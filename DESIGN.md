@@ -305,6 +305,15 @@ The customer's three choices. Each is white when open and violet when it is the 
 - **Slot button:** a visually hidden radio styled as a 44px white button, 8px radius, Control Grey stroke, control shadow, 500 tabular time; three columns on phones, four from 640px, 8px gaps, grouped under caption headings. Selected: violet fill and border, white text. Focus shows the 2px Focus Violet outline on the visible button.
 - **Time zone:** stated once under the day strip as the city name ("Times are Bucharest time.").
 
+### Chat Helper (public booking page)
+- **Launcher:** a 48px violet pill in the bottom-right corner (16px from the edges on phones, 24px from 640px, above the safe area) with a MessageCircle icon and "Ask a question", Popover shadow. It is the one floating thing on the page, so it is the one pill-shaped button. The page footer has extra bottom room so the launcher never covers it.
+- **Window:** full screen on phones (white, no radius, the page behind stops scrolling); from 640px a 400px × up to 680px floating surface in the same corner, 12px radius, Border Grey outline, Popover shadow. Header: "Ask <shop>" in Title style, then either a neutral "Practice mode" badge with "Simple answers from the shop’s details." or "An AI helper. It only knows what the shop wrote." in Muted Ink, and a 36px ghost X. Escape closes it and focus returns to the launcher.
+- **Messages:** 8px radius, 0.875rem, at most 85% wide, plain text only. The customer's are Ink with white text on the right; the helper's are Ground grey with Ink text on the left. Never violet: violet stays for actions. A "Thinking…" bubble with a spinner shows while waiting.
+- **Quick questions:** small secondary buttons ("Prices", "Opening hours", "Next free time") under the welcome message only.
+- **Time buttons:** 36px slot buttons, four per row, one row per day under a caption day label ("Sat 31 Oct"); white with Control Grey stroke, violet fill when chosen. A Muted Ink line points to the page's steps for more times.
+- **Booking form in chat:** a Sunken Grey block (8px radius, no border) with the service summary in 600 and the time below, then name, email and phone fields and a full-width "Book 10:30" primary. It scrolls into view when it opens. After booking it becomes a Done Green receipt (wash, inset ring, CalendarCheck) with a small secondary "Add to calendar", and the time buttons above it disappear.
+- **Errors:** the standard red message box above the message field; the typed message goes back into the field.
+
 ### Booked Receipt
 Replaces the form in place and hides the steps above it. Centred: a 44px Done Green wash disc with a CalendarCheck icon, "You’re booked" in 1.125rem 600, the service summary, the date and time in 600 tabular, one Muted Ink line, then a secondary "Add to calendar" button (.ics download). Below a hairline: the shop address with a MapPin and a violet tap-to-call text link, then a violet "Book another time" link.
 
@@ -362,3 +371,4 @@ Grey rounded blocks with the same shapes as the page header and cards, pulsing o
 - **Don't** show the browser's default select arrow; use the ChevronDown.
 - **Don't** add a second accent, gradients, or a heavier shadow on resting surfaces.
 - **Don't** use uppercase or letter-spaced labels above headings.
+- **Don't** colour chat bubbles violet; the customer's are Ink, the helper's are Ground grey.

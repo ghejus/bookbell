@@ -39,7 +39,7 @@ function groupSlots(slots: Props["slots"]) {
 }
 
 /** A calendar file (.ics) the customer can add to their phone's calendar. */
-function calendarHref({ start, minutes, title, location, shopName }: { start: string; minutes: number; title: string; location: string; shopName: string }) {
+export function calendarHref({ start, minutes, title, location, shopName }: { start: string; minutes: number; title: string; location: string; shopName: string }) {
   const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
   const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/([,;])/g, "\\$1").replace(/\n/g, "\\n");
   const begins = new Date(start);

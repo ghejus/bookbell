@@ -4,11 +4,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { Card, EmptyState, Logo, PageSkeleton } from "@/components/ui";
+import { aiProvider } from "@/lib/assistant/provider";
 import { getAvailability, getPublicShop, shopToday } from "@/lib/booking";
 import { formatDuration, formatPrice } from "@/lib/format";
 import { addDays } from "@/lib/slots";
 import { BookingFlow, HideWhenBooked, LinkPending, PendingSwap } from "./booking-flow";
 import { BookingForm } from "./booking-form";
+import { ShopChat } from "./chat";
 
 const DAYS_SHOWN = 14;
 /** "Europe/Bucharest" -> "Bucharest", for customers. */
@@ -64,177 +66,189 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
   const takingBookings = services.length > 0 && hours.length > 0;
 
   return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-balance text-gray-900">{shop.name}</h1>
-        {shop.about ? <p className="mt-2 max-w-prose text-gray-700">{shop.about}</p> : null}
-        {shop.address || shop.phone ? (
-          <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-gray-600">
-            {shop.address ? (
-              <li className="flex items-center gap-1.5">
-                <MapPin aria-hidden className="size-4 text-gray-500" />
-                {shop.address}
-              </li>
-            ) : null}
-            {shop.phone ? (
-              <li className="flex items-center gap-1.5">
-                <Phone aria-hidden className="size-4 text-gray-500" />
-                <a href={`tel:${shop.phone.replace(/[^\d+]/g, "")}`} className="hover:text-gray-900 hover:underline">
-                  {shop.phone}
-                </a>
-              </li>
-            ) : null}
-          </ul>
-        ) : null}
-      </header>
-
-      {!takingBookings ? (
-        <Card>
-          <EmptyState icon={CalendarX} title="Online booking isn’t open yet" as="h2">
-            {shop.phone ? `Please call the shop at ${shop.phone} to book.` : "Please contact the shop to book."}
-          </EmptyState>
-        </Card>
-      ) : (
-        <BookingFlow>
-          <HideWhenBooked>
-          {/* Step 1: service */}
-          <section aria-labelledby="step-service">
-            <h2 id="step-service" className="mb-3 text-base font-semibold text-gray-900">
-              1. Choose a service
-            </h2>
-            <ul className="space-y-2.5">
-              {services.map((s) => {
-                const active = s.id === service?.id;
-                return (
-                  <li key={s.id}>
-                    <Link
-                      href={href({ service: s.id })}
-                      scroll={false}
-                      aria-current={active ? "true" : undefined}
-                      className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-card transition-colors duration-150 sm:px-5 ${
-                        active ? "border-brand-700 ring-1 ring-brand-700" : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-semibold break-words text-gray-900">{s.name}</span>
-                        <span className="block text-sm text-gray-600 tabular">{formatDuration(s.duration_minutes)}</span>
-                      </span>
-                      <LinkPending className="text-gray-500" />
-                      {s.price_cents !== null ? (
-                        <span className="font-semibold whitespace-nowrap text-gray-900 tabular">
-                          {formatPrice(s.price_cents, shop.currency)}
-                        </span>
-                      ) : null}
-                    </Link>
-                  </li>
-                );
-              })}
+    <>
+      <div className="space-y-6">
+        <header>
+          <h1 className="text-2xl font-bold tracking-tight text-balance text-gray-900">{shop.name}</h1>
+          {shop.about ? <p className="mt-2 max-w-prose text-gray-700">{shop.about}</p> : null}
+          {shop.address || shop.phone ? (
+            <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-gray-600">
+              {shop.address ? (
+                <li className="flex items-center gap-1.5">
+                  <MapPin aria-hidden className="size-4 text-gray-500" />
+                  {shop.address}
+                </li>
+              ) : null}
+              {shop.phone ? (
+                <li className="flex items-center gap-1.5">
+                  <Phone aria-hidden className="size-4 text-gray-500" />
+                  <a href={`tel:${shop.phone.replace(/[^\d+]/g, "")}`} className="hover:text-gray-900 hover:underline">
+                    {shop.phone}
+                  </a>
+                </li>
+              ) : null}
             </ul>
-          </section>
+          ) : null}
+        </header>
 
-          {/* Step 2: day */}
-          {service ? (
-            <section aria-labelledby="step-day">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <h2 id="step-day" className="text-base font-semibold text-gray-900">
-                  2. Choose a day
-                </h2>
-                <div className="flex items-center gap-1">
-                  <span className="mr-1 text-sm text-gray-600">{shownMonths}</span>
-                  {prevFrom ? (
-                    <Link href={href({ service: service.id, from: prevFrom })} scroll={false} aria-label="Earlier days" className="relative flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
-                      <ChevronLeft aria-hidden className="size-4.5" />
-                      <LinkPending className="absolute text-gray-500" />
-                    </Link>
-                  ) : null}
-                  {nextFrom ? (
-                    <Link href={href({ service: service.id, from: nextFrom })} scroll={false} aria-label="Later days" className="relative flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
-                      <ChevronRight aria-hidden className="size-4.5" />
-                      <LinkPending className="absolute text-gray-500" />
-                    </Link>
-                  ) : null}
-                </div>
-              </div>
-              <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-7 sm:overflow-visible sm:px-0">
-                {days.map((d) => {
-                  const open = d.slots.length > 0;
-                  const active = d.date === chosenDate;
-                  const weekday = dayName.format(asUtc(d.date));
-                  const number = <span className="text-lg font-semibold tabular">{dayNum.format(asUtc(d.date))}</span>;
+        {!takingBookings ? (
+          <Card>
+            <EmptyState icon={CalendarX} title="Online booking isn’t open yet" as="h2">
+              {shop.phone ? `Please call the shop at ${shop.phone} to book.` : "Please contact the shop to book."}
+            </EmptyState>
+          </Card>
+        ) : (
+          <BookingFlow>
+            <HideWhenBooked>
+            {/* Step 1: service */}
+            <section aria-labelledby="step-service">
+              <h2 id="step-service" className="mb-3 text-base font-semibold text-gray-900">
+                1. Choose a service
+              </h2>
+              <ul className="space-y-2.5">
+                {services.map((s) => {
+                  const active = s.id === service?.id;
                   return (
-                    <li key={d.date} className="shrink-0">
-                      {open ? (
-                        <Link
-                          href={href({ service: service.id, from: from === today ? undefined : from, date: d.date })}
-                          scroll={false}
-                          aria-current={active ? "date" : undefined}
-                          aria-label={`${longDay.format(asUtc(d.date))}, ${d.slots.length} free times`}
-                          className={`relative flex h-16 w-14 flex-col items-center justify-center rounded-lg border transition-colors duration-150 sm:w-full ${
-                            active ? "border-brand-700 bg-brand-700 text-white" : "border-gray-300 bg-white text-gray-900 hover:border-gray-400"
-                          }`}
-                        >
-                          {/* While the day loads, the spinner takes the weekday's place. */}
-                          <span className="flex h-4 items-center text-xs font-medium">
-                            <PendingSwap>{weekday}</PendingSwap>
-                          </span>
-                          {number}
-                        </Link>
-                      ) : (
-                        <span
-                          aria-label={`${longDay.format(asUtc(d.date))}, no free times`}
-                          className="flex h-16 w-14 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 text-gray-600 sm:w-full"
-                        >
-                          <span className="flex h-4 items-center text-xs font-medium">{weekday}</span>
-                          {number}
+                    <li key={s.id}>
+                      <Link
+                        href={href({ service: s.id })}
+                        scroll={false}
+                        aria-current={active ? "true" : undefined}
+                        className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-card transition-colors duration-150 sm:px-5 ${
+                          active ? "border-brand-700 ring-1 ring-brand-700" : "border-gray-200 hover:border-gray-300"
+                        }`}
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-semibold break-words text-gray-900">{s.name}</span>
+                          <span className="block text-sm text-gray-600 tabular">{formatDuration(s.duration_minutes)}</span>
                         </span>
-                      )}
+                        <LinkPending className="text-gray-500" />
+                        {s.price_cents !== null ? (
+                          <span className="font-semibold whitespace-nowrap text-gray-900 tabular">
+                            {formatPrice(s.price_cents, shop.currency)}
+                          </span>
+                        ) : null}
+                      </Link>
                     </li>
                   );
                 })}
               </ul>
-              <p className="mt-2 text-sm text-gray-600">Times are {cityOf(shop.timezone)} time.</p>
             </section>
-          ) : null}
-          </HideWhenBooked>
 
-          {/* Step 3: time and details */}
-          {service ? (
-            <section aria-label="Choose a time">
-              <HideWhenBooked>
-                <h2 className="mb-3 text-base font-semibold text-gray-900">3. Choose a time</h2>
-              </HideWhenBooked>
-              {chosenDay && chosenDay.slots.length > 0 ? (
-                <Card className="p-5 sm:p-6">
-                  <BookingForm
-                    key={`${service.id}-${chosenDay.date}`}
-                    shopId={shop.id}
-                    shopName={shop.name}
-                    shopAddress={shop.address}
-                    shopPhone={shop.phone}
-                    serviceId={service.id}
-                    serviceName={service.name}
-                    durationMinutes={service.duration_minutes}
-                    serviceSummary={`${service.name}, ${formatDuration(service.duration_minutes)}${
-                      service.price_cents !== null ? `, ${formatPrice(service.price_cents, shop.currency)}` : ""
-                    }`}
-                    timezone={shop.timezone}
-                    dayLabel={longDay.format(asUtc(chosenDay.date))}
-                    slots={chosenDay.slots}
-                    againHref={href({})}
-                  />
-                </Card>
-              ) : (
-                <Card>
-                  <EmptyState icon={CalendarX} title="No free times in these two weeks">
-                    {nextFrom ? "Try the later days with the arrow above." : "Please check again soon, or call the shop."}
-                  </EmptyState>
-                </Card>
-              )}
-            </section>
-          ) : null}
-        </BookingFlow>
-      )}
-    </div>
+            {/* Step 2: day */}
+            {service ? (
+              <section aria-labelledby="step-day">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <h2 id="step-day" className="text-base font-semibold text-gray-900">
+                    2. Choose a day
+                  </h2>
+                  <div className="flex items-center gap-1">
+                    <span className="mr-1 text-sm text-gray-600">{shownMonths}</span>
+                    {prevFrom ? (
+                      <Link href={href({ service: service.id, from: prevFrom })} scroll={false} aria-label="Earlier days" className="relative flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
+                        <ChevronLeft aria-hidden className="size-4.5" />
+                        <LinkPending className="absolute text-gray-500" />
+                      </Link>
+                    ) : null}
+                    {nextFrom ? (
+                      <Link href={href({ service: service.id, from: nextFrom })} scroll={false} aria-label="Later days" className="relative flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
+                        <ChevronRight aria-hidden className="size-4.5" />
+                        <LinkPending className="absolute text-gray-500" />
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+                <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-7 sm:overflow-visible sm:px-0">
+                  {days.map((d) => {
+                    const open = d.slots.length > 0;
+                    const active = d.date === chosenDate;
+                    const weekday = dayName.format(asUtc(d.date));
+                    const number = <span className="text-lg font-semibold tabular">{dayNum.format(asUtc(d.date))}</span>;
+                    return (
+                      <li key={d.date} className="shrink-0">
+                        {open ? (
+                          <Link
+                            href={href({ service: service.id, from: from === today ? undefined : from, date: d.date })}
+                            scroll={false}
+                            aria-current={active ? "date" : undefined}
+                            aria-label={`${longDay.format(asUtc(d.date))}, ${d.slots.length} free times`}
+                            className={`relative flex h-16 w-14 flex-col items-center justify-center rounded-lg border transition-colors duration-150 sm:w-full ${
+                              active ? "border-brand-700 bg-brand-700 text-white" : "border-gray-300 bg-white text-gray-900 hover:border-gray-400"
+                            }`}
+                          >
+                            {/* While the day loads, the spinner takes the weekday's place. */}
+                            <span className="flex h-4 items-center text-xs font-medium">
+                              <PendingSwap>{weekday}</PendingSwap>
+                            </span>
+                            {number}
+                          </Link>
+                        ) : (
+                          <span
+                            aria-label={`${longDay.format(asUtc(d.date))}, no free times`}
+                            className="flex h-16 w-14 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 text-gray-600 sm:w-full"
+                          >
+                            <span className="flex h-4 items-center text-xs font-medium">{weekday}</span>
+                            {number}
+                          </span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+                <p className="mt-2 text-sm text-gray-600">Times are {cityOf(shop.timezone)} time.</p>
+              </section>
+            ) : null}
+            </HideWhenBooked>
+
+            {/* Step 3: time and details */}
+            {service ? (
+              <section aria-label="Choose a time">
+                <HideWhenBooked>
+                  <h2 className="mb-3 text-base font-semibold text-gray-900">3. Choose a time</h2>
+                </HideWhenBooked>
+                {chosenDay && chosenDay.slots.length > 0 ? (
+                  <Card className="p-5 sm:p-6">
+                    <BookingForm
+                      key={`${service.id}-${chosenDay.date}`}
+                      shopId={shop.id}
+                      shopName={shop.name}
+                      shopAddress={shop.address}
+                      shopPhone={shop.phone}
+                      serviceId={service.id}
+                      serviceName={service.name}
+                      durationMinutes={service.duration_minutes}
+                      serviceSummary={`${service.name}, ${formatDuration(service.duration_minutes)}${
+                        service.price_cents !== null ? `, ${formatPrice(service.price_cents, shop.currency)}` : ""
+                      }`}
+                      timezone={shop.timezone}
+                      dayLabel={longDay.format(asUtc(chosenDay.date))}
+                      slots={chosenDay.slots}
+                      againHref={href({})}
+                    />
+                  </Card>
+                ) : (
+                  <Card>
+                    <EmptyState icon={CalendarX} title="No free times in these two weeks">
+                      {nextFrom ? "Try the later days with the arrow above." : "Please check again soon, or call the shop."}
+                    </EmptyState>
+                  </Card>
+                )}
+              </section>
+            ) : null}
+          </BookingFlow>
+        )}
+      </div>
+      {/* Outside the stack above, so its spacing never touches the chat window. */}
+      <ShopChat
+        slug={shop.slug}
+        shopId={shop.id}
+        shopName={shop.name}
+        shopAddress={shop.address}
+        shopPhone={shop.phone}
+        timezone={shop.timezone}
+        practice={aiProvider() === "practice"}
+      />
+    </>
   );
 }
 
@@ -247,7 +261,8 @@ export default function Page(props: PageProps<"/s/[slug]">) {
           <BookingPage {...props} />
         </Suspense>
       </main>
-      <footer className="py-6 text-center text-sm text-gray-600">
+      {/* Extra room at the bottom so the chat button never covers the footer. */}
+      <footer className="pt-6 pb-24 text-center text-sm text-gray-600 sm:pb-28">
         Booking by{" "}
         <Link href="/" className="font-medium text-gray-900 hover:underline">
           <Logo className="text-sm" />
