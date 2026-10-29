@@ -40,17 +40,21 @@ async function ServicesContent() {
                 <Card className="flex items-center gap-3 py-3 pr-2 pl-4 sm:pl-5">
                   <div className="min-w-0 flex-1">
                     <p className={`font-semibold break-words ${s.active ? "text-gray-900" : "text-gray-600"}`}>{s.name}</p>
-                    <p className="mt-0.5 flex flex-wrap items-center gap-2 text-sm text-gray-600">
+                    <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
                       <span className="tabular">{formatDuration(s.duration_minutes)}</span>
+                      {/* On phones the price sits here, so a long name keeps the room it needs. */}
+                      {s.price_cents !== null ? (
+                        <span className="tabular whitespace-nowrap sm:hidden">· {formatPrice(s.price_cents, shop.currency)}</span>
+                      ) : null}
                       {s.active ? null : <Badge>Hidden</Badge>}
                     </p>
                   </div>
                   {s.price_cents !== null ? (
-                    <span className={`font-semibold tabular whitespace-nowrap ${s.active ? "text-gray-900" : "text-gray-600"}`}>
+                    <span className={`hidden font-semibold tabular whitespace-nowrap sm:inline ${s.active ? "text-gray-900" : "text-gray-600"}`}>
                       {formatPrice(s.price_cents, shop.currency)}
                     </span>
                   ) : null}
-                  <div className="flex items-center">
+                  <div className="flex shrink-0 items-center">
                     <form action={toggleService}>
                       <input type="hidden" name="id" value={s.id} />
                       <input type="hidden" name="active" value={String(s.active)} />

@@ -303,7 +303,8 @@ The customer's three choices. Each is white when open and violet when it is the 
 - **Service row:** a white selectable row with 12px radius, Border Grey outline and the Card shadow; name in 600 with the duration below in Muted Ink, price on the right in 600 tabular. Hover darkens the border to Control Grey; selected gets a violet (brand-700) border plus a 1px violet ring. Rows stack 10px apart.
 - **Day cell:** 56px × 64px (fills its grid column from 640px), 8px radius; caption weekday over a 1.125rem 600 tabular day number. Open: white with a Control Grey stroke, darkening on hover. Selected: violet fill and border, white text. Unavailable: a dashed Border Grey outline, no fill, dimmed text, and not a link. Prev / next arrows are 36px ghost icon links with an accessible label, beside the month range.
 - **Slot button:** a visually hidden radio styled as a 44px white button, 8px radius, Control Grey stroke, control shadow, 500 tabular time; three columns on phones, four from 640px, 8px gaps, grouped under caption headings. Selected: violet fill and border, white text. Focus shows the 2px Focus Violet outline on the visible button.
-- **Time zone:** stated once under the day strip as the city name ("Times are Bucharest time.").
+- **Time zone:** stated once under the day strip as the city name ("Times are Bucharest time."). The month range beside the step heading uses short months ("Oct – Nov 2026") and neither wraps.
+- **Shop header:** the about text keeps the owner's line breaks and shows four lines, then a violet "Show more" text button (only when it is really cut off). Address and phone icons sit at the first line of their text and never shrink.
 
 ### Chat Helper (public booking page)
 - **Launcher:** a 48px violet pill in the bottom-right corner (16px from the edges on phones, 24px from 640px, above the safe area) with a MessageCircle icon and "Ask a question", Popover shadow. It is the one floating thing on the page, so it is the one pill-shaped button. The page footer has extra bottom room so the launcher never covers it.
@@ -351,6 +352,9 @@ A card with "N of 4 done" (tabular), a 6px green progress bar, and full-bleed ro
 
 ### Loading
 Grey rounded blocks with the same shapes as the page header and cards, pulsing only when reduced motion is off.
+
+### Long and unusual data
+Checked against a worst-case test shop (`scripts/seed-worst-case.mjs`) at 320px. Long words, links and emails wrap (`overflow-wrap: anywhere`) instead of widening the page. Emails are never cut off with "…" in owner screens, because the owner needs the whole address; they break before "@" and dots. On phones a service's price moves under its name, beside the duration, so the name keeps its room. A price of zero reads "Free". Icons beside text that can wrap are top-aligned and never shrink.
 
 ## Do's and Don'ts
 

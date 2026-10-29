@@ -81,12 +81,17 @@ export function ShopChat(props: Props) {
     };
   }, [open]);
 
-  // Keep the newest message in view.
+  // Keep the newest message in view. A long answer opens at its first line, so it can be read from the top.
   useEffect(() => {
     const el = log.current;
     if (!el) return;
-    const smooth = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "auto" });
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    const newest = [...el.querySelectorAll<HTMLElement>("[data-message]")].at(-1);
+    if (!pending && newest?.dataset.message === "assistant" && newest.offsetHeight > el.clientHeight - 32) {
+      el.scrollTo({ top: newest.offsetTop - el.offsetTop - 16, behavior });
+    } else {
+      el.scrollTo({ top: el.scrollHeight, behavior });
+    }
   }, [messages, pending, open]);
 
   async function send(text: string) {
@@ -184,13 +189,13 @@ export function ShopChat(props: Props) {
           <div ref={log} role="log" aria-live="polite" aria-label="Conversation" className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4">
             {messages.map((m) =>
               m.role === "user" ? (
-                <p key={m.id} className="ml-auto w-fit max-w-[85%] rounded-lg bg-gray-900 px-3 py-2 text-sm break-words whitespace-pre-wrap text-white">
+                <p key={m.id} data-message="user" className="ml-auto w-fit max-w-[85%] rounded-lg bg-gray-900 px-3 py-2 text-sm wrap-anywhere whitespace-pre-wrap text-white">
                   {m.text}
                 </p>
               ) : (
-                <div key={m.id} className="space-y-3">
+                <div key={m.id} data-message="assistant" className="space-y-3">
                   {/* The helper's words are shown as plain text, never as HTML. */}
-                  <p className="w-fit max-w-[85%] rounded-lg bg-gray-100 px-3 py-2 text-sm break-words whitespace-pre-wrap text-gray-900">{m.text}</p>
+                  <p className="w-fit max-w-[85%] rounded-lg bg-gray-100 px-3 py-2 text-sm wrap-anywhere whitespace-pre-wrap text-gray-900">{m.text}</p>
                   {m.booking ? (
                     <ChatBookingForm {...props} booking={m.booking} onBooked={(note) => markBooked(m.id, note)} />
                   ) : m.times ? (

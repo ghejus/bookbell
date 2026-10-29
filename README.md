@@ -51,4 +51,14 @@ npm run lint     # code style
 npm run build    # full production build
 ```
 
+`npm run test:db` signs in as two test owners (`lock-test-a@` and `lock-test-b@randul-test.dev`). Their password is not in the code: add `TEST_OWNER_PASSWORD=...` to `.env.local` first (any strong password; the tests sign the owners up the first time).
+
+**Worst-case test shop:** `node scripts/seed-worst-case.mjs` fills a test shop with the longest names and texts the database accepts, names in many scripts, emoji, a dozen services and a full day of bookings. Compare `/s/frizeria-stefan-fiii` (normal) with `/s/atelier-infrumusetare-wisniewska-kowalcz` (worst case) at a 320px-wide window after any layout change.
+
 `.env.local` is in `.gitignore`, so your keys never go to GitHub.
+
+## Known limits
+
+- **Fake bookings:** booking needs no account, so a determined bot could fill a calendar with made-up bookings (a hidden form field stops simple bots, and one email can hold at most 3 upcoming bookings). The planned fix is "confirm your booking by email".
+- **Chat limits can be used up on purpose:** someone could spend a shop's 300 daily chat messages by sending requests directly. That switches off the helper for that shop until the next day; it can't touch bookings or cost more than the cap.
+- **Emails:** customers aren't emailed yet. Owners contact customers themselves when they cancel.

@@ -10,6 +10,16 @@ import { cancelBooking } from "../actions";
 
 export const metadata: Metadata = { title: "Bookings" };
 
+/** An email that may wrap before "@" and dots ("wang.xiuying / @example.com"), not in the middle of a word. */
+function BreakableEmail({ email }: { email: string }) {
+  return email.split(/(?=[@.])/).map((part, i) => (
+    <span key={i}>
+      {i > 0 ? <wbr /> : null}
+      {part}
+    </span>
+  ));
+}
+
 type Booking = {
   id: string;
   starts_at: string;
@@ -81,20 +91,23 @@ async function BookingsContent() {
                       </form>
                       {/* Details use the full width under the name, so the Cancel? button never squeezes them. */}
                       <div className="col-span-2 col-start-2 min-w-0">
-                        <p className="text-sm text-gray-600">
+                        <p className="text-sm wrap-anywhere text-gray-600">
                           {b.services?.name ?? "Service"}
                           {b.services ? <span className="tabular">, {formatDuration(b.services.duration_minutes)}</span> : null}
                           <span className="tabular"> · until&nbsp;{time.format(new Date(b.ends_at))}</span>
                         </p>
                         <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                          <a href={`mailto:${b.customer_email}`} className="flex min-w-0 items-center gap-1.5 text-gray-700 hover:text-gray-900 hover:underline">
-                            <Mail aria-hidden className="size-3.5 shrink-0 text-gray-500" />
-                            <span className="truncate">{b.customer_email}</span>
+                          {/* The owner needs the whole email to reach the customer, so it wraps instead of being cut off. */}
+                          <a href={`mailto:${b.customer_email}`} className="flex min-w-0 items-start gap-1.5 text-gray-700 hover:text-gray-900 hover:underline">
+                            <Mail aria-hidden className="mt-[3px] size-3.5 shrink-0 text-gray-500" />
+                            <span className="min-w-0 wrap-break-word">
+                              <BreakableEmail email={b.customer_email} />
+                            </span>
                           </a>
                           {b.customer_phone ? (
-                            <a href={`tel:${b.customer_phone.replace(/[^\d+]/g, "")}`} className="flex items-center gap-1.5 text-gray-700 hover:text-gray-900 hover:underline">
-                              <Phone aria-hidden className="size-3.5 text-gray-500" />
-                              {b.customer_phone}
+                            <a href={`tel:${b.customer_phone.replace(/[^\d+]/g, "")}`} className="flex min-w-0 items-start gap-1.5 text-gray-700 hover:text-gray-900 hover:underline">
+                              <Phone aria-hidden className="mt-[3px] size-3.5 shrink-0 text-gray-500" />
+                              <span className="min-w-0 wrap-anywhere">{b.customer_phone}</span>
                             </a>
                           ) : null}
                         </p>

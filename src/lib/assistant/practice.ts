@@ -49,7 +49,10 @@ export function findService(text: string, services: Service[]): Service | undefi
   let best: { s: Service; score: number } | undefined;
   for (const s of services) {
     const name = contentWords(s.name);
-    const score = name.length ? overlap(name, said) / name.length : 0;
+    const hits = overlap(name, said);
+    // More matching words wins ("vopsit rădăcini" picks the long colouring service over plain "Vopsit");
+    // on a tie, the name the customer said more completely wins.
+    const score = name.length && hits ? hits + hits / name.length / 2 : 0;
     if (score > 0 && (!best || score > best.score)) best = { s, score };
   }
   return best?.s;
@@ -130,7 +133,7 @@ export async function practiceReply(f: ShopFacts, history: ChatTurn[], tools: To
   if (service) {
     const price = formatPrice(service.price_cents, f.currency);
     return {
-      reply: `${service.name} takes ${formatDuration(service.duration_minutes)}${price ? ` and costs ${price}` : ""}. Want me to find a free time? Just ask “When is ${service.name} free?”`,
+      reply: `${service.name} takes ${formatDuration(service.duration_minutes)}${service.price_cents === 0 ? " and is free" : price ? ` and costs ${price}` : ""}. Want me to find a free time? Just ask “When is ${service.name} free?”`,
     };
   }
   if (has(last, PRICE_WORDS)) {

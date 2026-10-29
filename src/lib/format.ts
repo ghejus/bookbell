@@ -13,10 +13,11 @@ const NBSP = String.fromCharCode(160);
 
 /**
  * 2550 cents -> "€25.50" or "25.50 lei". Whole amounts drop the decimals: "€25", "60 lei".
- * Null (no price set) -> "".
+ * Null (no price set) -> "". Zero -> "Free".
  */
 export function formatPrice(cents: number | null, currency: Currency): string {
   if (cents === null) return "";
+  if (cents === 0) return "Free";
   const amount = (cents / 100).toLocaleString("en-US", {
     minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
     maximumFractionDigits: 2,

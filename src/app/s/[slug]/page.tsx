@@ -2,12 +2,14 @@ import { CalendarX, ChevronLeft, ChevronRight, MapPin, Phone } from "lucide-reac
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { Card, EmptyState, Logo, PageSkeleton } from "@/components/ui";
 import { aiProvider } from "@/lib/assistant/provider";
-import { getAvailability, getPublicShop, shopToday } from "@/lib/booking";
+import { getAvailability, getPublicShop, getShopMeta, shopToday } from "@/lib/booking";
 import { formatDuration, formatPrice } from "@/lib/format";
 import { addDays } from "@/lib/slots";
+import { AboutText } from "./about-text";
 import { BookingFlow, HideWhenBooked, LinkPending, PendingSwap } from "./booking-flow";
 import { BookingForm } from "./booking-form";
 import { ShopChat } from "./chat";
@@ -19,12 +21,14 @@ const isDate = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{
 
 export async function generateMetadata({ params }: PageProps<"/s/[slug]">): Promise<Metadata> {
   const { slug } = await params;
-  const data = await getPublicShop(slug);
-  return data ? { title: `Book at ${data.shop.name}`, description: data.shop.about || undefined } : { title: "Shop not found" };
+  const shop = await getShopMeta(slug);
+  return shop ? { title: `Book at ${shop.name}`, description: shop.about || undefined } : { title: "Shop not found" };
 }
 
 async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
+  // Free times depend on the current time, so this part always waits for a real visit.
+  await connection();
   const data = await getPublicShop(slug);
   if (!data) notFound();
   const { shop, services, hours } = data;
@@ -55,7 +59,8 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
   const dayName = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short" });
   const dayNum = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric" });
   const longDay = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
-  const monthRange = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", month: "long", year: "numeric" });
+  // Short months ("Oct – Nov 2026") so the range fits beside the heading on small phones.
+  const monthRange = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", month: "short", year: "numeric" });
   const shownMonths = (() => {
     // "October 2026", or "October – November 2026" when the two weeks cross a month.
     const first = asUtc(from);
@@ -69,19 +74,19 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
     <>
       <div className="space-y-6">
         <header>
-          <h1 className="text-2xl font-bold tracking-tight text-balance text-gray-900">{shop.name}</h1>
-          {shop.about ? <p className="mt-2 max-w-prose text-gray-700">{shop.about}</p> : null}
+          <h1 className="text-2xl font-bold tracking-tight text-balance wrap-anywhere text-gray-900">{shop.name}</h1>
+          {shop.about ? <AboutText text={shop.about} /> : null}
           {shop.address || shop.phone ? (
             <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-gray-600">
               {shop.address ? (
-                <li className="flex items-center gap-1.5">
-                  <MapPin aria-hidden className="size-4 text-gray-500" />
+                <li className="flex min-w-0 items-start gap-1.5">
+                  <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-gray-500" />
                   {shop.address}
                 </li>
               ) : null}
               {shop.phone ? (
-                <li className="flex items-center gap-1.5">
-                  <Phone aria-hidden className="size-4 text-gray-500" />
+                <li className="flex min-w-0 items-start gap-1.5">
+                  <Phone aria-hidden className="mt-0.5 size-4 shrink-0 text-gray-500" />
                   <a href={`tel:${shop.phone.replace(/[^\d+]/g, "")}`} className="hover:text-gray-900 hover:underline">
                     {shop.phone}
                   </a>
@@ -139,11 +144,11 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
             {service ? (
               <section aria-labelledby="step-day">
                 <div className="mb-3 flex items-center justify-between gap-3">
-                  <h2 id="step-day" className="text-base font-semibold text-gray-900">
+                  <h2 id="step-day" className="text-base font-semibold whitespace-nowrap text-gray-900">
                     2. Choose a day
                   </h2>
                   <div className="flex items-center gap-1">
-                    <span className="mr-1 text-sm text-gray-600">{shownMonths}</span>
+                    <span className="mr-1 text-sm whitespace-nowrap text-gray-600 tabular">{shownMonths}</span>
                     {prevFrom ? (
                       <Link href={href({ service: service.id, from: prevFrom })} scroll={false} aria-label="Earlier days" className="relative flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
                         <ChevronLeft aria-hidden className="size-4.5" />

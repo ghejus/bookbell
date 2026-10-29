@@ -1,4 +1,6 @@
 import "server-only";
+import { createClient as createPlainClient } from "@supabase/supabase-js";
+import { cacheLife } from "next/cache";
 import { cache } from "react";
 import type { Currency } from "@/lib/format";
 import { addDays, getFreeSlots, isoWeekday, type Busy, type OpeningBlock } from "@/lib/slots";
@@ -25,6 +27,21 @@ export type PublicShop = {
 
 export type PublicService = { id: string; name: string; duration_minutes: number; price_cents: number | null };
 export type WeeklyHours = OpeningBlock & { weekday: number };
+
+/**
+ * Just the shop's name and about text, for the browser tab title and link previews.
+ * Public data read without the visitor's login, and remembered for a few minutes,
+ * so Next.js can work it out ahead of time.
+ */
+export async function getShopMeta(slug: string) {
+  "use cache";
+  cacheLife("minutes");
+  const db = createPlainClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data } = await db.from("shops").select("name, about").eq("slug", slug).maybeSingle<{ name: string; about: string }>();
+  return data;
+}
 
 /** A shop's public page data, or null if the web address doesn't exist. */
 export const getPublicShop = cache(async (slug: string) => {

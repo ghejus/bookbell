@@ -118,6 +118,12 @@ describe("word matching", () => {
     expect(findService("two haircuts for my kids", facts.services)?.id).toBe("s-kids");
     expect(findService("mens haircut", facts.services)?.id).toBe("s-cut");
     expect(findService("hello", facts.services)).toBeUndefined();
+    const colour = [
+      { id: "short", name: "Vopsit", duration_minutes: 120, price_cents: null },
+      { id: "long", name: "Vopsit rădăcini + tuns + coafat de ocazie", duration_minutes: 480, price_cents: null },
+    ];
+    expect(findService("book vopsit radacini saturday", colour)?.id).toBe("long");
+    expect(findService("vopsit", colour)?.id).toBe("short");
   });
 
   it("matches notes only when enough words line up", () => {

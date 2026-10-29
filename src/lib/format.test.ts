@@ -7,6 +7,7 @@ const nb = String.fromCharCode(160);
 describe("formatPrice", () => {
   it("writes euro before the amount and lei after it", () => {
     expect(formatPrice(2500, "EUR")).toBe("€25");
+    expect(formatPrice(0, "RON")).toBe("Free");
     expect(formatPrice(2550, "EUR")).toBe("€25.50");
     expect(formatPrice(6000, "RON")).toBe(`60${nb}lei`);
     expect(formatPrice(4050, "RON")).toBe(`40.50${nb}lei`);

@@ -13,6 +13,11 @@ type Props = { shop: Shop | null; timezones: string[] };
 export function ShopForm({ shop, timezones }: Props) {
   const { state, pending, formProps } = useActionForm(saveShop);
   const v = (key: keyof Shop, fallback = "") => state?.values?.[key] ?? shop?.[key] ?? fallback;
+  // The browser's list can use an older name for the saved zone (America/Buenos_Aires for
+  // America/Argentina/Buenos_Aires). Always offer the saved one, so saving never quietly
+  // switches the shop to the first zone in the list.
+  const savedZone = v("timezone", "Europe/Bucharest");
+  const zones = timezones.includes(savedZone) ? timezones : [savedZone, ...timezones];
 
   // While making a new shop, suggest a web address from the name until the owner edits it.
   const [slug, setSlug] = useState(v("slug"));
@@ -63,7 +68,7 @@ export function ShopForm({ shop, timezones }: Props) {
           ))}
         </Select>
         <Select label="Time zone" name="timezone" defaultValue={v("timezone", "Europe/Bucharest")}>
-          {timezones.map((tz) => (
+          {zones.map((tz) => (
             <option key={tz} value={tz}>
               {tz.replaceAll("_", " ")}
             </option>

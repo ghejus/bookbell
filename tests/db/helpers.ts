@@ -4,7 +4,12 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 process.loadEnvFile(".env.local");
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-const PASSWORD = "Lock-test-river-7-cactus";
+// The test owners' password lives in .env.local (never in the code), because the code is public.
+const PASSWORD: string =
+  process.env.TEST_OWNER_PASSWORD ??
+  (() => {
+    throw new Error("Add TEST_OWNER_PASSWORD to .env.local to run the database tests (see README).");
+  })();
 
 export function client() {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });

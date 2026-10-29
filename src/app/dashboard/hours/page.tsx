@@ -82,7 +82,7 @@ async function HoursContent() {
                           action={deleteOpeningHours}
                           className="flex items-center rounded-lg bg-gray-50 pl-3 text-sm font-medium text-gray-900 ring-1 ring-gray-200 ring-inset"
                         >
-                          <time className="tabular">
+                          <time className="tabular whitespace-nowrap">
                             {hm(h.opens)}–{hm(h.closes)}
                           </time>
                           <input type="hidden" name="id" value={h.id} />
@@ -131,14 +131,15 @@ async function HoursContent() {
           {timeOff.length > 0 ? (
             <ul className="-mx-5 mb-6 divide-y divide-gray-100 border-y border-gray-100 sm:-mx-6">
               {timeOff.map((t) => (
-                <li key={t.id} className="flex items-center gap-3 py-2.5 pr-3 pl-5 sm:pr-4 sm:pl-6">
-                  <CalendarOff aria-hidden className="size-4.5 shrink-0 text-gray-500" />
+                <li key={t.id} className="flex items-start gap-3 py-2.5 pr-3 pl-5 sm:pr-4 sm:pl-6">
+                  {/* Top-aligned, so the icon and button stay with the dates when a long reason wraps. */}
+                  <CalendarOff aria-hidden className="mt-0.5 size-4.5 shrink-0 text-gray-500" />
                   <div className="min-w-0 flex-1 text-sm">
                     <p className="text-gray-900 tabular">
                       <time dateTime={t.starts_at}>{when.format(new Date(t.starts_at))}</time> –{" "}
                       <time dateTime={t.ends_at}>{when.format(new Date(t.ends_at))}</time>
                     </p>
-                    {t.reason ? <p className="break-words text-gray-600">{t.reason}</p> : null}
+                    {t.reason ? <p className="wrap-anywhere text-gray-600">{t.reason}</p> : null}
                   </div>
                   <form action={deleteTimeOff}>
                     <input type="hidden" name="id" value={t.id} />
