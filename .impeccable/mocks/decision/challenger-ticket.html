@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Ticket Coupons</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:390px;height:844px;overflow:hidden}
+body{font-family:Barlow,system-ui,sans-serif;background:#eef0f5;color:#1b2c5c}
+header{background:#1b2c5c;color:#fff;padding:14px 18px 0}
+.top{display:flex;justify-content:space-between;font:600 13px Barlow}
+.top b{font:700 16px "Barlow Condensed";letter-spacing:.06em}
+.shop{font:600 22px "Barlow Condensed";margin:8px 0 10px}
+nav{display:flex;gap:2px}
+nav a{font-size:14px;padding:9px 12px;color:#c9d2ec}
+nav a.on{background:#eef0f5;color:#1b2c5c;font-weight:600;border-radius:4px 4px 0 0}
+main{padding:18px}
+h1{font:700 24px "Barlow Condensed";margin-bottom:12px}
+.cp{background:#fff;border:1px solid #c6cbe0;border-radius:4px;margin-bottom:10px;display:flex;position:relative}
+.cp .head{background:#d8322a;color:#fff;writing-mode:vertical-rl;transform:rotate(180deg);font:700 11px "Barlow Condensed";letter-spacing:.08em;padding:8px 5px;text-align:center}
+.cp .body{flex:1;padding:10px 12px;display:grid;grid-template-columns:1fr auto auto;gap:2px 14px;align-items:end}
+.cp .n{font-weight:600;font-size:16px;grid-column:1/-1}
+.cp small{font:500 10px "Barlow Condensed";color:#6a7497;letter-spacing:.06em}
+.cp .v{font:700 18px "Courier Prime";color:#5b3f8c}
+.cp:after{content:"";position:absolute;right:86px;top:6px;bottom:6px;border-left:1.5px dashed #c6cbe0}
+.void .body{opacity:.45}
+.void .stamp{position:absolute;right:20px;top:14px;border:2px solid #d8322a;color:#d8322a;font:700 15px "Barlow Condensed";padding:1px 6px;transform:rotate(-9deg)}
+.add{width:100%;margin-top:6px;background:#1b2c5c;color:#fff;border:0;border-radius:4px;padding:13px;font:600 15px Barlow}
+</style></head><body>
+<header><div class="top"><b>RÂNDUL</b><span>Log out</span></div><p class="shop">Frizeria Ștefan</p>
+<nav><a>Shop</a><a class="on">Services</a><a>Hours</a><a>AI notes</a></nav></header>
+<main><h1>Services</h1>
+<div class="cp"><div class="head">SERVICE</div><div class="body"><p class="n">Men's haircut</p><small>LENGTH</small><small>FARE</small><span></span><span class="v">30 MIN</span><span class="v">60 LEI</span></div></div>
+<div class="cp"><div class="head">SERVICE</div><div class="body"><p class="n">Beard trim</p><small>LENGTH</small><small>FARE</small><span></span><span class="v">15 MIN</span><span class="v">35 LEI</span></div></div>
+<div class="cp"><div class="head">SERVICE</div><div class="body"><p class="n">Haircut + beard</p><small>LENGTH</small><small>FARE</small><span></span><span class="v">45 MIN</span><span class="v">85 LEI</span></div></div>
+<div class="cp"><div class="head">SERVICE</div><div class="body"><p class="n">Kids' cut</p><small>LENGTH</small><small>FARE</small><span></span><span class="v">25 MIN</span><span class="v">45 LEI</span></div></div>
+<div class="cp void"><div class="head">SERVICE</div><div class="body"><p class="n">Hot towel shave</p><small>LENGTH</small><small>FARE</small><span></span><span class="v">40 MIN</span><span class="v">70 LEI</span></div><span class="stamp">HIDDEN</span></div>
+<button class="add">Add a service</button></main></body></html>

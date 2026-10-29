@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Category standard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:390px;height:844px;overflow:hidden}
+body{font-family:Inter,system-ui,sans-serif;background:#f3f4f6;color:#111827}
+header{background:#fff;border-bottom:1px solid #e5e7eb;padding:14px 18px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:700;font-size:16px;color:#6d28d9}
+.av{width:32px;height:32px;border-radius:50%;background:#ede9fe}
+.tabs{display:flex;gap:6px;padding:12px 18px;background:#fff;border-bottom:1px solid #e5e7eb}
+.tabs a{font-size:14px;padding:6px 12px;border-radius:99px;color:#4b5563}
+.tabs a.on{background:#6d28d9;color:#fff}
+main{padding:18px}
+h1{font-size:22px;font-weight:700}
+.sub{color:#6b7280;font-size:14px;margin:4px 0 16px}
+.card{background:#fff;border-radius:12px;box-shadow:0 1px 3px rgba(0,0,0,.1);padding:14px 16px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.card b{font-weight:600;font-size:15px}
+.card p{font-size:13px;color:#6b7280;margin-top:2px}
+.price{font-weight:600;color:#111827}
+.add{width:100%;margin-top:8px;background:#6d28d9;color:#fff;border:0;border-radius:10px;padding:13px;font:600 15px Inter}
+</style></head><body>
+<header><span class="logo">Rândul</span><span class="av"></span></header>
+<div class="tabs"><a>Shop</a><a class="on">Services</a><a>Hours</a><a>AI notes</a></div>
+<main><h1>Services</h1><p class="sub">Manage what customers can book.</p>
+<div class="card"><div><b>Men's haircut</b><p>30 min</p></div><span class="price">60 lei</span></div>
+<div class="card"><div><b>Beard trim</b><p>15 min</p></div><span class="price">35 lei</span></div>
+<div class="card"><div><b>Haircut + beard</b><p>45 min</p></div><span class="price">85 lei</span></div>
+<div class="card"><div><b>Kids' cut</b><p>25 min</p></div><span class="price">45 lei</span></div>
+<div class="card" style="opacity:.55"><div><b>Hot towel shave</b><p>40 min · Hidden</p></div><span class="price">70 lei</span></div>
+<button class="add">Add service</button></main></body></html>

@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rândul
 
-## Getting Started
+Online booking for small shops (barbers, salons, dentists, any appointment business), with an AI helper that answers customers' questions and books times.
 
-First, run the development server:
+**Built so far (phases 1 and 2):** shop owner accounts, and a dashboard to set up the shop, its services, opening hours, days off, and notes for the AI helper.
+**Coming next:** the public booking page (phase 3), the AI chat helper (phase 4), then design polish and going online (phase 5).
+
+## The big pieces
+
+| Piece | What it does | Where it lives |
+|---|---|---|
+| **Website + server** | Next.js 16 pages and server actions | `src/app/` |
+| **Accounts** | Supabase Auth, email + password. `src/proxy.ts` keeps the login fresh and keeps logged-out visitors out of `/dashboard`. | `src/lib/supabase/`, `src/app/(auth)/` |
+| **Database** | Supabase Postgres. Every table has row level security, so an owner can only touch their own shop. Double bookings are blocked by the database itself. | `supabase/migrations/` |
+| **Form checks** | Everything typed is checked (zod) before it's saved. Time zone helpers turn "09:00 in Bucharest" into an exact moment. | `src/lib/validation.ts`, `src/lib/time.ts` |
+
+## Set up (one time)
+
+You need **Node 22 or newer** (`node --version`).
+
+**Already done for this computer:** the Supabase project **Randul** (Frankfurt) is linked, its tables are built, and `.env.local` holds the project URL and public key.
+
+To set it up again somewhere else (needs the Supabase command tool logged in: `npx supabase login` in a normal terminal window):
+
+1. `npx supabase link --project-ref <your-project-ref>`
+2. `npx supabase db push --linked` builds the tables from `supabase/migrations/`.
+3. `npx supabase config push` sends the login settings in `supabase/config.toml` (site address, redirect link, 8-character passwords). Run `npx supabase config diff` first to see exactly what will change.
+4. Copy `.env.example` to `.env.local` and fill in the project URL and the **publishable** key (starts with `sb_publishable_`). Never put the **secret** key there: anything starting with `NEXT_PUBLIC_` is visible in the browser.
+
+**Before real people use the site:** email confirmation is turned **off** right now so testing works without real inboxes. Turn it back on in Supabase (Authentication → Sign In / Providers → Email → Confirm email) or set `enable_confirmations = true` under `[auth.email]` in `supabase/config.toml` and run `npx supabase config push`.
+
+## Run it
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open **http://localhost:3000**, click **Set up my shop**, and create an account.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Checks
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm test         # small automatic checks (form rules, time zones, prices)
+npm run test:db  # lock test against the real database: one owner can never touch another's shop
+npm run lint     # code style
+npm run build    # full production build
+```
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`.env.local` is in `.gitignore`, so your keys never go to GitHub.

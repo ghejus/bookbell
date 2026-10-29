@@ -1,0 +1,62 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "inter",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-10-29T18:12:15.657Z",
+        "reason": "Decision-page sketch of the canon card; the user chose this category-standard look (Inter, violet) on the decision page on 2026-10-29"
+      },
+      {
+        "rule": "ai-color-palette",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/canon.html"
+        ],
+        "createdAt": "2026-10-29T18:12:15.984Z",
+        "reason": "Decision-page sketch of the canon card the user chose on 2026-10-29; flat violet accent, no gradient; not shipped"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-10-29T18:12:16.295Z",
+        "reason": "Unchosen decision-page sketch, a throwaway fixture that is never shipped"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/assigned.html"
+        ],
+        "createdAt": "2026-10-29T18:57:44.670Z",
+        "reason": "Unchosen decision-page sketch for another direction (user chose the canon card on 2026-10-29); never shipped, so its fonts are outside DESIGN.md by design"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/model-pick.html"
+        ],
+        "createdAt": "2026-10-29T18:57:45.004Z",
+        "reason": "Unchosen decision-page sketch for another direction (user chose the canon card on 2026-10-29); never shipped, so its fonts are outside DESIGN.md by design"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/challenger-ticket.html"
+        ],
+        "createdAt": "2026-10-29T18:57:45.337Z",
+        "reason": "Unchosen decision-page sketch for another direction (user chose the canon card on 2026-10-29); never shipped, so its fonts are outside DESIGN.md by design"
+      }
+    ]
+  }
+}

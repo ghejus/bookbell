@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-29T12:00:00Z",
+  "title": "Design System: Rândul",
+  "extensions": {
+    "colorMeta": {
+      "brand-700": { "role": "primary", "displayName": "Rândul Violet", "canonical": "#6d28d9", "tonalRamp": ["#2e1065", "#4c1d95", "#5b21b6", "#6d28d9", "#7c3aed", "#a78bfa", "#ddd6fe", "#f5f3ff"] },
+      "brand-800": { "role": "primary", "displayName": "Deep Violet", "canonical": "#5b21b6" },
+      "brand-600": { "role": "primary", "displayName": "Focus Violet", "canonical": "#7c3aed" },
+      "brand-200": { "role": "primary", "displayName": "Violet Wash (hover)", "canonical": "#ddd6fe" },
+      "brand-100": { "role": "primary", "displayName": "Violet Wash", "canonical": "#ede9fe" },
+      "brand-50": { "role": "primary", "displayName": "Violet Wash (faint)", "canonical": "#f5f3ff" },
+      "ground": { "role": "neutral", "displayName": "Cool Ground", "canonical": "var(--color-gray-100)", "tonalRamp": ["#030712", "#111827", "#374151", "#4b5563", "#9ca3af", "#d1d5db", "#e5e7eb", "#f9fafb"] },
+      "surface": { "role": "neutral", "displayName": "White Surface", "canonical": "#ffffff" },
+      "surface-sunken": { "role": "neutral", "displayName": "Sunken Grey", "canonical": "var(--color-gray-50)" },
+      "hairline": { "role": "neutral", "displayName": "Hairline", "canonical": "var(--color-gray-100)" },
+      "border": { "role": "neutral", "displayName": "Border Grey", "canonical": "var(--color-gray-200)" },
+      "border-control": { "role": "neutral", "displayName": "Control Grey", "canonical": "var(--color-gray-300)" },
+      "border-control-hover": { "role": "neutral", "displayName": "Control Grey (hover)", "canonical": "var(--color-gray-400)" },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "var(--color-gray-900)" },
+      "ink-soft": { "role": "neutral", "displayName": "Soft Ink", "canonical": "var(--color-gray-700)" },
+      "ink-muted": { "role": "neutral", "displayName": "Muted Ink", "canonical": "var(--color-gray-600)" },
+      "icon-muted": { "role": "neutral", "displayName": "Icon Grey", "canonical": "var(--color-gray-500)" },
+      "success": { "role": "semantic", "displayName": "Done Green", "canonical": "var(--color-green-600)", "tonalRamp": ["#052e16", "#14532d", "#166534", "#16a34a", "#4ade80", "#bbf7d0", "#dcfce7", "#f0fdf4"] },
+      "success-bg": { "role": "semantic", "displayName": "Done Green wash", "canonical": "var(--color-green-50)" },
+      "success-ring": { "role": "semantic", "displayName": "Done Green ring", "canonical": "var(--color-green-200)" },
+      "success-ink": { "role": "semantic", "displayName": "Done Green ink", "canonical": "var(--color-green-800)" },
+      "danger": { "role": "semantic", "displayName": "Delete Red", "canonical": "var(--color-red-600)", "tonalRamp": ["#450a0a", "#7f1d1d", "#991b1b", "#dc2626", "#f87171", "#fecaca", "#fee2e2", "#fef2f2"] },
+      "danger-deep": { "role": "semantic", "displayName": "Delete Red (hover)", "canonical": "var(--color-red-700)" },
+      "danger-bg": { "role": "semantic", "displayName": "Delete Red wash", "canonical": "var(--color-red-50)" },
+      "danger-ring": { "role": "semantic", "displayName": "Delete Red ring", "canonical": "var(--color-red-200)" },
+      "danger-ink": { "role": "semantic", "displayName": "Delete Red ink", "canonical": "var(--color-red-800)" }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Page title", "purpose": "One per screen; 1.25rem on auth cards." },
+      "title": { "displayName": "Card title", "purpose": "Card headings and list item names." },
+      "body": { "displayName": "Body", "purpose": "Descriptions, hints and messages, usually in Muted Ink." },
+      "label": { "displayName": "Label", "purpose": "Field labels and nav links; buttons use weight 600." },
+      "caption": { "displayName": "Caption", "purpose": "Badges only." },
+      "wordmark": { "displayName": "Wordmark", "purpose": "The Rândul logo text in Rândul Violet; 1.25rem on auth screens." }
+    },
+    "shadows": [
+      { "name": "card", "value": "0 1px 2px 0 rgb(17 24 39 / 0.05), 0 1px 3px 0 rgb(17 24 39 / 0.06)", "purpose": "Every card; the one resting surface level." },
+      { "name": "control", "value": "0 1px 2px 0 rgb(0 0 0 / 0.05)", "purpose": "Inputs, primary and secondary buttons." },
+      { "name": "popover", "value": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)", "purpose": "Avatar menu and skip link only." }
+    ],
+    "motion": [
+      { "name": "state-colour", "value": "150ms colour transitions", "purpose": "Hover and press on buttons, links, inputs and tabs." },
+      { "name": "busy-spin", "value": "Lucide LoaderCircle, animate-spin, motion-safe only", "purpose": "Pending submit and delete buttons." },
+      { "name": "skeleton-pulse", "value": "animate-pulse, motion-safe only", "purpose": "Page loading placeholders." },
+      { "name": "delete-reset", "value": "4000ms", "purpose": "Armed 'Delete?' button returns to the icon." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px", "purpose": "Wider padding, multi-column forms, buttons shrink to fit." },
+      { "name": "lg", "value": "1024px", "purpose": "Sidebar replaces top bar and pill tabs." }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action of a form; full width on phones.",
+      "html": "<button class=\"ds-btn-primary\">Add hours</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 44px; padding: 0 16px; border: none; border-radius: 8px; background: var(--color-brand-700, #6d28d9); color: #fff; font: 600 14px/20px Inter, ui-sans-serif, system-ui, sans-serif; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); cursor: pointer; transition: background-color 150ms; } .ds-btn-primary:hover, .ds-btn-primary:active { background: var(--color-brand-800, #5b21b6); } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-brand-600, #7c3aed); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Optional helper actions beside the main flow.",
+      "html": "<button class=\"ds-btn-secondary\">Fill Mon–Fri, 09:00–17:00</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; height: 44px; padding: 0 16px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; color: #111827; font: 600 14px/20px Inter, ui-sans-serif, system-ui, sans-serif; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); cursor: pointer; transition: background-color 150ms; } .ds-btn-secondary:hover { background: #f9fafb; } .ds-btn-secondary:active { background: #f3f4f6; } .ds-btn-secondary:focus-visible { outline: 2px solid var(--color-brand-600, #7c3aed); outline-offset: 2px; }"
+    },
+    {
+      "name": "Ghost Button and Two-Tap Delete",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Worded row action (Hide/Show) beside the trash icon that arms into a red 'Delete?'.",
+      "html": "<div class=\"ds-row-actions\"><button class=\"ds-btn-ghost\">Hide</button><button class=\"ds-btn-icon-danger\" aria-label=\"Delete Haircut\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 6h18\"/><path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\"/><path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\"/><line x1=\"10\" x2=\"10\" y1=\"11\" y2=\"17\"/><line x1=\"14\" x2=\"14\" y1=\"11\" y2=\"17\"/></svg></button><button class=\"ds-btn-delete-confirm\">Delete?</button></div>",
+      "css": ".ds-row-actions { display: flex; align-items: center; gap: 4px; } .ds-btn-ghost { height: 36px; padding: 0 12px; border: none; border-radius: 8px; background: transparent; color: #374151; font: 600 14px/20px Inter, ui-sans-serif, system-ui, sans-serif; cursor: pointer; transition: background-color 150ms; } .ds-btn-ghost:hover { background: #f3f4f6; } .ds-btn-ghost:active { background: #e5e7eb; } .ds-btn-icon-danger { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: none; border-radius: 8px; background: transparent; color: #6b7280; cursor: pointer; transition: background-color 150ms, color 150ms; } .ds-btn-icon-danger:hover { background: #fef2f2; color: #b91c1c; } .ds-btn-delete-confirm { height: 36px; padding: 0 12px; border: none; border-radius: 8px; background: #dc2626; color: #fff; font: 600 14px/20px Inter, ui-sans-serif, system-ui, sans-serif; cursor: pointer; transition: background-color 150ms; } .ds-btn-delete-confirm:hover { background: #b91c1c; } .ds-btn-ghost:focus-visible, .ds-btn-icon-danger:focus-visible, .ds-btn-delete-confirm:focus-visible { outline: 2px solid var(--color-brand-600, #7c3aed); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field and Select",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labelled control with hint; selects use a ChevronDown instead of the browser arrow.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-label\" for=\"ds-reason\">Reason <span class=\"ds-optional\">(optional)</span></label><input id=\"ds-reason\" class=\"ds-input\" placeholder=\"Christmas holiday\"><p class=\"ds-hint\">Private. Customers never see it.</p></div><div class=\"ds-field\"><label class=\"ds-label\" for=\"ds-opens\">Opens</label><div class=\"ds-select-wrap\"><select id=\"ds-opens\" class=\"ds-input ds-select\"><option>09:00</option><option>09:15</option></select><svg class=\"ds-chevron\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"m6 9 6 6 6-6\"/></svg></div></div>",
+      "css": ".ds-field { margin-bottom: 20px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; } .ds-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #111827; } .ds-optional { margin-left: 4px; font-weight: 400; color: #4b5563; } .ds-input { display: block; width: 100%; height: 44px; padding: 0 12px; border: 1px solid #d1d5db; border-radius: 8px; background: #fff; color: #111827; font: 400 14px Inter, ui-sans-serif, system-ui, sans-serif; box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); transition: border-color 150ms, box-shadow 150ms; } .ds-input::placeholder { color: #6b7280; } .ds-input:hover { border-color: #9ca3af; } .ds-input:focus { outline: none; border-color: var(--color-brand-600, #7c3aed); box-shadow: 0 0 0 3px var(--color-brand-100, #ede9fe); } .ds-select-wrap { position: relative; } .ds-select { appearance: none; padding-right: 40px; } .ds-chevron { position: absolute; top: 50%; right: 12px; transform: translateY(-50%); color: #6b7280; pointer-events: none; } .ds-hint { margin: 6px 0 0; font-size: 14px; color: #4b5563; }"
+    },
+    {
+      "name": "Form Message",
+      "kind": "custom",
+      "refersTo": "input",
+      "description": "Error or success line under a form's fields, always a full sentence.",
+      "html": "<p class=\"ds-msg ds-msg-error\" role=\"alert\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" x2=\"12\" y1=\"8\" y2=\"12\"/><line x1=\"12\" x2=\"12.01\" y1=\"16\" y2=\"16\"/></svg>The end must be after the start.</p><p class=\"ds-msg ds-msg-ok\" role=\"status\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M20 6 9 17l-5-5\"/></svg>Saved.</p>",
+      "css": ".ds-msg { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 8px; padding: 10px 12px; border-radius: 8px; font: 400 14px/20px Inter, ui-sans-serif, system-ui, sans-serif; } .ds-msg svg { flex-shrink: 0; margin-top: 2px; } .ds-msg-error { background: #fef2f2; color: #991b1b; box-shadow: inset 0 0 0 1px #fecaca; } .ds-msg-ok { background: #f0fdf4; color: #166534; box-shadow: inset 0 0 0 1px #bbf7d0; }"
+    },
+    {
+      "name": "Card with Full-Bleed Rows",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "White card; lists inside run edge to edge with hairline dividers. Week rows use a 6rem label column with grey time chips.",
+      "html": "<div class=\"ds-card\"><h2 class=\"ds-card-title\">Your week</h2><ul class=\"ds-rows\"><li class=\"ds-row\"><span class=\"ds-day\">Monday</span><div class=\"ds-chips\"><span class=\"ds-chip\"><time>09:00–13:00</time><button class=\"ds-chip-x\" aria-label=\"Remove Monday 09:00 to 13:00\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/></svg></button></span><span class=\"ds-chip\"><time>14:00–18:00</time><button class=\"ds-chip-x\" aria-label=\"Remove Monday 14:00 to 18:00\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/></svg></button></span></div></li><li class=\"ds-row\"><span class=\"ds-day\">Sunday</span><span class=\"ds-badge\">Closed</span></li></ul></div>",
+      "css": ".ds-card { border: 1px solid #e5e7eb; border-radius: 12px; background: #fff; box-shadow: 0 1px 2px 0 rgb(17 24 39 / 0.05), 0 1px 3px 0 rgb(17 24 39 / 0.06); font-family: Inter, ui-sans-serif, system-ui, sans-serif; overflow: hidden; } .ds-card-title { margin: 0; padding: 20px 20px 0; font-size: 16px; font-weight: 600; color: #111827; } .ds-rows { list-style: none; margin: 16px 0 0; padding: 0; border-top: 1px solid #f3f4f6; } .ds-row { display: grid; grid-template-columns: 6rem 1fr; align-items: start; column-gap: 16px; padding: 10px 20px; } .ds-row + .ds-row { border-top: 1px solid #f3f4f6; } .ds-day { display: flex; align-items: center; height: 36px; font-size: 14px; font-weight: 500; color: #111827; } .ds-chips { display: flex; flex-wrap: wrap; gap: 8px; } .ds-chip { display: flex; align-items: center; padding-left: 12px; border-radius: 8px; background: #f9fafb; box-shadow: inset 0 0 0 1px #e5e7eb; font-size: 14px; font-weight: 500; color: #111827; font-variant-numeric: tabular-nums; } .ds-chip-x { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border: none; border-radius: 8px; background: transparent; color: #6b7280; cursor: pointer; transition: background-color 150ms, color 150ms; } .ds-chip-x:hover { background: #f3f4f6; color: #111827; } .ds-chip-x:focus-visible { outline: 2px solid var(--color-brand-600, #7c3aed); outline-offset: 2px; } .ds-badge { display: inline-flex; align-items: center; align-self: center; margin-top: 8px; padding: 2px 8px; border-radius: 9999px; background: #f3f4f6; color: #374151; box-shadow: inset 0 0 0 1px #e5e7eb; font-size: 12px; font-weight: 500; }"
+    },
+    {
+      "name": "Pill Tabs",
+      "kind": "nav",
+      "refersTo": "tab-pill",
+      "description": "Phone and tablet navigation under the top bar; the current tab is filled violet.",
+      "html": "<nav class=\"ds-tabs\" aria-label=\"Dashboard\"><a class=\"ds-tab\" href=\"#\">Shop</a><a class=\"ds-tab\" href=\"#\">Services</a><a class=\"ds-tab\" href=\"#\" aria-current=\"page\">Hours</a><a class=\"ds-tab\" href=\"#\">AI notes</a></nav>",
+      "css": ".ds-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 12px; background: #fff; scrollbar-width: none; } .ds-tab { flex-shrink: 0; padding: 6px 14px; border-radius: 9999px; color: #374151; font: 500 14px/20px Inter, ui-sans-serif, system-ui, sans-serif; text-decoration: none; transition: background-color 150ms; } .ds-tab:hover { background: #f3f4f6; } .ds-tab[aria-current=page] { background: var(--color-brand-700, #6d28d9); color: #fff; } .ds-tab:focus-visible { outline: 2px solid var(--color-brand-600, #7c3aed); outline-offset: 2px; }"
+    },
+    {
+      "name": "Sidebar Nav",
+      "kind": "nav",
+      "refersTo": "sidebar-link-active",
+      "description": "Desktop navigation from 1024px: icon and word, current link in a violet wash.",
+      "html": "<nav class=\"ds-side\" aria-label=\"Dashboard\"><a class=\"ds-side-link\" href=\"#\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg>Hours</a><a class=\"ds-side-link\" href=\"#\" aria-current=\"page\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M7.9 20A9 9 0 1 0 4 16.1L2 22Z\"/></svg>AI notes</a></nav>",
+      "css": ".ds-side { width: 216px; padding: 12px; background: #fff; display: flex; flex-direction: column; gap: 2px; } .ds-side-link { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-radius: 8px; color: #374151; font: 500 14px/20px Inter, ui-sans-serif, system-ui, sans-serif; text-decoration: none; transition: background-color 150ms, color 150ms; } .ds-side-link svg { color: #6b7280; } .ds-side-link:hover { background: #f3f4f6; color: #111827; } .ds-side-link[aria-current=page] { background: var(--color-brand-50, #f5f3ff); color: var(--color-brand-800, #5b21b6); } .ds-side-link[aria-current=page] svg { color: var(--color-brand-700, #6d28d9); } .ds-side-link:focus-visible { outline: 2px solid var(--color-brand-600, #7c3aed); outline-offset: 2px; }"
+    },
+    {
+      "name": "Empty State",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Grey disc, title and one neutral example sentence, centred in a card.",
+      "html": "<div class=\"ds-empty\"><span class=\"ds-empty-disc\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/></svg></span><p class=\"ds-empty-title\">No services yet</p><p class=\"ds-empty-text\">Add your first one below, for example “Haircut, 30 minutes”.</p></div>",
+      "css": ".ds-empty { display: flex; flex-direction: column; align-items: center; padding: 40px 24px; text-align: center; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; font-family: Inter, ui-sans-serif, system-ui, sans-serif; } .ds-empty-disc { display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin-bottom: 12px; border-radius: 9999px; background: #f3f4f6; color: #4b5563; } .ds-empty-title { margin: 0; font-weight: 600; color: #111827; } .ds-empty-text { margin: 4px 0 0; max-width: 24rem; font-size: 14px; color: #4b5563; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Front Desk",
+    "overview": "Rândul is the category standard, played straight. It looks like the booking admin a shop owner already expects from Booksy or the Stripe Dashboard: a cool light-grey ground, white cards, near-black ink, and one violet accent. There is no costume and no decoration. Clarity, exact spacing and complete states (loading, empty, error, success, busy) are the whole identity.\n\nDensity is product-tight and phone-first. One column of white cards sits in a centred column up to 768px; on phones the primary action stretches full width so it can be hit with a thumb between customers. Every message is a short sentence in sentence case with a full stop, and every example is neutral enough to fit any shop.",
+    "keyCharacteristics": [
+      "Grey ground, white bordered cards, one soft shadow level.",
+      "One violet accent, reserved for primary actions, current navigation and focus.",
+      "Inter at a small product scale; tabular numerals for every time, price and duration.",
+      "12px surfaces, 8px controls, full pills for tabs, badges and the avatar.",
+      "Lucide icons at one stroke weight, always paired with a visible word or an accessible label.",
+      "Semantic green and red only where they mean done, saved, error or delete."
+    ],
+    "rules": [
+      { "name": "The One Violet Rule", "body": "Violet marks only what you can act on now or where you are: the primary button, text links, the current tab or sidebar link, and focus. The wordmark and the avatar are the only identity uses. Time chips stay grey, done states are green, empty-state discs are grey.", "section": "colors" },
+      { "name": "The Meaning-Only Colour Rule", "body": "Green and red appear only to say done, saved, failed or delete. Never use them for decoration or categories.", "section": "colors" },
+      { "name": "The Tabular Numbers Rule", "body": "Every time, price, duration and count is set with tabular numerals (`<time>` or the `.tabular` class) so columns line up. Prices and durations use no-break spaces so \"30 min\" and \"25 RON\" never split across lines.", "section": "typography" },
+      { "name": "The Sentence Case Rule", "body": "Titles, buttons and messages are sentence case, and every message ends with a full stop. No uppercase labels, no letter-spaced small caps.", "section": "typography" },
+      { "name": "The Full-Bleed Rows Rule", "body": "Lists inside a card run edge to edge as rows divided by hairlines, with the card's own padding inside each row. Never nest a bordered box inside a card.", "section": "layout" },
+      { "name": "The Label Column Rule", "body": "Week rows use a fixed 6rem label column; the day name is 36px tall to align with the first chip, and chips wrap within the second column.", "section": "layout" },
+      { "name": "The One Surface Level Rule", "body": "Cards never stack on cards. If something needs to look separate inside a card, use a hairline divider or a grey chip, not another border and shadow.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do keep violet for primary actions, text links, the current nav item and focus (brand-700 fill, brand-600 focus outline).",
+      "Do put lists inside cards as full-bleed rows divided by hairlines.",
+      "Do set every time, price and duration with tabular numerals and no-break spaces.",
+      "Do write labels for actions (\"Hide\", \"Show\", \"Add hours\") and give short buttons a longer accessible label.",
+      "Do use two taps for delete, resetting after 4 seconds.",
+      "Do keep typed values when a form fails, and clear the form only after it succeeds.",
+      "Do write messages in sentence case ending with a full stop, with examples that fit any shop.",
+      "Do make the main form button full width on phones and right-aligned from 640px."
+    ],
+    "donts": [
+      "Don't colour time chips, empty-state discs or done states violet; they are grey, grey and green.",
+      "Don't nest a bordered box inside a card.",
+      "Don't use eye icons for Hide and Show; use worded ghost buttons.",
+      "Don't show the browser's default select arrow; use the ChevronDown.",
+      "Don't add a second accent, gradients, or a heavier shadow on resting surfaces.",
+      "Don't use uppercase or letter-spaced labels above headings."
+    ]
+  }
+}
