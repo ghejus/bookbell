@@ -1,11 +1,12 @@
 "use client";
 
-import { Clock, MessageSquareText, Store, Tags, type LucideIcon } from "lucide-react";
+import { CalendarDays, Clock, MessageSquareText, Store, Tags, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const links: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/dashboard", label: "Shop", icon: Store },
+  { href: "/dashboard/bookings", label: "Bookings", icon: CalendarDays },
   { href: "/dashboard/services", label: "Services", icon: Tags },
   { href: "/dashboard/hours", label: "Hours", icon: Clock },
   { href: "/dashboard/info", label: "AI notes", icon: MessageSquareText },
@@ -15,7 +16,10 @@ const links: { href: string; label: string; icon: LucideIcon }[] = [
 export function TabsNav() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Dashboard" className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-3 [scrollbar-width:none]">
+    <nav
+      aria-label="Dashboard"
+      className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-3 [mask-image:linear-gradient(to_right,#000_88%,transparent)] [scrollbar-width:none]"
+    >
       {links.map(({ href, label }) => {
         const active = pathname === href;
         return (

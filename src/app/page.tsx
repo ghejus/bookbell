@@ -60,7 +60,7 @@ export default function Home() {
           ))}
         </ul>
         <p className="mt-8 max-w-3xl text-sm text-gray-600">
-          Being built now: shop setup works today; the customer booking page and the AI helper are coming in the next updates.
+          Being built now: shop setup and online booking work today; the AI helper is coming in the next update.
         </p>
       </main>
     </div>

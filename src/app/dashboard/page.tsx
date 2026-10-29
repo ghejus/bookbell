@@ -3,13 +3,16 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
 import { buttonClass, Card, CardSection, PageHeader, PageSkeleton } from "@/components/ui";
+import { CopyLink } from "@/components/copy-link";
 import { getMyShop } from "@/lib/shop";
+import { siteUrl } from "@/lib/site";
 import { ShopForm } from "./shop-form";
 
 export const metadata: Metadata = { title: "Your shop" };
 
 async function ShopContent() {
   const { supabase, shop, email } = await getMyShop();
+  const bookingUrl = shop ? `${await siteUrl()}/s/${shop.slug}` : "";
   const timezones = Intl.supportedValuesOf("timeZone");
 
   if (!shop) {
@@ -43,7 +46,7 @@ async function ShopContent() {
 
   return (
     <>
-      <PageHeader title={shop.name} description={<>Booking page: /s/{shop.slug} (opens to customers in the next update).</>} />
+      <PageHeader title={shop.name} description="Your shop details and booking link." />
 
       <div className="space-y-6">
         {next ? (
@@ -92,6 +95,19 @@ async function ShopContent() {
             </ol>
           </Card>
         ) : null}
+
+        <CardSection
+          title="Your booking link"
+          description="Share it with customers: in messages, on your social profiles, or on a sign by the door."
+        >
+          <CopyLink url={bookingUrl} />
+          <Link
+            href={`/s/${shop.slug}`}
+            className="mt-3 inline-block text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+          >
+            Open my booking page
+          </Link>
+        </CardSection>
 
         <CardSection title="Shop details" description="Customers see these on your booking page.">
           <ShopForm shop={shop} timezones={timezones} />

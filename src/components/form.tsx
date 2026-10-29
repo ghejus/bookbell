@@ -60,7 +60,17 @@ export function IconSubmit({ label, children, tone = "neutral" }: { label: strin
  * Delete needs two taps: the first asks "Delete?", the second does it.
  * It resets after a few seconds, so a stray tap never deletes anything.
  */
-export function ConfirmDelete({ label, children }: { label: string; children: React.ReactNode }) {
+export function ConfirmDelete({
+  label,
+  children,
+  confirmText = "Delete?",
+  busyText = "Deleting…",
+}: {
+  label: string;
+  children: React.ReactNode;
+  confirmText?: string;
+  busyText?: string;
+}) {
   const { pending } = useFormStatus();
   const [armed, setArmed] = useState(false);
 
@@ -79,7 +89,7 @@ export function ConfirmDelete({ label, children }: { label: string; children: Re
         className="flex h-9 items-center gap-1.5 rounded-lg bg-red-600 px-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-red-700 disabled:opacity-60"
       >
         {pending ? <LoaderCircle aria-hidden className="size-4 motion-safe:animate-spin" /> : null}
-        {pending ? "Deleting…" : "Delete?"}
+        {pending ? busyText : confirmText}
       </button>
     );
   }

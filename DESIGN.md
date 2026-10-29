@@ -73,6 +73,7 @@ spacing:
   page-x: "16px"
   page-x-sm: "24px"
   content-max: "768px"
+  content-max-public: "672px"
   sidebar: "240px"
 components:
   button-primary:
@@ -132,6 +133,42 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.control}"
     height: "36px"
+  service-row:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.surface}"
+    padding: "12px 16px"
+  service-row-selected:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+  day-cell:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.control}"
+    width: "56px"
+    height: "64px"
+  day-cell-selected:
+    backgroundColor: "{colors.brand-700}"
+    textColor: "{colors.surface}"
+  day-cell-unavailable:
+    rounded: "{rounded.control}"
+    width: "56px"
+    height: "64px"
+  slot-button:
+    backgroundColor: "{colors.surface}"
+    textColor: "{colors.ink}"
+    typography: "{typography.label}"
+    rounded: "{rounded.control}"
+    height: "44px"
+  slot-button-selected:
+    backgroundColor: "{colors.brand-700}"
+    textColor: "{colors.surface}"
+  link-field:
+    backgroundColor: "{colors.surface-sunken}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.control}"
+    padding: "0 12px"
+    height: "44px"
   badge:
     backgroundColor: "{colors.ground}"
     textColor: "{colors.ink-soft}"
@@ -157,7 +194,7 @@ Density is product-tight and phone-first. One column of white cards sits in a ce
 
 **Key Characteristics:**
 - Grey ground, white bordered cards, one soft shadow level.
-- One violet accent, reserved for primary actions, current navigation and focus.
+- One violet accent, reserved for primary actions, current navigation, the current selection and focus.
 - Inter at a small product scale; tabular numerals for every time, price and duration.
 - 12px surfaces, 8px controls, full pills for tabs, badges and the avatar.
 - Lucide icons at one stroke weight, always paired with a visible word or an accessible label.
@@ -189,7 +226,7 @@ A cool neutral grey scale carries almost everything; violet appears rarely, and 
 - **Delete Red** (danger, danger-deep, with danger-bg / danger-ring / danger-ink): the armed "Delete?" button, hover state of delete icons, and error messages.
 
 ### Named Rules
-**The One Violet Rule.** Violet marks only what you can act on now or where you are: the primary button, text links, the current tab or sidebar link, and focus. The wordmark and the avatar are the only identity uses. Time chips stay grey, done states are green, empty-state discs are grey.
+**The One Violet Rule.** Violet marks only what you can act on now or where you are: the primary button, text links, the current tab or sidebar link, the current selection, and focus. On the booking page the current selection is the chosen service row (violet border and ring), the chosen day cell and the chosen slot button (violet fill, white text); everything not chosen stays white. The wordmark and the avatar are the only identity uses. The hours time chip stays grey, done states are green, empty-state discs are grey.
 
 **The Meaning-Only Colour Rule.** Green and red appear only to say done, saved, failed or delete. Never use them for decoration or categories.
 
@@ -204,7 +241,8 @@ A cool neutral grey scale carries almost everything; violet appears rarely, and 
 - **Title** (600, 1rem): card titles and list item names.
 - **Body** (400, 0.875rem): descriptions, hints and messages, in Muted Ink; page descriptions cap at `max-w-prose`.
 - **Label** (500, 0.875rem): field labels, nav links, button text (buttons use 600). "(optional)" follows in 400 Muted Ink.
-- **Caption** (500, 0.75rem): badges only.
+- **Caption** (500, 0.75rem): badges, the weekday name in a day cell, and the Morning / Afternoon / Evening group captions above slot buttons (Muted Ink, sentence case, never uppercase).
+- **Step heading** (Title style, numbered "1. Choose a service"): the public booking page's steps; the number is part of the heading text, not a separate label.
 - Inputs use 1rem on phones (stops iOS zoom) and 0.875rem from 640px up.
 
 ### Named Rules
@@ -220,7 +258,9 @@ Content lives in one centred column (max 768px) with 16px side padding (24px fro
 
 **The Full-Bleed Rows Rule.** Lists inside a card run edge to edge as rows divided by hairlines, with the card's own padding inside each row. Never nest a bordered box inside a card.
 
-**The Label Column Rule.** Week rows use a fixed 6rem label column; the day name is 36px tall to align with the first chip, and chips wrap within the second column.
+**The Label Column Rule.** Week rows use a fixed 6rem label column; the day name is 36px tall to align with the first chip, and chips wrap within the second column. Bookings rows use a 3rem time column: the time, the name and the cancel button share the top line, and the details run full width beneath the name so the armed button never squeezes them.
+
+The public booking page has no app chrome: one centred column (max 672px, 16px side padding, 24px from 640px; 32px top padding, 48px from 640px), the shop header, the steps stacked 24px apart, and a centred "Booking by Rândul" footer. The day strip scrolls sideways edge to edge on phones and becomes a seven-column grid from 640px. Owner lists that span days are grouped under small 600 day headings, each day with its own card.
 
 ## Elevation & Depth
 
@@ -236,7 +276,7 @@ Mostly flat. Depth comes from the grey ground against white surfaces with 1px bo
 
 ## Shapes
 
-Three radii: 12px for surfaces (cards, menus, skeleton blocks), 8px for anything you press or type into (buttons, inputs, chips, nav links, messages), and full pills for tabs, badges, the avatar, step circles and progress bars. Strokes are 1px grey; badges and messages use an inset 1px ring instead of a border.
+Three radii: 12px for surfaces (cards, menus, skeleton blocks, selectable service rows), 8px for anything you press or type into (buttons, inputs, chips, day cells, slot buttons, nav links, messages), and full pills for tabs, badges, the avatar, step circles and progress bars. Strokes are 1px grey; badges and messages use an inset 1px ring instead of a border.
 
 ## Components
 
@@ -245,16 +285,31 @@ Calm and solid; one primary per form.
 - **Shape:** gently rounded (8px); 44px tall at normal size, 36px small.
 - **Primary:** violet fill, white 600 text, 16px side padding; full width on phones when it ends a form.
 - **Hover / Focus:** colour deepens over 150ms; focus shows the 2px violet outline.
-- **Busy:** a spinning loader plus "Saving…" or "Adding…". Small buttons keep their word so the row doesn't jump.
+- **Busy:** a spinning loader plus "Saving…", "Adding…" or "Booking…". Small buttons keep their word so the row doesn't jump.
+- **Label follows the choice:** a primary that needs a prior pick says what is missing ("Choose a time") and then names the action with the value ("Book 14:30"). Tapping it early shows a "Please choose a time." error rather than staying disabled.
+- **Link pending:** a link that loads a new view (service row, day cell, prev/next arrows) shows a small Icon Grey spinner inside itself while the next view loads, motion-safe only.
 - **Secondary:** white fill with a grey stroke, for optional helpers like "Fill Mon–Fri, 09:00–17:00".
 - **Ghost:** no fill, Soft Ink text, grey wash on hover. Used for worded row actions like Hide and Show, with a longer accessible label.
 - **Disabled:** 60% opacity, not-allowed cursor.
 
 ### Two-Tap Delete (signature)
-A 36px grey trash icon turns red on hover. The first tap swaps it for a red "Delete?" button; a second tap deletes. It resets after 4 seconds, so a stray tap never deletes anything.
+A 36px grey trash icon turns red on hover. The first tap swaps it for a red "Delete?" button; a second tap deletes. It resets after 4 seconds, so a stray tap never deletes anything. The same control cancels a booking: an X icon, "Cancel?" when armed and "Cancelling…" while busy.
 
 ### Chips
-- **Time chip:** Sunken Grey fill, inset grey ring, 8px radius, tabular "09:00–17:00", and a 36px X icon button to remove it. Never violet.
+- **Time chip (hours):** Sunken Grey fill, inset grey ring, 8px radius, tabular "09:00–17:00", and a 36px X icon button to remove it. It shows saved opening hours, not a choice, so it is never violet. It is a different component from the slot button below.
+
+### Booking Controls (public booking page)
+The customer's three choices. Each is white when open and violet when it is the current selection.
+- **Service row:** a white selectable row with 12px radius, Border Grey outline and the Card shadow; name in 600 with the duration below in Muted Ink, price on the right in 600 tabular. Hover darkens the border to Control Grey; selected gets a violet (brand-700) border plus a 1px violet ring. Rows stack 10px apart.
+- **Day cell:** 56px × 64px (fills its grid column from 640px), 8px radius; caption weekday over a 1.125rem 600 tabular day number. Open: white with a Control Grey stroke, darkening on hover. Selected: violet fill and border, white text. Unavailable: a dashed Border Grey outline, no fill, dimmed text, and not a link. Prev / next arrows are 36px ghost icon links with an accessible label, beside the month range.
+- **Slot button:** a visually hidden radio styled as a 44px white button, 8px radius, Control Grey stroke, control shadow, 500 tabular time; three columns on phones, four from 640px, 8px gaps, grouped under caption headings. Selected: violet fill and border, white text. Focus shows the 2px Focus Violet outline on the visible button.
+- **Time zone:** stated once under the day strip as the city name ("Times are Bucharest time.").
+
+### Booked Receipt
+Replaces the form in place and hides the steps above it. Centred: a 44px Done Green wash disc with a CalendarCheck icon, "You’re booked" in 1.125rem 600, the service summary, the date and time in 600 tabular, one Muted Ink line, then a secondary "Add to calendar" button (.ics download). Below a hairline: the shop address with a MapPin and a violet tap-to-call text link, then a violet "Book another time" link.
+
+### Copy Link
+A read-only 44px field on Sunken Grey (Control Grey stroke, 8px radius) that selects itself on focus, beside a secondary "Copy link" button. After copying the button reads "Copied." with a green check for 2.5 seconds; a hidden status line announces it.
 
 ### Badges
 - **Neutral pill:** grey fill, Soft Ink, inset ring, caption type. Used for "Closed" and "Hidden".
@@ -274,12 +329,13 @@ A 36px grey trash icon turns red on hover. The first tap swaps it for a red "Del
 - **Error / Success:** a message box under the fields: red or green wash, inset ring, 8px radius, with a CircleAlert or Check icon. Typed values stay after an error; forms clear only after success.
 
 ### Navigation
-- **Pill tabs (phones):** 500 text, 6px × 14px padding; the current tab is filled violet with white text, the rest get a grey wash on hover.
+- **Tabs:** Shop, Bookings, Services, Hours, AI notes, in that order, in both the pill row and the sidebar.
+- **Pill tabs (phones):** 500 text, 6px × 14px padding; the current tab is filled violet with white text, the rest get a grey wash on hover. The row's right edge fades out (a mask from 88% width) so a cut-off tab reads as scrollable.
 - **Sidebar (desktop):** icon plus word, 8px radius; the current link is a Violet Wash with Deep Violet text and a violet icon.
 - **Avatar menu:** a 36px violet-tint circle with the email's first letter; it opens a 256px white menu (12px radius, Popover shadow) with the email and Log out.
 
 ### Empty State
-A 44px grey disc with a grey Lucide icon, a 600 title, and one Muted Ink sentence with a neutral example, centred inside a card.
+A 44px grey disc with a grey Lucide icon, a 600 title, and one Muted Ink sentence with a neutral example, centred inside a card. An optional secondary button may follow it. The title takes the heading level its page needs: h2 inside a page, h1 on the 404 page, which is a single 384px column under the wordmark.
 
 ### Setup Checklist
 A card with "N of 4 done" (tabular), a 6px green progress bar, and full-bleed rows. Done steps get a filled green check circle and struck-through muted text; open steps get an empty grey ring. Only the next step shows a small violet "Start" button with an arrow.
@@ -290,7 +346,7 @@ Grey rounded blocks with the same shapes as the page header and cards, pulsing o
 ## Do's and Don'ts
 
 ### Do:
-- **Do** keep violet for primary actions, text links, the current nav item and focus (brand-700 fill, brand-600 focus outline).
+- **Do** keep violet for primary actions, text links, the current nav item, the current selection (service row, day cell, slot button) and focus (brand-700 fill, brand-600 focus outline).
 - **Do** put lists inside cards as full-bleed rows divided by hairlines.
 - **Do** set every time, price and duration with tabular numerals and no-break spaces.
 - **Do** write labels for actions ("Hide", "Show", "Add hours") and give short buttons a longer accessible label.
@@ -300,7 +356,7 @@ Grey rounded blocks with the same shapes as the page header and cards, pulsing o
 - **Do** make the main form button full width on phones and right-aligned from 640px.
 
 ### Don't:
-- **Don't** colour time chips, empty-state discs or done states violet; they are grey, grey and green.
+- **Don't** colour the hours time chip, empty-state discs or done states violet; they are grey, grey and green. Only a slot button or day cell that is the current selection turns violet.
 - **Don't** nest a bordered box inside a card.
 - **Don't** use eye icons for Hide and Show; use worded ghost buttons.
 - **Don't** show the browser's default select arrow; use the ChevronDown.

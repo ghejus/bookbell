@@ -2,8 +2,8 @@
 
 Online booking for small shops (barbers, salons, dentists, any appointment business), with an AI helper that answers customers' questions and books times.
 
-**Built so far (phases 1 and 2):** shop owner accounts, and a dashboard to set up the shop, its services, opening hours, days off, and notes for the AI helper.
-**Coming next:** the public booking page (phase 3), the AI chat helper (phase 4), then design polish and going online (phase 5).
+**Built so far (phases 1 to 3):** shop owner accounts; a dashboard to set up the shop, its services, opening hours, days off and notes for the AI helper; a public booking page for each shop at `/s/<shop-address>`; and a Bookings list for owners.
+**Coming next:** the AI chat helper (phase 4), then design polish and going online (phase 5).
 
 ## The big pieces
 
@@ -12,6 +12,7 @@ Online booking for small shops (barbers, salons, dentists, any appointment busin
 | **Website + server** | Next.js 16 pages and server actions | `src/app/` |
 | **Accounts** | Supabase Auth, email + password. `src/proxy.ts` keeps the login fresh and keeps logged-out visitors out of `/dashboard`. | `src/lib/supabase/`, `src/app/(auth)/` |
 | **Database** | Supabase Postgres. Every table has row level security, so an owner can only touch their own shop. Double bookings are blocked by the database itself. | `supabase/migrations/` |
+| **Booking** | Customers book at `/s/<shop-address>`. Free times come from `getFreeSlots` in `src/lib/slots.ts`. Two database functions are the only public doors: `get_busy_times` (taken times, no names) and `book_appointment` (checks every rule before saving). | `src/app/s/`, `supabase/migrations/` |
 | **Form checks** | Everything typed is checked (zod) before it's saved. Time zone helpers turn "09:00 in Bucharest" into an exact moment. | `src/lib/validation.ts`, `src/lib/time.ts` |
 
 ## Set up (one time)
@@ -42,7 +43,7 @@ Open **http://localhost:3000**, click **Set up my shop**, and create an account.
 
 ```bash
 npm test         # small automatic checks (form rules, time zones, prices)
-npm run test:db  # lock test against the real database: one owner can never touch another's shop
+npm run test:db  # real-database tests: owners can never touch each other's shops, and every booking rule holds
 npm run lint     # code style
 npm run build    # full production build
 ```

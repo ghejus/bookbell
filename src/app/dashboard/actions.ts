@@ -148,6 +148,15 @@ export async function deleteTimeOff(formData: FormData) {
   refresh();
 }
 
+// --------------------------------------------------------------- bookings
+
+export async function cancelBooking(formData: FormData) {
+  const id = idSchema.parse(formData.get("id"));
+  const { supabase, shop } = await requireShop();
+  await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id).eq("shop_id", shop.id);
+  refresh();
+}
+
 // --------------------------------------------------- shop info (AI notes)
 
 export async function addShopInfo(_prev: ActionState, formData: FormData): Promise<ActionState> {

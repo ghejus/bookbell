@@ -29,7 +29,8 @@ The AI helper only knows what the owner wrote (shop details, services, hours, an
 ## Capabilities and Constraints
 
 - Built: owner accounts (email and password), one shop per owner, services with length and optional price, weekly opening hours with split days, days off with a private reason, public question-and-answer notes for the AI.
-- Planned: public booking page at `/s/<shop-address>` (phase 3), AI chat helper (phase 4), confirmation and reminder emails and staff calendars (later).
+- Built: public booking page at `/s/<shop-address>` (pick service, day, free time; name and email, no account), and an owner Bookings list with cancel. Rules per shop: book up to 60 days ahead, at least 2 hours notice, a time every 15 minutes, at most 3 upcoming bookings per email. The database checks every rule.
+- Planned: AI chat helper (phase 4), confirmation and reminder emails and staff calendars (later). Until emails exist, owners tell customers themselves about cancellations.
 - Free to use. No payments for now.
 - Interface language: English.
 - Prices: each shop chooses euro (EUR) or Romanian lei (RON).

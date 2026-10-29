@@ -7,59 +7,15 @@
  * It uses two test owners (A and B) and creates them the first time it runs.
  * Email confirmation must be off in Supabase for the first run to sign them up.
  */
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { beforeAll, describe, expect, it } from "vitest";
+import { client, testOwners, type TestOwner } from "./helpers";
 
-process.loadEnvFile(".env.local");
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
-const PASSWORD = "Lock-test-river-7-cactus";
-
-function client() {
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-}
-
-/** Signs in a test owner, signing them up first if needed. */
-async function owner(email: string) {
-  const db = client();
-  let res = await db.auth.signInWithPassword({ email, password: PASSWORD });
-  if (res.error) {
-    const up = await db.auth.signUp({ email, password: PASSWORD });
-    if (up.error) throw up.error;
-    res = await db.auth.signInWithPassword({ email, password: PASSWORD });
-  }
-  if (res.error) throw res.error;
-  return { db, userId: res.data.user!.id };
-}
-
-/** Gives the owner a shop with one visible and one hidden service, hours, a day off and a note. */
-async function ensureShop(db: SupabaseClient, userId: string, slug: string) {
-  const existing = await db.from("shops").select("id").eq("owner_id", userId).maybeSingle();
-  let shopId = existing.data?.id as string | undefined;
-  if (!shopId) {
-    const made = await db.from("shops").insert({ name: `Lock test ${slug}`, slug, currency: "EUR" }).select("id").single();
-    if (made.error) throw made.error;
-    shopId = made.data.id;
-    await db.from("services").insert([
-      { shop_id: shopId, name: "Visible service", duration_minutes: 30, active: true },
-      { shop_id: shopId, name: "Hidden service", duration_minutes: 30, active: false },
-    ]);
-    await db.from("opening_hours").insert({ shop_id: shopId, weekday: 1, opens: "09:00", closes: "17:00" });
-    await db.from("time_off").insert({ shop_id: shopId, starts_at: "2030-01-01T08:00:00Z", ends_at: "2030-01-02T08:00:00Z", reason: "private reason" });
-    await db.from("shop_info").insert({ shop_id: shopId, question: "Parking?", answer: "Yes." });
-  }
-  return shopId!;
-}
-
-let a: { db: SupabaseClient; userId: string; shopId: string };
-let b: { db: SupabaseClient; userId: string; shopId: string };
+let a: TestOwner;
+let b: TestOwner;
 const anon = client();
 
 beforeAll(async () => {
-  const ownerA = await owner("lock-test-a@randul-test.dev");
-  const ownerB = await owner("lock-test-b@randul-test.dev");
-  a = { ...ownerA, shopId: await ensureShop(ownerA.db, ownerA.userId, "lock-test-a") };
-  b = { ...ownerB, shopId: await ensureShop(ownerB.db, ownerB.userId, "lock-test-b") };
+  ({ a, b } = await testOwners());
 }, 30_000);
 
 describe("an owner and their own shop", () => {
