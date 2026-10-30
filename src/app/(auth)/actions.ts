@@ -3,7 +3,9 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { ActionState } from "@/lib/action-state";
+import { createDemoShop } from "@/lib/demo";
 import { hasSupabaseEnv } from "@/lib/env";
+import { requireUser } from "@/lib/shop";
 import { createClient } from "@/lib/supabase/server";
 import { credentialsSchema, firstError } from "@/lib/validation";
 
@@ -64,6 +66,23 @@ export async function login(_prev: ActionState, formData: FormData): Promise<Act
       return { error: "Please confirm your email first. Look for our message in your inbox." };
     }
     return { error: "Wrong email or password." };
+  }
+  redirect("/dashboard");
+}
+
+/**
+ * After the browser signs in with a no-email demo account, this fills it with
+ * a sample shop and opens the dashboard.
+ */
+export async function startDemo(): Promise<ActionState> {
+  if (!hasSupabaseEnv) return { error: NOT_CONNECTED };
+  const { supabase, userId, isDemo } = await requireUser();
+  if (!isDemo) redirect("/dashboard"); // A real owner pressed it: just go to their shop.
+  try {
+    await createDemoShop(supabase, userId);
+  } catch (error) {
+    console.error(error);
+    return { error: "Could not make your demo shop. Please try again." };
   }
   redirect("/dashboard");
 }

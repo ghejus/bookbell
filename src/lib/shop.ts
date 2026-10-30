@@ -31,7 +31,13 @@ export const requireUser = cache(async () => {
   const { data } = await supabase.auth.getClaims();
   const claims = data?.claims;
   if (!claims?.sub) redirect("/login");
-  return { supabase, userId: claims.sub, email: typeof claims.email === "string" ? claims.email : "" };
+  return {
+    supabase,
+    userId: claims.sub,
+    email: typeof claims.email === "string" ? claims.email : "",
+    // "Try a demo shop" visitors have a no-email (anonymous) account.
+    isDemo: claims.is_anonymous === true,
+  };
 });
 
 /** The owner's shop, or null if they haven't made one yet. */

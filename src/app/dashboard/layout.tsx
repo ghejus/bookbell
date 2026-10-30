@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { Logo, PageSkeleton } from "@/components/ui";
-import { AccountMenu, SidebarAccount } from "./account";
+import { AccountMenu, DemoNotice, SidebarAccount } from "./account";
 import { SidebarNav, TabsNav } from "./nav";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -42,6 +42,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <main id="content" className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:px-6 lg:py-10">
           {/* Pages here read the login cookie, so they render fresh on each visit. */}
+          <Suspense>
+            <DemoNotice />
+          </Suspense>
           <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
         </main>
       </div>

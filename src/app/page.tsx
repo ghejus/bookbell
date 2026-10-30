@@ -1,5 +1,6 @@
 import { CalendarCheck, MessageSquareText, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import { DemoButton } from "@/components/demo-button";
 import { buttonClass, Logo } from "@/components/ui";
 import { hasSupabaseEnv } from "@/lib/env";
 
@@ -37,9 +38,7 @@ export default function Home() {
             <Link href="/signup" className={buttonClass("primary", { full: true })}>
               Set up my shop
             </Link>
-            <Link href="/login" className={buttonClass("secondary", { full: true })}>
-              I already have an account
-            </Link>
+            <DemoButton />
           </div>
         ) : (
           <div role="status" className="mt-8 max-w-xl rounded-lg bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200 ring-inset">
@@ -60,7 +59,7 @@ export default function Home() {
           ))}
         </ul>
         <p className="mt-8 max-w-3xl text-sm text-gray-600">
-          Being built now: shop setup and online booking work today; the AI helper is coming in the next update.
+          Not sure yet? “Try a demo shop” opens your own sample shop with services, hours and bookings filled in. Nobody else sees your changes, and no email is needed.
         </p>
       </main>
     </div>
