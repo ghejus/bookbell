@@ -1,9 +1,11 @@
 # Rândul
 
-Online booking for small shops (barbers, salons, dentists, any appointment business), with an AI helper that answers customers' questions and books times.
+Online booking for small shops (barbers, salons, dentists, any appointment business), with a chat helper that answers customers' questions and finds free times.
 
-**Built so far (phases 1 to 4):** shop owner accounts; a dashboard to set up the shop, its services, opening hours, days off and notes for the AI helper; a public booking page for each shop at `/s/<shop-address>`; a Bookings list for owners; and a chat helper on every shop page that answers questions and finds free times.
-**Coming next:** design polish and going online (phase 5).
+**Live:** https://randul.vercel.app. Press **Try a demo shop** to get your own sample shop (no email needed), or open its booking page to book as a customer.
+
+**Built:** shop owner accounts and a one-click demo shop; a dashboard to set up the shop, its services, opening hours, days off and notes for the AI helper; a public booking page for each shop at `/s/<shop-address>`; a Bookings list for owners; and a chat helper on every shop page that answers questions and finds free times.
+**Later ideas:** confirmation and reminder emails, several staff per shop, customer accounts, payments.
 
 ## The big pieces
 
@@ -41,6 +43,12 @@ npm run dev
 ```
 
 Open **http://localhost:3000**, click **Set up my shop**, and create an account.
+
+## Going online (Vercel)
+
+The site runs on Vercel (project `randul`, server region Frankfurt next to the database, set in `vercel.json`). Every push to `main` on GitHub publishes a new version.
+
+Vercel needs three settings (Project → Settings → Environment Variables): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and, for Production, `NEXT_PUBLIC_SITE_URL=https://randul.vercel.app`. Add `ANTHROPIC_API_KEY` there to turn on the real AI helper. Supabase must list the live address too: `site_url` and `additional_redirect_urls` in `supabase/config.toml`, sent with `npx supabase config push`.
 
 ## Checks
 
