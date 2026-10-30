@@ -24,7 +24,7 @@ export function buttonClass(variant: ButtonVariant = "primary", options: { full?
 export function Logo({ className = "" }: { className?: string }) {
   return (
     <span translate="no" className={`text-lg font-semibold tracking-tight text-brand-700 ${className}`}>
-      Rândul
+      Bookbell
     </span>
   );
 }

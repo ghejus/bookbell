@@ -1,12 +1,12 @@
 {
   "schemaVersion": 2,
   "generatedAt": "2026-10-29T18:00:00Z",
-  "title": "Design System: Rândul",
+  "title": "Design System: Bookbell",
   "extensions": {
     "colorMeta": {
       "brand-700": {
         "role": "primary",
-        "displayName": "Rândul Violet",
+        "displayName": "Bookbell Violet",
         "canonical": "#6d28d9",
         "tonalRamp": [
           "#2e1065",
@@ -198,7 +198,7 @@
       },
       "wordmark": {
         "displayName": "Wordmark",
-        "purpose": "The Rândul logo text in Rândul Violet; 1.25rem on auth screens."
+        "purpose": "The Bookbell logo text in Bookbell Violet; 1.25rem on auth screens."
       }
     },
     "shadows": [
@@ -347,7 +347,7 @@
   ],
   "narrative": {
     "northStar": "The Quiet Front Desk",
-    "overview": "Rândul is the category standard, played straight. It looks like the booking admin a shop owner already expects from Booksy or the Stripe Dashboard: a cool light-grey ground, white cards, near-black ink, and one violet accent. There is no costume and no decoration. Clarity, exact spacing and complete states (loading, empty, error, success, busy) are the whole identity.\n\nDensity is product-tight and phone-first. One column of white cards sits in a centred column up to 768px; on phones the primary action stretches full width so it can be hit with a thumb between customers. Every message is a short sentence in sentence case with a full stop, and every example is neutral enough to fit any shop.",
+    "overview": "Bookbell is the category standard, played straight. It looks like the booking admin a shop owner already expects from Booksy or the Stripe Dashboard: a cool light-grey ground, white cards, near-black ink, and one violet accent. There is no costume and no decoration. Clarity, exact spacing and complete states (loading, empty, error, success, busy) are the whole identity.\n\nDensity is product-tight and phone-first. One column of white cards sits in a centred column up to 768px; on phones the primary action stretches full width so it can be hit with a thumb between customers. Every message is a short sentence in sentence case with a full stop, and every example is neutral enough to fit any shop.",
     "keyCharacteristics": [
       "Grey ground, white bordered cards, one soft shadow level.",
       "One violet accent, reserved for primary actions, current navigation and focus.",

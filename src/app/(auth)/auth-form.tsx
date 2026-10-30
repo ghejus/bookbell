@@ -42,7 +42,7 @@ export function AuthForm({ mode, action }: Props) {
         </form>
       </Card>
       <p className="mt-6 text-center text-sm text-gray-600">
-        {isLogin ? "New to Rândul? " : "Already have an account? "}
+        {isLogin ? "New to Bookbell? " : "Already have an account? "}
         <Link href={isLogin ? "/signup" : "/login"} className="font-semibold text-brand-700 hover:text-brand-800 hover:underline">
           {isLogin ? "Create an account" : "Log in"}
         </Link>

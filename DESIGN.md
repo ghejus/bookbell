@@ -1,5 +1,5 @@
 ---
-name: Rândul
+name: Bookbell
 description: A calm booking-app admin for small shops, played straight at Booksy and Stripe Dashboard finish.
 colors:
   brand-50: "#f5f3ff"
@@ -182,13 +182,13 @@ components:
     size: "36px"
 ---
 
-# Design System: Rândul
+# Design System: Bookbell
 
 ## Overview
 
 **Creative North Star: "The Quiet Front Desk"**
 
-Rândul is the category standard, played straight. It looks like the booking admin a shop owner already expects from Booksy or the Stripe Dashboard: a cool light-grey ground, white cards, near-black ink, and one violet accent. There is no costume and no decoration. Clarity, exact spacing and complete states (loading, empty, error, success, busy) are the whole identity.
+Bookbell is the category standard, played straight. It looks like the booking admin a shop owner already expects from Booksy or the Stripe Dashboard: a cool light-grey ground, white cards, near-black ink, and one violet accent. There is no costume and no decoration. Clarity, exact spacing and complete states (loading, empty, error, success, busy) are the whole identity.
 
 Density is product-tight and phone-first. One column of white cards sits in a centred column up to 768px; on phones the primary action stretches full width so it can be hit with a thumb between customers. Every message is a short sentence in sentence case with a full stop, and every example is neutral enough to fit any shop.
 
@@ -205,7 +205,7 @@ Density is product-tight and phone-first. One column of white cards sits in a ce
 A cool neutral grey scale carries almost everything; violet appears rarely, and green and red only when they carry meaning.
 
 ### Primary
-- **Rândul Violet** (brand-700): fill of the primary button, the active pill tab, inline text links and the wordmark. Hover and press deepen to **Deep Violet** (brand-800).
+- **Bookbell Violet** (brand-700): fill of the primary button, the active pill tab, inline text links and the wordmark. Hover and press deepen to **Deep Violet** (brand-800).
 - **Focus Violet** (brand-600): the 2px focus outline (offset 2px) on every focusable element, and the focused input border.
 - **Violet Wash** (brand-50 / brand-100 / brand-200): current sidebar link background (brand-50 with brand-800 text), the input focus ring (3px brand-100), text selection, and the account avatar (brand-100, brand-200 on hover).
 
@@ -260,7 +260,7 @@ Content lives in one centred column (max 768px) with 16px side padding (24px fro
 
 **The Label Column Rule.** Week rows use a fixed 6rem label column; the day name is 36px tall to align with the first chip, and chips wrap within the second column. Bookings rows use a 3rem time column: the time, the name and the cancel button share the top line, and the details run full width beneath the name so the armed button never squeezes them.
 
-The public booking page has no app chrome: one centred column (max 672px, 16px side padding, 24px from 640px; 32px top padding, 48px from 640px), the shop header, the steps stacked 24px apart, and a centred "Booking by Rândul" footer. The day strip scrolls sideways edge to edge on phones and becomes a seven-column grid from 640px. Owner lists that span days are grouped under small 600 day headings, each day with its own card.
+The public booking page has no app chrome: one centred column (max 672px, 16px side padding, 24px from 640px; 32px top padding, 48px from 640px), the shop header, the steps stacked 24px apart, and a centred "Booking by Bookbell" footer. The day strip scrolls sideways edge to edge on phones and becomes a seven-column grid from 640px. Owner lists that span days are grouped under small 600 day headings, each day with its own card.
 
 ## Elevation & Depth
 

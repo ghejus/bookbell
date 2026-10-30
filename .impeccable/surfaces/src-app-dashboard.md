@@ -21,7 +21,7 @@ OWN-WORLD: Cool light-grey app ground, white surfaces with 1px grey borders and 
 
 STORY: The owner sees where they are, what their shop already has, and the next step to finish setup; they add or change one thing and see it confirmed in place.
 
-FIRST VIEWPORT: Phone: white top bar with the Rândul wordmark left and an avatar menu right (log out inside), a row of pill tabs (Shop, Services, Hours, AI notes) with the current one filled violet; page title and one-line description; content as white rounded cards in a single column; the primary action as a full-width violet button. Desktop: a left sidebar replaces the tabs, content in a centred column up to 768px.
+FIRST VIEWPORT: Phone: white top bar with the Bookbell wordmark left and an avatar menu right (log out inside), a row of pill tabs (Shop, Services, Hours, AI notes) with the current one filled violet; page title and one-line description; content as white rounded cards in a single column; the primary action as a full-width violet button. Desktop: a left sidebar replaces the tabs, content in a centred column up to 768px.
 
 FORM: canon (the category standard), chosen by the user; quality bar Booksy and Stripe Dashboard. seed:18388ab13c1da546
 

@@ -7,7 +7,7 @@ related_targets: ["src/app/dashboard/bookings"]
 
 # Public booking page and owner bookings list
 
-Scope: `src/app/s/[slug]/*` (customer booking page) and `src/app/dashboard/bookings/page.tsx` (owner list). Mode: Operate (customers and owners each complete one task). This is an extension inside the established Rândul world in DESIGN.md: no new visual world, no concept round.
+Scope: `src/app/s/[slug]/*` (customer booking page) and `src/app/dashboard/bookings/page.tsx` (owner list). Mode: Operate (customers and owners each complete one task). This is an extension inside the established Bookbell world in DESIGN.md: no new visual world, no concept round.
 
 Audience and job:
 - Customers arrive from a link the shop shared, usually on a phone, not logged in. Job: pick a service, a day and a free time, leave a name and email, and get a clear confirmation. Success: booked in under a minute, or told plainly why a time can't be booked.

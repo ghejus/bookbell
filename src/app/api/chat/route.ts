@@ -32,7 +32,7 @@ const fail = (status: number, error: string) => Response.json({ error }, { statu
 /** A one-way code for "this visitor at this shop", so no network address is stored. */
 function visitorKey(request: Request, shopId: string) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
-  return createHash("sha256").update(`randul-chat:${shopId}:${ip}`).digest("hex").slice(0, 32);
+  return createHash("sha256").update(`bookbell-chat:${shopId}:${ip}`).digest("hex").slice(0, 32);
 }
 
 export async function POST(request: Request) {

@@ -1,8 +1,8 @@
-# Rândul
+# Bookbell
 
 Online booking for small shops (barbers, salons, dentists, any appointment business), with a chat helper that answers customers' questions and finds free times.
 
-**Live:** https://randul.vercel.app. Press **Try a demo shop** to get your own sample shop (no email needed), or open its booking page to book as a customer.
+**Live:** https://bookbell.vercel.app. Press **Try a demo shop** to get your own sample shop (no email needed), or open its booking page to book as a customer.
 
 **Built:** shop owner accounts and a one-click demo shop; a dashboard to set up the shop, its services, opening hours, days off and notes for the AI helper; a public booking page for each shop at `/s/<shop-address>`; a Bookings list for owners; and a chat helper on every shop page that answers questions and finds free times.
 **Later ideas:** confirmation and reminder emails, several staff per shop, customer accounts, payments.
@@ -22,7 +22,7 @@ Online booking for small shops (barbers, salons, dentists, any appointment busin
 
 You need **Node 22 or newer** (`node --version`).
 
-**Already done for this computer:** the Supabase project **Randul** (Frankfurt) is linked, its tables are built, and `.env.local` holds the project URL and public key.
+**Already done for this computer:** the Supabase project **Randul** (Frankfurt; named before the app became Bookbell) is linked, its tables are built, and `.env.local` holds the project URL and public key.
 
 To set it up again somewhere else (needs the Supabase command tool logged in: `npx supabase login` in a normal terminal window):
 
@@ -46,9 +46,9 @@ Open **http://localhost:3000**, click **Set up my shop**, and create an account.
 
 ## Going online (Vercel)
 
-The site runs on Vercel (project `randul`, server region Frankfurt next to the database, set in `vercel.json`). Every push to `main` on GitHub publishes a new version.
+The site runs on Vercel (project `bookbell`, server region Frankfurt next to the database, set in `vercel.json`). Every push to `main` on GitHub publishes a new version.
 
-Vercel needs three settings (Project → Settings → Environment Variables): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and, for Production, `NEXT_PUBLIC_SITE_URL=https://randul.vercel.app`. Add `ANTHROPIC_API_KEY` there to turn on the real AI helper. Supabase must list the live address too: `site_url` and `additional_redirect_urls` in `supabase/config.toml`, sent with `npx supabase config push`.
+Vercel needs three settings (Project → Settings → Environment Variables): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and, for Production, `NEXT_PUBLIC_SITE_URL=https://bookbell.vercel.app`. Add `ANTHROPIC_API_KEY` there to turn on the real AI helper. Supabase must list the live address too: `site_url` and `additional_redirect_urls` in `supabase/config.toml`, sent with `npx supabase config push`.
 
 ## Checks
 

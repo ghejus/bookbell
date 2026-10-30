@@ -47,9 +47,9 @@ export function calendarHref({ start, minutes, title, location, shopName }: { st
   const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Randul//Booking//EN",
+    "PRODID:-//Bookbell//Booking//EN",
     "BEGIN:VEVENT",
-    `UID:${stamp(begins)}-${Math.random().toString(36).slice(2)}@randul`,
+    `UID:${stamp(begins)}-${Math.random().toString(36).slice(2)}@bookbell`,
     `DTSTAMP:${stamp(new Date())}`,
     `DTSTART:${stamp(begins)}`,
     `DTEND:${stamp(ends)}`,

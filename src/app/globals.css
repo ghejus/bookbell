@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
-  Rândul design tokens. The look is the familiar booking-app standard:
+  Bookbell design tokens. The look is the familiar booking-app standard:
   light grey ground, white surfaces, one violet accent for actions and focus.
 */
 @theme {

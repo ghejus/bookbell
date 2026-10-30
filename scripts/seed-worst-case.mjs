@@ -47,7 +47,7 @@ const shopFields = {
   about: [
     "Salon de familie din 1987. Coafură, manichiură, cosmetică și tratamente pentru păr deteriorat.",
     "Programările se fac cu cel puțin 2 ore înainte; pentru vopsit vă rugăm să veniți cu părul nespălat de o zi.",
-    "Detalii despre prețuri și pachete: https://example.com/atelier-infrumusetare/preturi-si-pachete-actualizate-octombrie-2026?utm_source=randul&utm_medium=booking-page",
+    "Detalii despre prețuri și pachete: https://example.com/atelier-infrumusetare/preturi-si-pachete-actualizate-octombrie-2026?utm_source=bookbell&utm_medium=booking-page",
     "Parcare gratuită în curtea interioară (intrarea pe lângă farmacie). Accesibil cu scaun cu rotile, lift până la etajul 7. Plata cu cardul sau numerar. Bonuri de cadou disponibile la recepție. Nu lucrăm în zilele de sărbătoare legală. Animalele de companie mici sunt binevenite. Wi-Fi gratuit pentru clienți.",
   ]
     .join("\n\n")

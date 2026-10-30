@@ -1,7 +1,7 @@
 import "server-only";
 import { headers } from "next/headers";
 
-/** The site's own address, like "https://randul.app", for links people copy and share. */
+/** The site's own address, like "https://bookbell.vercel.app", for links people copy and share. */
 export async function siteUrl(): Promise<string> {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, "");
   const h = await headers();

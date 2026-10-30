@@ -14,7 +14,7 @@ web
 
 ## Product Purpose
 
-Rândul lets a small shop take bookings online, with an AI helper on the shop's page that answers customer questions from the owner's own notes and can book a free time. Success: an owner finishes setup in a few minutes, and a customer can book, or get an answer, without calling.
+Bookbell lets a small shop take bookings online, with an AI helper on the shop's page that answers customer questions from the owner's own notes and can book a free time. Success: an owner finishes setup in a few minutes, and a customer can book, or get an answer, without calling.
 
 ## Positioning
 
@@ -39,7 +39,7 @@ The AI helper only knows what the owner wrote (shop details, services, hours, an
 
 ## Brand Commitments
 
-- Name: **Rândul** (from the Romanian "e rândul tău", "it's your turn"). Written "randul" in code and URLs. The name is a working choice and may change.
+- Name: **Bookbell**, like the little bell on a shop door that rings when a customer walks in; here it rings for a new booking. Chosen by the user on 2026-10-30 (the earlier working name was Bookbell, which still appears in old database files and test email addresses). Written "bookbell" in code and URLs.
 - Visual stance (chosen by the user on 2026-10-29): the familiar booking-app look, played straight and at full craft. It should sit alongside **Booksy** and the **Stripe Dashboard**; their finish is the quality bar.
 
 ## Evidence on Hand
