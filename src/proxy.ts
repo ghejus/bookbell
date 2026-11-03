@@ -7,7 +7,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Everything except Next.js files and images.
-    "/((?!_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Everything except Next.js files, images, icons, share pictures and search-engine files.
+    "/((?!_next/static|_next/image|favicon.ico|icon/|apple-icon|manifest.webmanifest|robots.txt|sitemap.xml|.*opengraph-image|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

@@ -5,8 +5,15 @@ import "./globals.css";
 const inter = Inter({ variable: "--font-inter", subsets: ["latin", "latin-ext"] });
 
 export const metadata: Metadata = {
+  // Share pictures need a full web address; this is the start of it.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://bookbell.vercel.app"),
   title: { default: "Bookbell", template: "%s · Bookbell" },
   description: "Online booking with a friendly AI helper, for small shops.",
+  applicationName: "Bookbell",
+  openGraph: { siteName: "Bookbell", type: "website" },
+  twitter: { card: "summary_large_image" },
+  // Opened from the home screen, the iPhone status bar stays light like the app.
+  appleWebApp: { title: "Bookbell", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

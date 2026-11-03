@@ -19,6 +19,10 @@ const nextConfig: NextConfig = {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
   cacheComponents: true,
+  // Shop share pictures are drawn on request, so the server needs the font files with it.
+  outputFileTracingIncludes: {
+    "/s/[slug]/opengraph-image": ["./assets/fonts/**/*"],
+  },
   partialPrefetching: true,
   turbopack: {
     rules: {
