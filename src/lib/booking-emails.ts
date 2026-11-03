@@ -99,8 +99,11 @@ function calendarFile(info: BookingInfo) {
   };
 }
 
-/** After a new booking: "you're booked" to the customer, a note to the owner. */
-export async function sendBookingEmails(token: string, site: string) {
+/**
+ * After a new booking: "you're booked" to the customer, and a note to the owner
+ * (unless the owner made the booking themselves).
+ */
+export async function sendBookingEmails(token: string, site: string, { notifyOwner = true } = {}) {
   try {
     const row = await bookingByToken(token);
     if (!row) return;
@@ -109,7 +112,7 @@ export async function sendBookingEmails(token: string, site: string) {
     const mail = confirmationEmail(info);
     await Promise.all([
       sendEmail({ to: row.customer_email, ...mail, replyTo: owner ?? undefined, attachments: [calendarFile(info)] }),
-      owner
+      owner && notifyOwner
         ? sendEmail({ to: owner, ...ownerNoteEmail(info, "new", { email: row.customer_email, phone: row.customer_phone }, `${site}/dashboard/bookings`) })
         : null,
     ]);
@@ -153,8 +156,9 @@ export type OwnerBookingRow = {
   staff: { name: string } | null;
 };
 
-/** After the shop cancelled a booking: tell the customer. */
-export async function sendShopCancelledEmail(
+/** After the shop cancelled or moved a booking: tell the customer. */
+export async function sendShopChangeEmail(
+  what: "cancelled" | "moved",
   b: OwnerBookingRow,
   shop: { id: string; name: string; slug: string; address: string; phone: string; timezone: string; currency: Currency },
   teamSize: number,
@@ -176,9 +180,15 @@ export async function sendShopCancelledEmail(
       shopPhone: shop.phone,
     };
     const owner = await ownerEmail(shop.id);
-    await sendEmail({ to: b.customer_email, ...cancelledEmail(info, "shop", `${site}/s/${shop.slug}`), replyTo: owner ?? undefined });
+    const mail = what === "moved" ? movedEmail(info) : cancelledEmail(info, "shop", `${site}/s/${shop.slug}`);
+    await sendEmail({
+      to: b.customer_email,
+      ...mail,
+      replyTo: owner ?? undefined,
+      attachments: what === "moved" ? [calendarFile(info)] : undefined,
+    });
   } catch (error) {
-    console.error("[email] shop-cancel email failed:", error instanceof Error ? error.message : error);
+    console.error("[email] shop-change email failed:", error instanceof Error ? error.message : error);
   }
 }
 

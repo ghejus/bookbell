@@ -40,7 +40,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <TabsNav />
         </header>
 
-        <main id="content" className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:px-6 lg:py-10">
+        <main id="content" className="mx-auto w-full max-w-3xl flex-1 px-4 py-6 sm:px-6 lg:py-10 has-[[data-wide]]:max-w-7xl">
           {/* Pages here read the login cookie, so they render fresh on each visit. */}
           <Suspense>
             <DemoNotice />

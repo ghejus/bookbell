@@ -36,6 +36,15 @@ const CUSTOMERS = [
   { name: "Elena Dumitru", email: "elena.d@example.com", phone: "+40 700 333 444", service: 2, time: "11:00", day: 2, staff: 1 },
 ];
 
+// Visits that already happened (`daysAgo` counts weekdays back from yesterday),
+// so the calendar and the "Past" list have something to show. One is a walk-in
+// with no email, the way an owner would type it in.
+const PAST = [
+  { name: "Ioana Stan", email: "ioana.stan@example.com", phone: "", service: 0, time: "09:30", daysAgo: 0, staff: 0 },
+  { name: "Walk-in", email: "", phone: "", service: 3, time: "12:00", daysAgo: 0, staff: 1 },
+  { name: "George Vasile", email: "george.v@example.com", phone: "+40 700 555 666", service: 1, time: "16:00", daysAgo: 1, staff: 0 },
+];
+
 /** Makes the sample shop for this demo visitor, unless they already have a shop. */
 export async function createDemoShop(supabase: SupabaseClient, userId: string) {
   const { data: existing } = await supabase.from("shops").select("id").eq("owner_id", userId).maybeSingle();
@@ -96,6 +105,24 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
       p_customer_email: c.email,
       p_customer_phone: c.phone,
       p_staff_id: staffIds[c.staff] ?? null,
+    });
+  }
+
+  // Past visits, added the way the owner adds walk-ins (that door allows past times).
+  const pastDays: string[] = [];
+  for (let day = addDays(utcToZoned(new Date(), TZ).date, -1); pastDays.length < 2; day = addDays(day, -1)) {
+    if (isoWeekday(day) <= 5) pastDays.push(day);
+  }
+  for (const p of PAST) {
+    const staffId = staffIds[p.staff];
+    if (!staffId) continue;
+    await supabase.rpc("owner_add_booking", {
+      p_service_id: ids[p.service],
+      p_staff_id: staffId,
+      p_starts_at: zonedToUtc(pastDays[p.daysAgo], p.time, TZ).toISOString(),
+      p_customer_name: p.name,
+      p_customer_email: p.email,
+      p_customer_phone: p.phone,
     });
   }
 }
