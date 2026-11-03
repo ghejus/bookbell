@@ -1,0 +1,81 @@
+"use client";
+
+import { useState } from "react";
+import { FormMessage, SubmitButton } from "@/components/form";
+import { useActionForm } from "@/components/use-action-form";
+import { buttonClass } from "@/components/ui";
+import { cancelMyBooking, moveMyBooking } from "./actions";
+
+/** Cancel needs two taps: "Cancel booking", then "Yes, cancel it". */
+export function CancelForm({ token }: { token: string }) {
+  const { state, pending, formProps } = useActionForm(cancelMyBooking);
+  const [asking, setAsking] = useState(false);
+
+  if (!asking) {
+    return (
+      <button type="button" onClick={() => setAsking(true)} className={buttonClass("danger", { full: true })}>
+        Cancel booking
+      </button>
+    );
+  }
+  return (
+    <form {...formProps} className="w-full space-y-3 rounded-lg bg-red-50 p-4 ring-1 ring-red-200 ring-inset">
+      <input type="hidden" name="token" value={token} />
+      <p className="text-sm font-medium text-red-900">Cancel this booking? The time goes back to other customers.</p>
+      <FormMessage state={state} />
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="submit"
+          disabled={pending}
+          className="inline-flex h-11 items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+        >
+          {pending ? "Cancelling…" : "Yes, cancel it"}
+        </button>
+        <button type="button" onClick={() => setAsking(false)} disabled={pending} className={buttonClass("secondary")}>
+          Keep it
+        </button>
+      </div>
+    </form>
+  );
+}
+
+type Slot = { iso: string; label: string };
+
+/** The free times on one day; pick one and move the booking there. */
+export function MoveForm({ token, slots, dayLabel }: { token: string; slots: Slot[]; dayLabel: string }) {
+  const { state, pending, formProps } = useActionForm(moveMyBooking);
+  const [picked, setPicked] = useState<string | null>(null);
+  const pickedLabel = slots.find((s) => s.iso === picked)?.label;
+
+  return (
+    <form {...formProps} className="space-y-5">
+      <input type="hidden" name="token" value={token} />
+      <fieldset>
+        <legend className="mb-3 text-sm font-medium text-gray-900">Free times on {dayLabel}</legend>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          {slots.map((s) => (
+            <label key={s.iso} className="relative">
+              <input
+                type="radio"
+                name="starts_at"
+                value={s.iso}
+                checked={picked === s.iso}
+                onChange={() => setPicked(s.iso)}
+                className="peer sr-only"
+              />
+              <span className="flex h-11 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-900 tabular shadow-sm transition-colors duration-150 peer-checked:border-brand-700 peer-checked:bg-brand-700 peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-600 hover:border-gray-400">
+                {s.label}
+              </span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+      <FormMessage state={state} />
+      <div className="[&>button]:w-full">
+        <SubmitButton pending={pending} pendingText="Moving…">
+          {pickedLabel ? `Move to ${pickedLabel}` : "Choose a new time"}
+        </SubmitButton>
+      </div>
+    </form>
+  );
+}

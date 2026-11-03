@@ -1,14 +1,15 @@
 "use client";
 
 import { CalendarCheck, CalendarPlus, LoaderCircle, MessageCircle, SendHorizontal, X } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { Field, FormMessage, SubmitButton } from "@/components/form";
 import { useActionForm } from "@/components/use-action-form";
 import { Badge, buttonClass } from "@/components/ui";
 import { whenLabel } from "@/lib/assistant/facts";
+import { calendarHref } from "@/lib/ics";
 import { CHAT_LIMITS, type ChatBooking, type ChatReply, type ChatTimes, type ChatTurn } from "@/lib/assistant/types";
 import { bookAppointment } from "./actions";
-import { calendarHref } from "./booking-form";
 
 // The helper on a shop's page: a button in the corner that opens a chat.
 // It answers from the shop's own details and shows free times as buttons.
@@ -354,7 +355,16 @@ function ChatBookingForm(props: Props & { booking: ChatBooking; onBooked: Booked
         </p>
         <p className="mt-1">{booking.service.summary}</p>
         <p className="font-semibold tabular">{booking.whenLabel}</p>
-        <p className="mt-1 text-green-800">Booked for {booked.customer_email}. If you can’t make it, please let the shop know.</p>
+        <p className="mt-1 text-green-800">
+          Booked for {booked.customer_email}.{" "}
+          {booked.manage_path ? (
+            <Link href={booked.manage_path} className="font-semibold underline hover:text-green-950">
+              Change or cancel
+            </Link>
+          ) : (
+            "If you can’t make it, please let the shop know."
+          )}
+        </p>
         <a
           href={calendarHref({
             start: booking.startsAt,

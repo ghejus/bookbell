@@ -1,11 +1,12 @@
 "use client";
 
-import { CalendarCheck, CalendarPlus, MapPin, Phone } from "lucide-react";
+import { CalendarCheck, CalendarCog, CalendarPlus, MapPin, Phone } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Field, FormMessage, SubmitButton } from "@/components/form";
 import { useActionForm } from "@/components/use-action-form";
 import { buttonClass } from "@/components/ui";
+import { calendarHref } from "@/lib/ics";
 import { bookAppointment } from "./actions";
 import { useBookingFlow } from "./booking-flow";
 
@@ -26,6 +27,8 @@ type Props = {
   slots: { iso: string; label: string }[];
   /** Link back to the start, for "Book another time". */
   againHref: string;
+  /** True when confirmation emails really go out (Gmail is set up). */
+  emailsOn?: boolean;
 };
 
 const whenFormat = (timezone: string) =>
@@ -39,29 +42,6 @@ function groupSlots(slots: Props["slots"]) {
     { name: "Evening", slots: slots.filter((s) => s.label >= "17:00") },
   ];
   return groups.filter((g) => g.slots.length > 0);
-}
-
-/** A calendar file (.ics) the customer can add to their phone's calendar. */
-export function calendarHref({ start, minutes, title, location, shopName }: { start: string; minutes: number; title: string; location: string; shopName: string }) {
-  const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-  const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/([,;])/g, "\\$1").replace(/\n/g, "\\n");
-  const begins = new Date(start);
-  const ends = new Date(begins.getTime() + minutes * 60_000);
-  const lines = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Bookbell//Booking//EN",
-    "BEGIN:VEVENT",
-    `UID:${stamp(begins)}-${Math.random().toString(36).slice(2)}@bookbell`,
-    `DTSTAMP:${stamp(new Date())}`,
-    `DTSTART:${stamp(begins)}`,
-    `DTEND:${stamp(ends)}`,
-    `SUMMARY:${esc(`${title} at ${shopName}`)}`,
-    location ? `LOCATION:${esc(location)}` : "",
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].filter(Boolean);
-  return `data:text/calendar;charset=utf-8,${encodeURIComponent(lines.join("\r\n"))}`;
 }
 
 /** Step 3: pick a time, then name and email. Shows the receipt after booking. */
@@ -93,19 +73,37 @@ export function BookingForm(props: Props) {
           {props.staffName ? <>, with {props.staffName}</> : null}
         </p>
         <p className="font-semibold text-gray-900 tabular">{whenFormat(timezone).format(new Date(booked.starts_at))}</p>
-        <p className="mx-auto mt-3 max-w-sm text-sm text-gray-600">Booked for {booked.customer_email}. Keep this page or add it to your calendar.</p>
+        <p className="mx-auto mt-3 max-w-sm text-sm text-gray-600">
+          {props.emailsOn
+            ? `We sent the details to ${booked.customer_email}.`
+            : `Booked for ${booked.customer_email}. Keep this page or add it to your calendar.`}
+        </p>
 
-        <a
-          href={calendarHref({ start: booked.starts_at, minutes: props.durationMinutes, title: props.serviceName, location: props.shopAddress, shopName: props.shopName })}
-          download="booking.ics"
-          className={`${buttonClass("secondary")} mt-5`}
-        >
-          <CalendarPlus aria-hidden className="size-4" />
-          Add to calendar
-        </a>
+        <div className="mt-5 flex flex-wrap justify-center gap-2.5">
+          <a
+            href={calendarHref({ start: booked.starts_at, minutes: props.durationMinutes, title: props.serviceName, location: props.shopAddress, shopName: props.shopName })}
+            download="booking.ics"
+            className={buttonClass("secondary")}
+          >
+            <CalendarPlus aria-hidden className="size-4" />
+            Add to calendar
+          </a>
+          {booked.manage_path ? (
+            <Link href={booked.manage_path} className={buttonClass("secondary")}>
+              <CalendarCog aria-hidden className="size-4" />
+              Change or cancel
+            </Link>
+          ) : null}
+        </div>
 
         <div className="mx-auto mt-6 max-w-sm border-t border-gray-100 pt-5 text-sm text-gray-700">
-          <p>If you can’t make it, please let {props.shopName} know.</p>
+          <p>
+            {booked.manage_path
+              ? props.emailsOn
+                ? "Plans change? Use the link in your email, or call the shop."
+                : "Plans change? Keep the “Change or cancel” link, or call the shop."
+              : `If you can’t make it, please let ${props.shopName} know.`}
+          </p>
           <ul className="mt-2 flex flex-col items-center gap-1.5">
             {props.shopAddress ? (
               <li className="flex items-center gap-1.5">

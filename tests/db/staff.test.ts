@@ -33,7 +33,7 @@ function book(startsAt: string, staffId: string | null = null) {
     p_customer_email: `staff-${n}@randul-test.dev`,
     p_customer_phone: "",
     p_staff_id: staffId,
-  });
+  }).single<{ booking_id: string; manage_token: string }>();
 }
 
 async function workerOf(bookingId: string) {
@@ -91,14 +91,14 @@ describe("a shop with two workers", () => {
     const two = await book(at("10:00"));
     expect(one.error).toBeNull();
     expect(two.error).toBeNull();
-    expect(new Set([await workerOf(one.data), await workerOf(two.data)])).toEqual(new Set([first, second]));
+    expect(new Set([await workerOf(one.data!.booking_id), await workerOf(two.data!.booking_id)])).toEqual(new Set([first, second]));
     expect((await book(at("10:00"))).error?.message).toBe("slot_taken");
   });
 
   it("books a chosen worker, and keeps that worker from being double-booked", async () => {
     const mine = await book(at("11:00"), second);
     expect(mine.error).toBeNull();
-    expect(await workerOf(mine.data)).toBe(second);
+    expect(await workerOf(mine.data!.booking_id)).toBe(second);
     expect((await book(at("11:00"), second)).error?.message).toBe("slot_taken");
     expect((await book(at("11:00"), first)).error).toBeNull();
   });
@@ -107,7 +107,7 @@ describe("a shop with two workers", () => {
     expect((await book(at("12:00"), first)).error).toBeNull();
     const res = await book(at("12:00"));
     expect(res.error).toBeNull();
-    expect(await workerOf(res.data)).toBe(second);
+    expect(await workerOf(res.data!.booking_id)).toBe(second);
   });
 
   it("respects one worker's own day off", async () => {
@@ -118,7 +118,7 @@ describe("a shop with two workers", () => {
     expect((await book(at("13:00"), second)).error?.message).toBe("closed_then");
     const res = await book(at("13:00"));
     expect(res.error).toBeNull();
-    expect(await workerOf(res.data)).toBe(first);
+    expect(await workerOf(res.data!.booking_id)).toBe(first);
   });
 
   it("tells strangers whose time is taken, but nothing about the customer", async () => {
@@ -145,9 +145,9 @@ describe("the database refuses", () => {
 
   it("an owner moving their booking onto another shop's worker", async () => {
     const res = await book(at("16:00"), first);
-    const moved = await b.db.from("bookings").update({ staff_id: aWorker }).eq("id", res.data);
+    const moved = await b.db.from("bookings").update({ staff_id: aWorker }).eq("id", res.data!.booking_id);
     expect(moved.error).not.toBeNull();
-    expect(await workerOf(res.data)).toBe(first);
+    expect(await workerOf(res.data!.booking_id)).toBe(first);
   });
 
   it("an owner adding a worker to another shop", async () => {

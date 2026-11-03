@@ -49,10 +49,12 @@ afterAll(async () => {
 });
 
 describe("booking a free time", () => {
-  it("works for a stranger, and returns the new booking id", async () => {
+  it("works for a stranger, and returns the booking id and a secret link token", async () => {
     const res = await book(at("10:00"));
     expect(res.error).toBeNull();
-    expect(typeof res.data).toBe("string");
+    const [row] = res.data as { booking_id: string; manage_token: string }[];
+    expect(typeof row.booking_id).toBe("string");
+    expect(row.manage_token).toMatch(/^[0-9a-f]{48}$/);
   });
 
   it("shows up for the owner with the customer's details", async () => {

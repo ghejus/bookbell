@@ -1,0 +1,47 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { z } from "zod";
+import type { ActionState } from "@/lib/action-state";
+import { sendCustomerChangeEmails } from "@/lib/booking-emails";
+import { bookingError } from "@/lib/booking-errors";
+import { siteUrl } from "@/lib/site";
+import { createClient } from "@/lib/supabase/server";
+
+// The customer's private booking page: cancel, or move to a new time.
+// The secret token in the link is the only "login"; the database checks it.
+
+const token = z.string().regex(/^[0-9a-f]{48}$/);
+const cancelSchema = z.object({ token });
+const moveSchema = z.object({ token, starts_at: z.iso.datetime({ offset: true, error: "Pick a new time first." }) });
+
+const fields = (formData: FormData) =>
+  Object.fromEntries([...formData.entries()].filter(([k]) => !k.startsWith("$")).map(([k, v]) => [k, String(v)]));
+
+export async function cancelMyBooking(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = cancelSchema.safeParse(fields(formData));
+  if (!parsed.success) return { error: bookingError("not_found") };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("cancel_booking_by_token", { p_token: parsed.data.token });
+  if (error) return { error: bookingError(error.message) };
+
+  const site = await siteUrl();
+  after(() => sendCustomerChangeEmails(parsed.data.token, "cancelled", site));
+  redirect(`/b/${parsed.data.token}?done=cancelled`);
+}
+
+export async function moveMyBooking(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const parsed = moveSchema.safeParse(fields(formData));
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Pick a new time first." };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("reschedule_booking_by_token", {
+    p_token: parsed.data.token,
+    p_starts_at: parsed.data.starts_at,
+  });
+  if (error) return { error: bookingError(error.message, "Could not move the booking. Please try again.") };
+
+  const site = await siteUrl();
+  after(() => sendCustomerChangeEmails(parsed.data.token, "moved", site));
+  redirect(`/b/${parsed.data.token}?done=moved`);
+}

@@ -2,7 +2,10 @@
 
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
 import type { ActionState } from "@/lib/action-state";
+import { sendShopCancelledEmail, type OwnerBookingRow } from "@/lib/booking-emails";
+import { siteUrl } from "@/lib/site";
 import { getMyShop, requireShop } from "@/lib/shop";
 import {
   firstError,
@@ -206,8 +209,23 @@ export async function deleteStaff(formData: FormData) {
 export async function cancelBooking(formData: FormData) {
   const id = idSchema.parse(formData.get("id"));
   const { supabase, shop } = await requireShop();
-  await supabase.from("bookings").update({ status: "cancelled" }).eq("id", id).eq("shop_id", shop.id);
+  // Only a live booking changes, and we get it back to tell the customer.
+  const { data: booking } = await supabase
+    .from("bookings")
+    .update({ status: "cancelled" })
+    .eq("id", id)
+    .eq("shop_id", shop.id)
+    .eq("status", "booked")
+    .select("id, starts_at, ends_at, customer_name, customer_email, services(name, price_cents), staff(name)")
+    .maybeSingle<OwnerBookingRow>();
   refresh();
+  if (!booking || Date.parse(booking.starts_at) < Date.now()) return;
+
+  const [{ count: teamSize }, site] = await Promise.all([
+    supabase.from("staff").select("id", { count: "exact", head: true }).eq("shop_id", shop.id),
+    siteUrl(),
+  ]);
+  after(() => sendShopCancelledEmail(booking, shop, teamSize ?? 1, site));
 }
 
 // --------------------------------------------------- shop info (AI notes)

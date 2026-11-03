@@ -1,8 +1,12 @@
 "use server";
 
 import { refresh } from "next/cache";
+import { after } from "next/server";
 import { z } from "zod";
 import type { ActionState } from "@/lib/action-state";
+import { sendBookingEmails } from "@/lib/booking-emails";
+import { bookingError } from "@/lib/booking-errors";
+import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 import { firstError } from "@/lib/validation";
 
@@ -19,21 +23,6 @@ const bookingSchema = z.object({
   website: z.string().max(0),
 });
 
-/** Plain words for the reasons the database can refuse a booking. */
-const reasons: Record<string, string> = {
-  slot_taken: "Someone just booked that time. Please pick another one.",
-  too_soon: "That time is too soon to book online. Please pick a later time.",
-  too_far: "That date is too far ahead to book yet.",
-  outside_hours: "The shop isn’t open at that time. Please pick another one.",
-  closed_then: "The shop is closed then. Please pick another day.",
-  too_many: "You already have 3 upcoming bookings here. Please call the shop to book more.",
-  service_not_found: "That service isn’t available any more. Please pick another one.",
-  shop_not_found: "This shop isn’t taking bookings right now.",
-  invalid_details: "Please check your name and email.",
-  staff_not_found: "That person isn’t taking bookings any more. Please pick someone else.",
-  no_staff: "This shop isn’t taking bookings right now.",
-};
-
 export async function bookAppointment(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const values = Object.fromEntries(
     [...formData.entries()].filter(([k]) => !k.startsWith("$")).map(([k, v]) => [k, String(v)]),
@@ -47,24 +36,35 @@ export async function bookAppointment(_prev: ActionState, formData: FormData): P
   const d = parsed.data;
 
   const supabase = await createClient();
-  const { error } = await supabase.rpc("book_appointment", {
-    p_shop_id: d.shop_id,
-    p_service_id: d.service_id,
-    p_starts_at: d.starts_at,
-    p_customer_name: d.customer_name,
-    p_customer_email: d.customer_email,
-    p_customer_phone: d.customer_phone,
-    p_staff_id: d.staff_id || null,
-  });
+  const { data, error } = await supabase
+    .rpc("book_appointment", {
+      p_shop_id: d.shop_id,
+      p_service_id: d.service_id,
+      p_starts_at: d.starts_at,
+      p_customer_name: d.customer_name,
+      p_customer_email: d.customer_email,
+      p_customer_phone: d.customer_phone,
+      p_staff_id: d.staff_id || null,
+    })
+    .single<{ booking_id: string; manage_token: string }>();
 
-  if (error) {
+  if (error || !data) {
     refresh(); // show the latest free times next to the message
-    return { error: reasons[error.message] ?? "Could not book that time. Please try again." };
+    return { error: bookingError(error?.message, "Could not book that time. Please try again.") };
   }
+
+  // The emails go out after the answer, so the customer never waits for them.
+  const site = await siteUrl();
+  after(() => sendBookingEmails(data.manage_token, site));
 
   refresh();
   return {
     message: "booked",
-    values: { starts_at: d.starts_at, customer_email: d.customer_email, service_id: d.service_id },
+    values: {
+      starts_at: d.starts_at,
+      customer_email: d.customer_email,
+      service_id: d.service_id,
+      manage_path: `/b/${data.manage_token}`,
+    },
   };
 }

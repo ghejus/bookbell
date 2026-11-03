@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { ConfirmDelete } from "@/components/form";
 import { buttonClass, Card, EmptyState, PageHeader, PageSkeleton } from "@/components/ui";
+import { emailMode } from "@/lib/email/send";
 import { formatDuration } from "@/lib/format";
 import { requireShop } from "@/lib/shop";
 import { cancelBooking } from "../actions";
@@ -126,7 +127,9 @@ async function BookingsContent() {
             </section>
           ))}
           <p className="text-sm text-gray-600">
-            Cancelling frees the time for others. The customer isn’t told automatically yet, so please let them know.
+            {emailMode() === "gmail"
+              ? "Cancelling frees the time for others and emails the customer to say so."
+              : "Cancelling frees the time for others. Emails aren’t switched on yet, so please let the customer know."}
           </p>
         </div>
       )}

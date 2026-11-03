@@ -90,6 +90,8 @@ export async function getAvailability(
   days: number,
   now: Date,
   staffId?: string,
+  /** A booking being moved: its own time doesn't count as taken. */
+  ignore?: { staffId: string; startsAt: string },
 ): Promise<DayAvailability[]> {
   const { supabase, shop, hours, staff } = data;
   const rangeStart = zonedToUtc(fromDate, "00:00", shop.timezone);
@@ -101,11 +103,14 @@ export async function getAvailability(
     p_to: rangeEnd.toISOString(),
   });
   if (error) throw new Error(`Could not load free times: ${error.message}`);
-  const busy: StaffBusy[] = (busyRows as { starts_at: string; ends_at: string; staff_id: string | null }[]).map((b) => ({
-    start: new Date(b.starts_at),
-    end: new Date(b.ends_at),
-    staffId: b.staff_id,
-  }));
+  const ignoreAt = ignore ? Date.parse(ignore.startsAt) : NaN;
+  const busy: StaffBusy[] = (busyRows as { starts_at: string; ends_at: string; staff_id: string | null }[])
+    .filter((b) => !(ignore && b.staff_id === ignore.staffId && Date.parse(b.starts_at) === ignoreAt))
+    .map((b) => ({
+      start: new Date(b.starts_at),
+      end: new Date(b.ends_at),
+      staffId: b.staff_id,
+    }));
   const staffIds = staff.map((w) => w.id);
 
   return Array.from({ length: days }, (_, i) => {

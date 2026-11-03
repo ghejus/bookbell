@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import { Card, EmptyState, Logo, PageSkeleton } from "@/components/ui";
 import { aiProvider } from "@/lib/assistant/provider";
 import { getAvailability, getPublicShop, getShopMeta, shopToday } from "@/lib/booking";
+import { emailMode } from "@/lib/email/send";
 import { formatDuration, formatPrice } from "@/lib/format";
 import { addDays } from "@/lib/slots";
 import { AboutText } from "./about-text";
@@ -266,6 +267,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
                       dayLabel={longDay.format(asUtc(chosenDay.date))}
                       slots={chosenDay.slots}
                       againHref={href({})}
+                      emailsOn={emailMode() === "gmail"}
                     />
                   </Card>
                 ) : (
