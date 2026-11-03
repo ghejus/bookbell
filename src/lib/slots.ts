@@ -65,3 +65,26 @@ export function isoWeekday(date: string): number {
   const day = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
   return day === 0 ? 7 : day;
 }
+
+/** A taken time that belongs to one worker, or to the whole shop (staffId null). */
+export type StaffBusy = Busy & { staffId: string | null };
+
+/**
+ * Free times when the shop has several workers. With `staffId`, only that
+ * worker's free times. Without it ("anyone"), a time is free when at least one
+ * worker is free then. Whole-shop days off (staffId null) block everyone.
+ */
+export function getTeamFreeSlots(
+  input: Omit<SlotInput, "busy">,
+  busy: StaffBusy[],
+  staffIds: string[],
+  staffId?: string,
+): Slot[] {
+  const workers = staffId ? staffIds.filter((id) => id === staffId) : staffIds;
+  const byStart = new Map<number, Slot>();
+  for (const id of workers) {
+    const mine = busy.filter((b) => b.staffId === null || b.staffId === id);
+    for (const slot of getFreeSlots({ ...input, busy: mine })) byStart.set(slot.start.getTime(), slot);
+  }
+  return [...byStart.values()].sort((a, b) => a.start.getTime() - b.start.getTime());
+}

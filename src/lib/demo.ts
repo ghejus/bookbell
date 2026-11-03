@@ -24,10 +24,16 @@ const NOTES = [
   { question: "Can I walk in without booking?", answer: "If a chair is free, yes. Booking online is the surest way to get a time." },
 ];
 
+// Two barbers. The shop's first worker ("Me") becomes Andrei, then Maria is added.
+const TEAM = ["Andrei", "Maria"];
+
+// `day` counts weekdays from tomorrow; `staff` points into TEAM. Ana and Radu
+// share a time with different barbers, to show two people booked at once.
 const CUSTOMERS = [
-  { name: "Ana Popescu", email: "ana.popescu@example.com", phone: "+40 700 111 222", service: 0, time: "10:00" },
-  { name: "Mihai Ionescu", email: "mihai@example.com", phone: "", service: 1, time: "15:30" },
-  { name: "Elena Dumitru", email: "elena.d@example.com", phone: "+40 700 333 444", service: 2, time: "11:00" },
+  { name: "Ana Popescu", email: "ana.popescu@example.com", phone: "+40 700 111 222", service: 0, time: "10:00", day: 0, staff: 0 },
+  { name: "Radu Marin", email: "radu.marin@example.com", phone: "", service: 3, time: "10:00", day: 0, staff: 1 },
+  { name: "Mihai Ionescu", email: "mihai@example.com", phone: "", service: 1, time: "15:30", day: 1, staff: 0 },
+  { name: "Elena Dumitru", email: "elena.d@example.com", phone: "+40 700 333 444", service: 2, time: "11:00", day: 2, staff: 1 },
 ];
 
 /** Makes the sample shop for this demo visitor, unless they already have a shop. */
@@ -67,19 +73,29 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
     supabase.from("shop_info").insert(NOTES.map((n) => ({ ...n, shop_id: shopId }))),
   ]);
 
-  // A few bookings on the next weekdays, made through the same checks as real ones.
+  // The team: the database already added a first worker, which gets a real name.
+  const { data: first } = await supabase.from("staff").select("id").eq("shop_id", shopId).limit(1).single();
+  if (first) await supabase.from("staff").update({ name: TEAM[0] }).eq("id", first.id);
+  const { data: second } = await supabase.from("staff").insert({ shop_id: shopId, name: TEAM[1] }).select("id").single();
+  const staffIds = [first?.id, second?.id] as (string | undefined)[];
+
+  // The next weekdays, starting tomorrow.
+  const weekdays: string[] = [];
+  for (let day = addDays(utcToZoned(new Date(), TZ).date, 1); weekdays.length < 3; day = addDays(day, 1)) {
+    if (isoWeekday(day) <= 5) weekdays.push(day);
+  }
+
+  // A few bookings, made through the same checks as real ones.
   const ids = (services ?? []).map((s) => s.id as string);
-  let day = addDays(utcToZoned(new Date(), TZ).date, 1);
   for (const c of CUSTOMERS) {
-    while (isoWeekday(day) > 5) day = addDays(day, 1);
     await supabase.rpc("book_appointment", {
       p_shop_id: shopId,
       p_service_id: ids[c.service],
-      p_starts_at: zonedToUtc(day, c.time, TZ).toISOString(),
+      p_starts_at: zonedToUtc(weekdays[c.day], c.time, TZ).toISOString(),
       p_customer_name: c.name,
       p_customer_email: c.email,
       p_customer_phone: c.phone,
+      p_staff_id: staffIds[c.staff] ?? null,
     });
-    day = addDays(day, 1);
   }
 }

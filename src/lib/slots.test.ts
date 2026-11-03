@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, getFreeSlots, isoWeekday, type SlotInput } from "./slots";
+import { addDays, getFreeSlots, getTeamFreeSlots, isoWeekday, type SlotInput, type StaffBusy } from "./slots";
 import { zonedToUtc } from "./time";
 
 const TZ = "Europe/Bucharest";
@@ -96,5 +96,39 @@ describe("calendar helpers", () => {
   it("knows the weekday", () => {
     expect(isoWeekday("2026-11-02")).toBe(1); // Monday
     expect(isoWeekday("2026-11-08")).toBe(7); // Sunday
+  });
+});
+
+describe("getTeamFreeSlots (several workers)", () => {
+  // 09:00–10:00, 30-minute service, 30-minute steps: 09:00 and 09:30.
+  const input = { ...base, hours: [{ opens: "09:00", closes: "10:00" }], stepMinutes: 30 };
+  const at = (time: string) => zonedToUtc("2026-11-02", time, TZ);
+  const busyFor = (staffId: string | null, from: string, to: string): StaffBusy => ({ staffId, start: at(from), end: at(to) });
+  const team = (busy: StaffBusy[], staffId?: string) =>
+    getTeamFreeSlots(input, busy, ["ana", "dan"], staffId).map((s) => s.label);
+
+  it("for anyone, a time is free while at least one worker is free", () => {
+    expect(team([busyFor("ana", "09:00", "09:30")])).toEqual(["09:00", "09:30"]);
+  });
+
+  it("for anyone, a time is gone once every worker is busy", () => {
+    expect(team([busyFor("ana", "09:00", "09:30"), busyFor("dan", "09:00", "09:30")])).toEqual(["09:30"]);
+  });
+
+  it("for one worker, only their own bookings count", () => {
+    expect(team([busyFor("ana", "09:00", "09:30")], "ana")).toEqual(["09:30"]);
+    expect(team([busyFor("ana", "09:00", "09:30")], "dan")).toEqual(["09:00", "09:30"]);
+  });
+
+  it("a whole-shop day off blocks everyone", () => {
+    expect(team([busyFor(null, "09:00", "10:00")])).toEqual([]);
+  });
+
+  it("an unknown worker has no times", () => {
+    expect(team([], "someone-else")).toEqual([]);
+  });
+
+  it("a shop with no workers has no times", () => {
+    expect(getTeamFreeSlots(input, [], [])).toEqual([]);
   });
 });

@@ -114,12 +114,12 @@ describe("the database refuses", () => {
 });
 
 describe("taken times for strangers", () => {
-  it("show start and end only, never who booked", async () => {
+  it("show start, end and which worker only, never who booked", async () => {
     const res = await anon.rpc("get_busy_times", { p_shop_id: a.shopId, p_from: at("00:00"), p_to: at("23:59") });
     expect(res.error).toBeNull();
     const rows = res.data as Record<string, string>[];
     expect(rows.length).toBeGreaterThanOrEqual(5); // 4 bookings + the day off
-    for (const row of rows) expect(Object.keys(row).sort()).toEqual(["ends_at", "starts_at"]);
+    for (const row of rows) expect(Object.keys(row).sort()).toEqual(["ends_at", "staff_id", "starts_at"]);
   });
 
   it("refuse windows longer than 62 days", async () => {

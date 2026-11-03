@@ -28,20 +28,26 @@ type Booking = {
   customer_email: string;
   customer_phone: string;
   services: { name: string; duration_minutes: number } | null;
+  staff: { name: string } | null;
 };
 
 async function BookingsContent() {
   const { supabase, shop } = await requireShop();
-  const { data } = await supabase
-    .from("bookings")
-    .select("id, starts_at, ends_at, customer_name, customer_email, customer_phone, services(name, duration_minutes)")
-    .eq("shop_id", shop.id)
-    .eq("status", "booked")
-    .gte("ends_at", new Date().toISOString())
-    .order("starts_at")
-    .limit(200)
-    .returns<Booking[]>();
+  const [{ data }, { count: teamSize }] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select("id, starts_at, ends_at, customer_name, customer_email, customer_phone, services(name, duration_minutes), staff(name)")
+      .eq("shop_id", shop.id)
+      .eq("status", "booked")
+      .gte("ends_at", new Date().toISOString())
+      .order("starts_at")
+      .limit(200)
+      .returns<Booking[]>(),
+    supabase.from("staff").select("id", { count: "exact", head: true }).eq("shop_id", shop.id),
+  ]);
   const bookings = data ?? [];
+  // Only name the person when there is more than one.
+  const showWho = (teamSize ?? 0) >= 2;
 
   const dayKey = new Intl.DateTimeFormat("en-CA", { timeZone: shop.timezone, year: "numeric", month: "2-digit", day: "2-digit" });
   const dayTitle = new Intl.DateTimeFormat("en-GB", { timeZone: shop.timezone, weekday: "long", day: "numeric", month: "long" });
@@ -95,6 +101,7 @@ async function BookingsContent() {
                           {b.services?.name ?? "Service"}
                           {b.services ? <span className="tabular">, {formatDuration(b.services.duration_minutes)}</span> : null}
                           <span className="tabular"> · until&nbsp;{time.format(new Date(b.ends_at))}</span>
+                          {showWho && b.staff ? <> · with {b.staff.name}</> : null}
                         </p>
                         <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                           {/* The owner needs the whole email to reach the customer, so it wraps instead of being cut off. */}

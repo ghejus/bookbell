@@ -14,6 +14,9 @@ type Props = {
   shopName: string;
   shopAddress: string;
   shopPhone: string;
+  /** The chosen worker, or nothing for "anyone". */
+  staffId?: string;
+  staffName?: string;
   serviceId: string;
   serviceName: string;
   serviceSummary: string;
@@ -85,7 +88,10 @@ export function BookingForm(props: Props) {
           <CalendarCheck aria-hidden className="size-5" />
         </span>
         <h2 className="text-lg font-semibold text-gray-900">You’re booked</h2>
-        <p className="mt-2 text-gray-900">{props.serviceSummary}</p>
+        <p className="mt-2 text-gray-900">
+          {props.serviceSummary}
+          {props.staffName ? <>, with {props.staffName}</> : null}
+        </p>
         <p className="font-semibold text-gray-900 tabular">{whenFormat(timezone).format(new Date(booked.starts_at))}</p>
         <p className="mx-auto mt-3 max-w-sm text-sm text-gray-600">Booked for {booked.customer_email}. Keep this page or add it to your calendar.</p>
 
@@ -146,6 +152,7 @@ export function BookingForm(props: Props) {
     >
       <input type="hidden" name="shop_id" value={shopId} />
       <input type="hidden" name="service_id" value={serviceId} />
+      {props.staffId ? <input type="hidden" name="staff_id" value={props.staffId} /> : null}
 
       <fieldset ref={grid} className="scroll-mt-4">
         <legend className="mb-3 text-sm font-medium text-gray-900">Free times on {dayLabel}</legend>

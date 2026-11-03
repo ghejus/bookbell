@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Clock, MessageSquareText, Store, Tags, type LucideIcon } from "lucide-react";
+import { CalendarDays, Clock, MessageSquareText, Store, Tags, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -8,6 +8,7 @@ const links: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/dashboard", label: "Shop", icon: Store },
   { href: "/dashboard/bookings", label: "Bookings", icon: CalendarDays },
   { href: "/dashboard/services", label: "Services", icon: Tags },
+  { href: "/dashboard/team", label: "Team", icon: Users },
   { href: "/dashboard/hours", label: "Hours", icon: Clock },
   { href: "/dashboard/info", label: "AI notes", icon: MessageSquareText },
 ];

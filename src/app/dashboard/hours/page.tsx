@@ -12,7 +12,8 @@ import { addOpeningHours, addStandardWeek, addTimeOff, deleteOpeningHours, delet
 export const metadata: Metadata = { title: "Opening hours" };
 
 type Hours = { id: string; weekday: number; opens: string; closes: string };
-type TimeOff = { id: string; starts_at: string; ends_at: string; reason: string };
+type TimeOff = { id: string; starts_at: string; ends_at: string; reason: string; staff: { name: string } | null };
+type Worker = { id: string; name: string };
 
 const hm = (t: string) => t.slice(0, 5);
 
@@ -24,7 +25,7 @@ const TIMES = Array.from({ length: (24 - 5) * 4 }, (_, i) => {
 
 async function HoursContent() {
   const { supabase, shop } = await requireShop();
-  const [{ data: hoursData }, { data: offData }] = await Promise.all([
+  const [{ data: hoursData }, { data: offData }, { data: staffData }] = await Promise.all([
     supabase
       .from("opening_hours")
       .select("id, weekday, opens, closes")
@@ -34,14 +35,18 @@ async function HoursContent() {
       .returns<Hours[]>(),
     supabase
       .from("time_off")
-      .select("id, starts_at, ends_at, reason")
+      .select("id, starts_at, ends_at, reason, staff(name)")
       .eq("shop_id", shop.id)
       .gte("ends_at", new Date().toISOString())
       .order("starts_at")
       .returns<TimeOff[]>(),
+    supabase.from("staff").select("id, name").eq("shop_id", shop.id).order("created_at").returns<Worker[]>(),
   ]);
   const hours = hoursData ?? [];
   const timeOff = offData ?? [];
+  const team = staffData ?? [];
+  // With one person, "the whole shop" and "that person" mean the same, so don't ask.
+  const askWho = team.length >= 2;
   const when = new Intl.DateTimeFormat("en-GB", { timeZone: shop.timezone, dateStyle: "medium", timeStyle: "short" });
 
   return (
@@ -139,6 +144,9 @@ async function HoursContent() {
                       <time dateTime={t.starts_at}>{when.format(new Date(t.starts_at))}</time> –{" "}
                       <time dateTime={t.ends_at}>{when.format(new Date(t.ends_at))}</time>
                     </p>
+                    {askWho ? (
+                      <p className="font-medium wrap-anywhere text-gray-900">{t.staff ? `${t.staff.name} is off` : "Whole shop closed"}</p>
+                    ) : null}
                     {t.reason ? <p className="wrap-anywhere text-gray-600">{t.reason}</p> : null}
                   </div>
                   <form action={deleteTimeOff}>
@@ -161,6 +169,16 @@ async function HoursContent() {
             <p className="-mt-2 text-sm text-gray-600">
               Dates may show in your device’s style. Saved in {shop.timezone.replaceAll("_", " ")} time.
             </p>
+            {askWho ? (
+              <Select label="Who is off?" name="staff_id" defaultValue="">
+                <option value="">Whole shop (nobody can be booked)</option>
+                {team.map((w) => (
+                  <option key={w.id} value={w.id}>
+                    {w.name}
+                  </option>
+                ))}
+              </Select>
+            ) : null}
             <Field label="Reason" name="reason" maxLength={200} placeholder="Christmas holiday" hint="Private. Customers never see it." />
           </ActionForm>
         </CardSection>

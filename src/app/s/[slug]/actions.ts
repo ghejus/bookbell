@@ -9,6 +9,8 @@ import { firstError } from "@/lib/validation";
 const bookingSchema = z.object({
   shop_id: z.uuid(),
   service_id: z.uuid(),
+  // Empty means "anyone".
+  staff_id: z.union([z.uuid(), z.literal("")]).optional(),
   starts_at: z.iso.datetime({ offset: true, error: "Pick a time first." }),
   customer_name: z.string().trim().min(1, "Type your name.").max(80),
   customer_email: z.string().trim().toLowerCase().pipe(z.email("Type a valid email address.")),
@@ -28,6 +30,8 @@ const reasons: Record<string, string> = {
   service_not_found: "That service isn’t available any more. Please pick another one.",
   shop_not_found: "This shop isn’t taking bookings right now.",
   invalid_details: "Please check your name and email.",
+  staff_not_found: "That person isn’t taking bookings any more. Please pick someone else.",
+  no_staff: "This shop isn’t taking bookings right now.",
 };
 
 export async function bookAppointment(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -50,6 +54,7 @@ export async function bookAppointment(_prev: ActionState, formData: FormData): P
     p_customer_name: d.customer_name,
     p_customer_email: d.customer_email,
     p_customer_phone: d.customer_phone,
+    p_staff_id: d.staff_id || null,
   });
 
   if (error) {

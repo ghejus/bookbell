@@ -65,11 +65,14 @@ export function timeOffSchema(timezone: string) {
       starts_at: localDateTime,
       ends_at: localDateTime,
       reason: text(200),
+      // Empty: the whole shop is closed. Otherwise only this worker is off.
+      staff_id: z.union([z.uuid(), z.literal("")]).optional(),
     })
     .transform((v) => ({
       starts_at: zonedToUtc(v.starts_at.slice(0, 10), v.starts_at.slice(11), timezone),
       ends_at: zonedToUtc(v.ends_at.slice(0, 10), v.ends_at.slice(11), timezone),
       reason: v.reason,
+      staff_id: v.staff_id || null,
     }))
     .refine((v) => v.ends_at > v.starts_at, { message: "The end must be after the start.", path: ["ends_at"] });
 }
@@ -77,6 +80,10 @@ export function timeOffSchema(timezone: string) {
 export const shopInfoSchema = z.object({
   question: text(200, 1),
   answer: text(1000, 1),
+});
+
+export const staffSchema = z.object({
+  name: z.string().trim().min(1, "Type a name.").max(60, "Use at most 60 characters."),
 });
 
 export const idSchema = z.uuid();

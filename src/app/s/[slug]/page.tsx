@@ -31,23 +31,29 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
   await connection();
   const data = await getPublicShop(slug);
   if (!data) notFound();
-  const { shop, services, hours } = data;
+  const { shop, services, hours, staff } = data;
 
   const now = new Date();
   const today = shopToday(shop.timezone, now);
   const lastDay = addDays(today, shop.booking_window_days);
   const service = services.find((s) => s.id === query.service);
+  // "Who?" is only asked when there is a real choice. No worker picked means "anyone".
+  const pickWorker = staff.length >= 2;
+  const worker = pickWorker ? staff.find((w) => w.id === query.staff) : undefined;
+  // Links keep the chosen worker unless they say otherwise.
   const href = (q: Record<string, string | undefined>) => {
-    const p = new URLSearchParams(Object.entries(q).filter((e): e is [string, string] => Boolean(e[1])));
+    const all = { service: q.service, staff: "staff" in q ? q.staff : worker?.id, from: q.from, date: q.date };
+    const p = new URLSearchParams(Object.entries(all).filter((e): e is [string, string] => Boolean(e[1])));
     return `/s/${shop.slug}${p.size ? `?${p}` : ""}`;
   };
+  const step = (n: number) => (pickWorker || n < 2 ? n : n - 1);
 
   // The two weeks shown, kept inside today … last bookable day.
   const from = isDate(query.from) && query.from > today && query.from <= lastDay ? query.from : today;
   const prevFrom = from > today ? (addDays(from, -DAYS_SHOWN) < today ? today : addDays(from, -DAYS_SHOWN)) : null;
   const nextFrom = addDays(from, DAYS_SHOWN) <= lastDay ? addDays(from, DAYS_SHOWN) : null;
 
-  const days = service ? await getAvailability(data, service, from, DAYS_SHOWN, now) : [];
+  const days = service ? await getAvailability(data, service, from, DAYS_SHOWN, now, worker?.id) : [];
   const chosenDate =
     service && isDate(query.date) && days.some((d) => d.date === query.date)
       ? query.date
@@ -140,12 +146,41 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
               </ul>
             </section>
 
-            {/* Step 2: day */}
+            {/* Step 2: who (only for shops with two or more workers) */}
+            {service && pickWorker ? (
+              <section aria-labelledby="step-staff">
+                <h2 id="step-staff" className="mb-3 text-base font-semibold text-gray-900">
+                  2. Who would you like?
+                </h2>
+                <ul className="flex flex-wrap gap-2">
+                  {[{ id: undefined, name: "Anyone" }, ...staff].map((w) => {
+                    const active = w.id === worker?.id;
+                    return (
+                      <li key={w.id ?? "anyone"} className="max-w-full">
+                        <Link
+                          href={href({ service: service.id, staff: w.id, from: from === today ? undefined : from })}
+                          scroll={false}
+                          aria-current={active ? "true" : undefined}
+                          className={`flex min-h-11 items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium wrap-anywhere transition-colors duration-150 ${
+                            active ? "border-brand-700 bg-brand-700 text-white" : "border-gray-300 bg-white text-gray-900 hover:border-gray-400"
+                          }`}
+                        >
+                          {w.name}
+                          <LinkPending className={active ? "text-white" : "text-gray-500"} />
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ) : null}
+
+            {/* Step 3 (or 2): day */}
             {service ? (
               <section aria-labelledby="step-day">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <h2 id="step-day" className="text-base font-semibold whitespace-nowrap text-gray-900">
-                    2. Choose a day
+                    {step(3)}. Choose a day
                   </h2>
                   <div className="flex items-center gap-1">
                     <span className="mr-1 text-sm whitespace-nowrap text-gray-600 tabular">{shownMonths}</span>
@@ -205,17 +240,19 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
             ) : null}
             </HideWhenBooked>
 
-            {/* Step 3: time and details */}
+            {/* Step 4 (or 3): time and details */}
             {service ? (
               <section aria-label="Choose a time">
                 <HideWhenBooked>
-                  <h2 className="mb-3 text-base font-semibold text-gray-900">3. Choose a time</h2>
+                  <h2 className="mb-3 text-base font-semibold text-gray-900">{step(4)}. Choose a time</h2>
                 </HideWhenBooked>
                 {chosenDay && chosenDay.slots.length > 0 ? (
                   <Card className="p-5 sm:p-6">
                     <BookingForm
-                      key={`${service.id}-${chosenDay.date}`}
+                      key={`${service.id}-${worker?.id ?? "anyone"}-${chosenDay.date}`}
                       shopId={shop.id}
+                      staffId={worker?.id}
+                      staffName={worker?.name}
                       shopName={shop.name}
                       shopAddress={shop.address}
                       shopPhone={shop.phone}
