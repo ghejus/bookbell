@@ -42,7 +42,10 @@ export async function updateSession(request: NextRequest) {
   if (!signedIn && (path === "/my" || path.startsWith("/my/"))) {
     return redirectKeepingCookies(request, response, "/login", { as: "customer", next: path });
   }
-  if (signedIn && (path === "/login" || path === "/signup")) {
+  // People with a real account skip the log-in and sign-up pages. Demo visitors
+  // (a no-email account) must still reach them, to make a real shop or log in.
+  const realAccount = signedIn && data?.claims?.is_anonymous !== true;
+  if (realAccount && (path === "/login" || path === "/signup")) {
     return redirectKeepingCookies(request, response, safeNextPath(request.nextUrl.searchParams.get("next"), "/start"));
   }
 

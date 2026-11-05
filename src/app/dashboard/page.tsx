@@ -131,7 +131,7 @@ async function TodayContent({ searchParams }: PageProps<"/dashboard">) {
 
   const nowLine = (
     <li aria-hidden key="now" className="flex items-center gap-3 px-4 py-1">
-      <span className="w-12 text-xs font-medium whitespace-nowrap text-accent-400 tabular">Now {utcToZoned(now, tz).time}</span>
+      <span className="min-w-12 text-xs font-medium whitespace-nowrap text-accent-400 tabular">Now {utcToZoned(now, tz).time}</span>
       <span className="h-px flex-1 bg-linear-to-r from-accent to-transparent shadow-[0_0_6px_rgb(145_132_217/0.6)]" />
     </li>
   );

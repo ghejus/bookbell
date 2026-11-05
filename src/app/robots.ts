@@ -5,7 +5,7 @@ import type { MetadataRoute } from "next";
 export default function robots(): MetadataRoute.Robots {
   const site = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://bookbell.vercel.app").replace(/\/+$/, "");
   return {
-    rules: { userAgent: "*", allow: "/", disallow: ["/dashboard", "/api/", "/auth/", "/b/"] },
+    rules: { userAgent: "*", allow: "/", disallow: ["/dashboard", "/my", "/start", "/api/", "/auth/", "/b/"] },
     sitemap: `${site}/sitemap.xml`,
   };
 }

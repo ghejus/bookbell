@@ -160,7 +160,7 @@ export function ShopChat(props: Props) {
           onKeyDown={(e) => {
             if (e.key === "Escape") setOpen(false);
           }}
-          className="fixed inset-0 z-40 flex flex-col bg-surface sm:inset-auto sm:right-6 sm:bottom-6 sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[400px] sm:rounded-xl sm:border sm:border-gray-200 sm:shadow-lg"
+          className="fixed inset-0 z-50 flex flex-col bg-surface pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] sm:inset-auto sm:right-6 sm:bottom-6 sm:pt-0 sm:pb-0 sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[400px] sm:rounded-xl sm:border sm:border-gray-200 sm:shadow-lg"
         >
           <header className="flex items-start gap-3 border-b border-gray-100 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-3">
             <div className="min-w-0 flex-1">
