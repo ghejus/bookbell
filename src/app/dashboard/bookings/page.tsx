@@ -1,13 +1,15 @@
-import { CalendarDays, Mail, Phone, X } from "lucide-react";
+import { CalendarBlankIcon, EnvelopeSimpleIcon, PhoneIcon, XIcon } from "@/components/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ConfirmDelete } from "@/components/form";
-import { buttonClass, Card, EmptyState, PageHeader, PageSkeleton } from "@/components/ui";
+import { buttonClass, Card, EmptyState, PageSkeleton } from "@/components/ui";
 import { emailMode } from "@/lib/email/send";
 import { formatDuration } from "@/lib/format";
 import { requireShop } from "@/lib/shop";
+import { OwnerHeader } from "../account";
 import { cancelBooking } from "../actions";
+import { BookingSheet, isBookingId } from "../booking-sheet";
 
 export const metadata: Metadata = { title: "Bookings" };
 
@@ -61,6 +63,9 @@ async function BookingsContent({ searchParams }: PageProps<"/dashboard/bookings"
   const dayTitle = new Intl.DateTimeFormat("en-GB", { timeZone: shop.timezone, weekday: "long", day: "numeric", month: "long", year: past ? "numeric" : undefined });
   const time = new Intl.DateTimeFormat("en-GB", { timeZone: shop.timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
+  const todayKey = dayKey.format(new Date(now));
+  const tomorrowKey = dayKey.format(new Date(Date.parse(now) + 86_400_000));
+  const here = past ? `/dashboard/bookings?show=past${page > 1 ? `&page=${page}` : ""}` : "/dashboard/bookings";
   const groups = new Map<string, Booking[]>();
   for (const b of bookings) {
     const key = dayKey.format(new Date(b.starts_at));
@@ -69,9 +74,9 @@ async function BookingsContent({ searchParams }: PageProps<"/dashboard/bookings"
 
   return (
     <>
-      <PageHeader title="Bookings" description={past ? "Bookings that already happened, newest first." : "Upcoming bookings, soonest first."} />
+      <OwnerHeader title="Bookings" eyebrow={past ? "Already happened, newest first" : "Upcoming, soonest first"} />
 
-      <div role="group" aria-label="Which bookings" className="mb-5 inline-flex rounded-lg bg-gray-200/70 p-0.5">
+      <div role="group" aria-label="Which bookings" className="mb-5 inline-flex overflow-hidden rounded-lg border border-line">
         {[
           { label: "Upcoming", href: "/dashboard/bookings", active: !past },
           { label: "Past", href: "/dashboard/bookings?show=past", active: past },
@@ -80,7 +85,7 @@ async function BookingsContent({ searchParams }: PageProps<"/dashboard/bookings"
             key={t.label}
             href={t.href}
             aria-current={t.active ? "true" : undefined}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 ${t.active ? "bg-white text-gray-900 shadow-sm" : "text-gray-700 hover:text-gray-900"}`}
+            className={`px-4 py-2 text-[13px] font-medium transition-colors duration-150 ${t.active ? "bg-accent-900 text-accent-300 shadow-[inset_0_0_0_1px_var(--color-accent)]" : "text-neutral-300 hover:bg-ink/7"}`}
           >
             {t.label}
           </Link>
@@ -89,13 +94,13 @@ async function BookingsContent({ searchParams }: PageProps<"/dashboard/bookings"
 
       {bookings.length === 0 && past ? (
         <Card>
-          <EmptyState icon={CalendarDays} title={page > 1 ? "No older bookings" : "No past bookings yet"}>
+          <EmptyState icon={CalendarBlankIcon} title={page > 1 ? "No older bookings" : "No past bookings yet"}>
             Bookings move here once they are over.
           </EmptyState>
         </Card>
       ) : bookings.length === 0 ? (
         <Card>
-          <EmptyState icon={CalendarDays} title="No bookings yet">
+          <EmptyState icon={CalendarBlankIcon} title="No bookings yet">
             Share your booking page with customers. New bookings show up here right away.
           </EmptyState>
           <div className="flex justify-center px-6 pb-8">
@@ -105,47 +110,48 @@ async function BookingsContent({ searchParams }: PageProps<"/dashboard/bookings"
           </div>
         </Card>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-[22px]">
           {[...groups.entries()].map(([day, list]) => (
             <section key={day} aria-labelledby={`day-${day}`}>
-              <h2 id={`day-${day}`} className="mb-2.5 text-sm font-semibold text-gray-900">
+              <h2 id={`day-${day}`} className="mb-2 px-1 text-[13px] font-medium">
+                {day === todayKey ? "Today, " : day === tomorrowKey ? "Tomorrow, " : ""}
                 {dayTitle.format(new Date(list[0].starts_at))}
               </h2>
-              <Card>
-                <ul className="divide-y divide-gray-100">
+              <Card className="overflow-hidden">
+                <ul>
                   {list.map((b) => (
-                    <li key={b.id} className="grid grid-cols-[3rem_1fr_auto] items-start gap-x-4 py-3.5 pr-3 pl-5 sm:pr-4 sm:pl-6">
-                      <time dateTime={b.starts_at} className="pt-1.5 text-sm font-semibold text-gray-900 tabular">
+                    <li key={b.id} className="rule-top grid grid-cols-[44px_minmax(0,1fr)_auto] items-start gap-x-3 pt-3 pr-2 pb-[13px] pl-4">
+                      <time dateTime={b.starts_at} className="pt-1.5 text-sm font-medium text-gray-900 tabular">
                         {time.format(new Date(b.starts_at))}
                       </time>
-                      <p className="min-w-0 pt-1 font-semibold break-words text-gray-900">
-                        <Link href={`/dashboard/calendar?date=${dayKey.format(new Date(b.starts_at))}&b=${b.id}`} className="hover:underline">
+                      <p className="min-w-0 pt-1 font-medium break-words text-gray-900">
+                        <Link href={`${here}${here.includes("?") ? "&" : "?"}b=${b.id}`} scroll={false} className="text-[15px] hover:underline">
                           {b.customer_name}
                         </Link>
                       </p>
                       {past ? (
                         <span />
                       ) : (
-                        <form action={cancelBooking} className="row-span-1">
+                        <form action={cancelBooking} className="row-span-1 flex min-w-9 justify-end">
                           <input type="hidden" name="id" value={b.id} />
                           <ConfirmDelete label={`Cancel ${b.customer_name}’s booking at ${time.format(new Date(b.starts_at))}`} confirmText="Cancel?" busyText="Cancelling…">
-                            <X aria-hidden className="size-4.5" />
+                            <XIcon aria-hidden className="size-4.5" />
                           </ConfirmDelete>
                         </form>
                       )}
                       {/* Details use the full width under the name, so the Cancel? button never squeezes them. */}
-                      <div className="col-span-2 col-start-2 min-w-0">
-                        <p className="text-sm wrap-anywhere text-gray-600">
+                      <div className="col-span-2 col-start-2 min-w-0 space-y-1 pr-2">
+                        <p className="text-[13px] wrap-anywhere text-neutral-400">
                           {b.services?.name ?? "Service"}
                           {b.services ? <span className="tabular">, {formatDuration(b.services.duration_minutes)}</span> : null}
                           <span className="tabular"> · until&nbsp;{time.format(new Date(b.ends_at))}</span>
                           {showWho && b.staff ? <> · with {b.staff.name}</> : null}
                         </p>
-                        <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                        <p className="flex flex-wrap gap-x-3.5 gap-y-1 text-[13px]">
                           {/* The owner needs the whole email to reach the customer, so it wraps instead of being cut off. */}
                           {b.customer_email ? (
                             <a href={`mailto:${b.customer_email}`} className="flex min-w-0 items-start gap-1.5 text-gray-700 hover:text-gray-900 hover:underline">
-                              <Mail aria-hidden className="mt-[3px] size-3.5 shrink-0 text-gray-500" />
+                              <EnvelopeSimpleIcon aria-hidden className="mt-[3px] size-3.5 shrink-0 text-gray-500" />
                               <span className="min-w-0 wrap-break-word">
                                 <BreakableEmail email={b.customer_email} />
                               </span>
@@ -153,7 +159,7 @@ async function BookingsContent({ searchParams }: PageProps<"/dashboard/bookings"
                           ) : null}
                           {b.customer_phone ? (
                             <a href={`tel:${b.customer_phone.replace(/[^\d+]/g, "")}`} className="flex min-w-0 items-start gap-1.5 text-gray-700 hover:text-gray-900 hover:underline">
-                              <Phone aria-hidden className="mt-[3px] size-3.5 shrink-0 text-gray-500" />
+                              <PhoneIcon aria-hidden className="mt-[3px] size-3.5 shrink-0 text-gray-500" />
                               <span className="min-w-0 wrap-anywhere">{b.customer_phone}</span>
                             </a>
                           ) : null}
@@ -182,7 +188,7 @@ async function BookingsContent({ searchParams }: PageProps<"/dashboard/bookings"
             </nav>
           ) : null}
           {past ? null : (
-            <p className="text-sm text-gray-600">
+            <p className="px-1 text-[13px] text-neutral-400">
               {emailMode() === "gmail"
                 ? "Cancelling frees the time for others and emails the customer to say so."
                 : "Cancelling frees the time for others. Emails aren’t switched on yet, so please let the customer know."}
@@ -190,6 +196,7 @@ async function BookingsContent({ searchParams }: PageProps<"/dashboard/bookings"
           )}
         </div>
       )}
+      {isBookingId(query.b) ? <BookingSheet id={query.b} closeHref={here} /> : null}
     </>
   );
 }

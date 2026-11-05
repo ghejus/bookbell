@@ -1,9 +1,10 @@
-import { MessageSquareText, Trash2 } from "lucide-react";
+import { ChatCircleTextIcon, TrashIcon } from "@/components/icons";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ActionForm } from "@/components/action-form";
 import { ConfirmDelete, Field, TextArea } from "@/components/form";
-import { Card, CardSection, EmptyState, PageHeader, PageSkeleton } from "@/components/ui";
+import { Card, CardSection, EmptyState, PageSkeleton } from "@/components/ui";
+import { OwnerHeader } from "../account";
 import { requireShop } from "@/lib/shop";
 import { addShopInfo, deleteShopInfo } from "../actions";
 
@@ -23,7 +24,7 @@ async function InfoContent() {
 
   return (
     <>
-      <PageHeader
+      <OwnerHeader back
         title="Notes for the AI helper"
         description="The helper on your booking page answers customers using only these notes and your shop details. If something isn’t here, it says it doesn’t know. Customers can read these, so don’t write anything private."
       />
@@ -31,7 +32,7 @@ async function InfoContent() {
       <div className="space-y-6">
         {notes.length === 0 ? (
           <Card>
-            <EmptyState icon={MessageSquareText} title="No notes yet">
+            <EmptyState icon={ChatCircleTextIcon} title="No notes yet">
               Think of what customers often ask you: parking, how to pay, kids, being late, cancelling.
             </EmptyState>
           </Card>
@@ -41,13 +42,13 @@ async function InfoContent() {
               <li key={n.id}>
                 <Card className="flex items-start gap-3 py-4 pr-2 pl-4 sm:pl-5">
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold break-words text-gray-900">{n.question}</p>
+                    <p className="font-medium break-words text-gray-900">{n.question}</p>
                     <p className="mt-1 text-sm break-words whitespace-pre-line text-gray-700">{n.answer}</p>
                   </div>
                   <form action={deleteShopInfo}>
                     <input type="hidden" name="id" value={n.id} />
                     <ConfirmDelete label={`Delete note: ${n.question}`}>
-                      <Trash2 aria-hidden className="size-4.5" />
+                      <TrashIcon aria-hidden className="size-4.5" />
                     </ConfirmDelete>
                   </form>
                 </Card>

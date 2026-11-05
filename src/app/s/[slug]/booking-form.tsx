@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarCheck, CalendarCog, CalendarPlus, MapPin, Phone } from "lucide-react";
+import { CalendarCheckIcon, CalendarDotsIcon, CalendarPlusIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Field, FormMessage, SubmitButton } from "@/components/form";
@@ -29,6 +29,10 @@ type Props = {
   againHref: string;
   /** True when confirmation emails really go out (Gmail is set up). */
   emailsOn?: boolean;
+  /** The signed-in customer, if any: their details are filled in and the booking goes to My bookings. */
+  account?: { name: string; email: string } | null;
+  /** This page's address, to come back here after logging in. */
+  pagePath: string;
 };
 
 const whenFormat = (timezone: string) =>
@@ -64,19 +68,21 @@ export function BookingForm(props: Props) {
   if (booked) {
     return (
       <div role="status" className="py-2 text-center">
-        <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-full bg-green-50 text-green-800">
-          <CalendarCheck aria-hidden className="size-5" />
+        <span className="mx-auto mb-3 flex size-11 items-center justify-center rounded-full bg-success-soft text-success-ink shadow-[inset_0_0_0_1px_rgb(134_217_165/0.3)]">
+          <CalendarCheckIcon aria-hidden className="size-[21px]" />
         </span>
-        <h2 className="text-lg font-semibold text-gray-900">You’re booked</h2>
-        <p className="mt-2 text-gray-900">
+        <h2 className="text-[19px] font-medium">You’re booked</h2>
+        <p className="mt-2 text-[15px]">
           {props.serviceSummary}
           {props.staffName ? <>, with {props.staffName}</> : null}
         </p>
-        <p className="font-semibold text-gray-900 tabular">{whenFormat(timezone).format(new Date(booked.starts_at))}</p>
-        <p className="mx-auto mt-3 max-w-sm text-sm text-gray-600">
+        <p className="text-[15px] font-medium tabular">{whenFormat(timezone).format(new Date(booked.starts_at))}</p>
+        <p className="mx-auto mt-3 max-w-sm text-sm text-neutral-400">
           {props.emailsOn
             ? `We sent the details to ${booked.customer_email}.`
-            : `Booked for ${booked.customer_email}. Keep this page or add it to your calendar.`}
+            : props.account
+              ? `Booked for ${booked.customer_email}.`
+              : `Booked for ${booked.customer_email}. Keep this page or add it to your calendar.`}
         </p>
 
         <div className="mt-5 flex flex-wrap justify-center gap-2.5">
@@ -85,20 +91,40 @@ export function BookingForm(props: Props) {
             download="booking.ics"
             className={buttonClass("secondary")}
           >
-            <CalendarPlus aria-hidden className="size-4" />
+            <CalendarPlusIcon aria-hidden className="size-4" />
             Add to calendar
           </a>
-          {booked.manage_path ? (
+          {props.account ? (
+            <Link href="/my" className={buttonClass("secondary")}>
+              <CalendarDotsIcon aria-hidden className="size-4" />
+              My bookings
+            </Link>
+          ) : booked.manage_path ? (
             <Link href={booked.manage_path} className={buttonClass("secondary")}>
-              <CalendarCog aria-hidden className="size-4" />
+              <CalendarDotsIcon aria-hidden className="size-4" />
               Change or cancel
             </Link>
           ) : null}
         </div>
+        {props.account ? (
+          <p className="mx-auto mt-3 max-w-sm text-[13px] text-neutral-400">Saved to My bookings, where you can change or cancel it.</p>
+        ) : booked.manage_path ? (
+          <p className="mx-auto mt-3 max-w-sm text-[13px] text-neutral-400">
+            Want all your bookings in one place?{" "}
+            <Link
+              href={`/signup?as=customer&next=${encodeURIComponent(booked.manage_path)}`}
+              className="font-medium text-accent-400 hover:text-accent-300 hover:underline"
+            >
+              Make a free account
+            </Link>
+          </p>
+        ) : null}
 
-        <div className="mx-auto mt-6 max-w-sm border-t border-gray-100 pt-5 text-sm text-gray-700">
+        <div className="rule-top mx-auto mt-6 max-w-sm pt-5 text-sm text-neutral-300">
           <p>
-            {booked.manage_path
+            {props.account
+              ? "Plans change? Use My bookings, or call the shop."
+              : booked.manage_path
               ? props.emailsOn
                 ? "Plans change? Use the link in your email, or call the shop."
                 : "Plans change? Keep the “Change or cancel” link, or call the shop."
@@ -107,14 +133,14 @@ export function BookingForm(props: Props) {
           <ul className="mt-2 flex flex-col items-center gap-1.5">
             {props.shopAddress ? (
               <li className="flex items-center gap-1.5">
-                <MapPin aria-hidden className="size-4 text-gray-500" />
+                <MapPinIcon aria-hidden className="size-4 text-gray-500" />
                 {props.shopAddress}
               </li>
             ) : null}
             {props.shopPhone ? (
               <li>
-                <a href={`tel:${props.shopPhone.replace(/[^\d+]/g, "")}`} className="flex items-center gap-1.5 font-semibold text-brand-700 hover:text-brand-800 hover:underline">
-                  <Phone aria-hidden className="size-4" />
+                <a href={`tel:${props.shopPhone.replace(/[^\d+]/g, "")}`} className="flex items-center gap-1.5 font-medium text-accent-400 hover:text-accent-300 hover:underline">
+                  <PhoneIcon aria-hidden className="size-4" />
                   Call {props.shopPhone}
                 </a>
               </li>
@@ -125,7 +151,7 @@ export function BookingForm(props: Props) {
         <Link
           href={againHref}
           onClick={() => setBooked(false)}
-          className="mt-6 inline-block text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+          className="mt-6 inline-block text-sm font-medium text-accent-400 hover:text-accent-300 hover:underline"
         >
           Book another time
         </Link>
@@ -172,7 +198,7 @@ export function BookingForm(props: Props) {
                       }}
                       className="peer sr-only"
                     />
-                    <span className="flex h-11 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-900 tabular shadow-sm transition-colors duration-150 peer-checked:border-brand-700 peer-checked:bg-brand-700 peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-600 hover:border-gray-400">
+                    <span className="flex h-11 cursor-pointer items-center justify-center rounded-lg border chip-off text-sm font-medium tabular transition-colors duration-150 peer-checked:chip-on peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
                       {s.label}
                     </span>
                   </label>
@@ -183,8 +209,8 @@ export function BookingForm(props: Props) {
         </div>
       </fieldset>
 
-      <div className="space-y-5 border-t border-gray-100 pt-6">
-        <Field label="Your name" name="customer_name" autoComplete="name" required maxLength={80} />
+      <div className="rule-top space-y-5 pt-6">
+        <Field label="Your name" name="customer_name" autoComplete="name" required maxLength={80} defaultValue={props.account?.name || undefined} />
         <Field
           label="Email"
           name="customer_email"
@@ -194,6 +220,7 @@ export function BookingForm(props: Props) {
           spellCheck={false}
           required
           maxLength={200}
+          defaultValue={props.account?.email || undefined}
           hint="Only the shop sees it."
         />
         <Field label="Phone" name="customer_phone" type="tel" autoComplete="tel" maxLength={40} />
@@ -207,11 +234,23 @@ export function BookingForm(props: Props) {
       </div>
 
       <FormMessage state={needTime ? { error: "Please choose a time." } : state} />
-      <div className="[&>button]:w-full">
+      <div className="[&>button]:h-12 [&>button]:w-full [&>button]:text-[15px]">
         <SubmitButton pending={pending} pendingText="Booking…">
           {pickedLabel ? `Book ${pickedLabel}` : "Choose a time"}
         </SubmitButton>
       </div>
+      {props.account ? null : (
+        <p className="text-center text-[13px] text-neutral-400">
+          Have an account?{" "}
+          <Link
+            href={`/login?as=customer&next=${encodeURIComponent(props.pagePath)}`}
+            className="font-medium text-accent-400 hover:text-accent-300 hover:underline"
+          >
+            Log in
+          </Link>{" "}
+          to keep your bookings in one place.
+        </p>
+      )}
     </form>
   );
 }

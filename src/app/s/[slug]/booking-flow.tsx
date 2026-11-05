@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle } from "lucide-react";
+import { CircleNotchIcon } from "@/components/icons";
 import { useLinkStatus } from "next/link";
 import { createContext, use, useState } from "react";
 
@@ -28,13 +28,13 @@ export function HideWhenBooked({ children }: { children: React.ReactNode }) {
 /** Inside a link: shows a spinner instead of its children while the next page loads (same slot, no jump). */
 export function PendingSwap({ children }: { children: React.ReactNode }) {
   const { pending } = useLinkStatus();
-  return pending ? <LoaderCircle aria-hidden className="size-3.5 motion-safe:animate-spin" /> : <>{children}</>;
+  return pending ? <CircleNotchIcon aria-hidden className="size-3.5 motion-safe:animate-spin" /> : <>{children}</>;
 }
 
 /** A small spinner inside a link while the next page loads, so a tap never looks ignored. */
 export function LinkPending({ className = "" }: { className?: string }) {
   const { pending } = useLinkStatus();
   return pending ? (
-    <LoaderCircle aria-hidden className={`size-4 shrink-0 motion-safe:animate-spin ${className}`} />
+    <CircleNotchIcon aria-hidden className={`size-4 shrink-0 motion-safe:animate-spin ${className}`} />
   ) : null;
 }

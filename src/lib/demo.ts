@@ -94,7 +94,8 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
     if (isoWeekday(day) <= 5) weekdays.push(day);
   }
 
-  // A few bookings, made through the same checks as real ones.
+  // A few bookings, made through the same checks as real ones. They are other
+  // people's, so they stay out of the demo visitor's own My bookings.
   const ids = (services ?? []).map((s) => s.id as string);
   for (const c of CUSTOMERS) {
     await supabase.rpc("book_appointment", {
@@ -105,8 +106,21 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
       p_customer_email: c.email,
       p_customer_phone: c.phone,
       p_staff_id: staffIds[c.staff] ?? null,
+      p_save_to_account: false,
     });
   }
+
+  // One booking that is the visitor's own, for trying "Customer" mode: it shows
+  // in My bookings, where it can be moved or cancelled.
+  await supabase.rpc("book_appointment", {
+    p_shop_id: shopId,
+    p_service_id: ids[0],
+    p_starts_at: zonedToUtc(weekdays[2], "16:30", TZ).toISOString(),
+    p_customer_name: "Alex Pop (you)",
+    p_customer_email: "alex.pop@example.com",
+    p_customer_phone: "",
+    p_staff_id: staffIds[0] ?? null,
+  });
 
   // Past visits, added the way the owner adds walk-ins (that door allows past times).
   const pastDays: string[] = [];

@@ -7,6 +7,8 @@ import type { ActionState } from "@/lib/action-state";
 import { z } from "zod";
 import { sendBookingEmails, sendShopChangeEmail, type OwnerBookingRow } from "@/lib/booking-emails";
 import { bookingError } from "@/lib/booking-errors";
+import { emailMode } from "@/lib/email/send";
+import { flash } from "@/lib/flash";
 import { siteUrl } from "@/lib/site";
 import { getMyShop, requireShop, type Shop } from "@/lib/shop";
 import { isoWeekday } from "@/lib/slots";
@@ -210,8 +212,13 @@ export async function deleteStaff(formData: FormData) {
 
 // --------------------------------------------------------------- bookings
 
+/** Where to go after cancelling: only a dashboard page of this site. */
+const backTo = (v: FormDataEntryValue | null) =>
+  typeof v === "string" && /^\/dashboard(\/[a-z]+)?(\?[\w=&%.-]*)?$/.test(v) ? v : null;
+
 export async function cancelBooking(formData: FormData) {
   const id = idSchema.parse(formData.get("id"));
+  const back = backTo(formData.get("back"));
   const { supabase, shop } = await requireShop();
   // Only a live booking changes, and we get it back to tell the customer.
   const { data: booking } = await supabase
@@ -222,14 +229,19 @@ export async function cancelBooking(formData: FormData) {
     .eq("status", "booked")
     .select("id, starts_at, ends_at, customer_name, customer_email, services(name, price_cents), staff(name)")
     .maybeSingle<OwnerBookingRow>();
+  if (booking) {
+    const when = new Intl.DateTimeFormat("en-GB", { timeZone: shop.timezone, weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+    await flash("cancelled", "Booking cancelled", `${booking.customer_name}, ${when.format(new Date(booking.starts_at))}.${booking.customer_email && emailMode() === "gmail" ? " We emailed them." : " Please let them know."}`);
+  }
+  if (booking && Date.parse(booking.starts_at) >= Date.now()) {
+    const [{ count: teamSize }, site] = await Promise.all([
+      supabase.from("staff").select("id", { count: "exact", head: true }).eq("shop_id", shop.id),
+      siteUrl(),
+    ]);
+    after(() => sendShopChangeEmail("cancelled", booking, shop, teamSize ?? 1, site));
+  }
+  if (back) redirect(back);
   refresh();
-  if (!booking || Date.parse(booking.starts_at) < Date.now()) return;
-
-  const [{ count: teamSize }, site] = await Promise.all([
-    supabase.from("staff").select("id", { count: "exact", head: true }).eq("shop_id", shop.id),
-    siteUrl(),
-  ]);
-  after(() => sendShopChangeEmail("cancelled", booking, shop, teamSize ?? 1, site));
 }
 
 // --------------------------------------------------- shop info (AI notes)
@@ -312,6 +324,10 @@ async function hoursWarning(
   return null;
 }
 
+/** "Thu 5 Nov 10:30", for toasts. */
+const shortWhen = (date: string, time: string) =>
+  `${new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" }).format(new Date(`${date}T12:00:00Z`))} ${time}`;
+
 /** The warning once; the same time and person pressed again goes ahead. */
 const forceKey = (d: { date: string; time: string; staff_id: string }) => `${d.date}T${d.time}|${d.staff_id}`;
 
@@ -353,7 +369,8 @@ export async function ownerAddBooking(_prev: ActionState, formData: FormData): P
     const site = await siteUrl();
     after(() => sendBookingEmails(data.manage_token, site, { notifyOwner: false }));
   }
-  redirect(`/dashboard/calendar?view=${d.view}&date=${d.date}&b=${data.booking_id}`);
+  await flash("added", "Booking added", `${d.customer_name}, ${shortWhen(d.date, d.time)}.`);
+  redirect(`/dashboard/calendar?${d.view === "week" ? "view=week&" : ""}date=${d.date}`);
 }
 
 export async function ownerMoveBooking(_prev: ActionState, formData: FormData): Promise<ActionState> {
@@ -396,5 +413,6 @@ export async function ownerMoveBooking(_prev: ActionState, formData: FormData): 
     siteUrl(),
   ]);
   if (booking?.customer_email) after(() => sendShopChangeEmail("moved", booking, shop, teamSize ?? 1, site));
-  redirect(`/dashboard/calendar?view=${d.view}&date=${d.date}&b=${d.id}`);
+  await flash("moved", "Booking moved", `${booking?.customer_name ?? "The booking"}: now ${shortWhen(d.date, d.time)}.`);
+  redirect(`/dashboard/calendar?${d.view === "week" ? "view=week&" : ""}date=${d.date}`);
 }

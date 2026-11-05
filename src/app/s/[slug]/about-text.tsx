@@ -33,7 +33,7 @@ export function AboutText({ text }: { text: string }) {
           onClick={() => setOpen((o) => !o)}
           aria-expanded={open}
           aria-controls="shop-about"
-          className="mt-1 text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline"
+          className="mt-1 text-sm font-medium text-brand-700 hover:text-brand-800 hover:underline"
         >
           {open ? "Show less" : "Show more"}
         </button>

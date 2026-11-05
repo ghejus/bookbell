@@ -7,7 +7,7 @@ import { createDemoShop } from "@/lib/demo";
 import { hasSupabaseEnv } from "@/lib/env";
 import { requireUser } from "@/lib/shop";
 import { createClient } from "@/lib/supabase/server";
-import { credentialsSchema, firstError } from "@/lib/validation";
+import { credentialsSchema, firstError, safeNextPath } from "@/lib/validation";
 
 const NOT_CONNECTED = "The database isn't connected yet. See the setup steps in README.md.";
 
@@ -34,20 +34,36 @@ function signupErrorMessage(code: string | undefined): string {
   }
 }
 
+/**
+ * Where to go after logging in or signing up: back to the page they came from
+ * (like a shop's booking page), or else their side of the app.
+ */
+function afterAuth(formData: FormData, fallback: string) {
+  return safeNextPath(String(formData.get("next") ?? ""), fallback);
+}
+
 export async function signup(_prev: ActionState, formData: FormData): Promise<ActionState> {
   if (!hasSupabaseEnv) return { error: NOT_CONNECTED };
   const parsed = credentialsSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: firstError(parsed.error) };
+  const customer = formData.get("as") === "customer";
+  const name = String(formData.get("name") ?? "").trim().slice(0, 80);
+  if (customer && !name) return { error: "Type your name." };
+  const next = afterAuth(formData, customer ? "/my" : "/dashboard");
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     ...parsed.data,
-    options: { emailRedirectTo: `${await siteOrigin()}/auth/confirm?next=/dashboard` },
+    options: {
+      // Customers' names fill in the booking form for them.
+      data: name ? { full_name: name } : undefined,
+      emailRedirectTo: `${await siteOrigin()}/auth/confirm?next=${encodeURIComponent(next)}`,
+    },
   });
   if (error) return { error: signupErrorMessage(error.code) };
 
   // If email confirmation is turned off in Supabase, the user is logged in right away.
-  if (data.session) redirect("/dashboard");
+  if (data.session) redirect(next);
 
   // Same message whether or not the email already had an account, so strangers
   // can't use this form to find out who has signed up.
@@ -67,7 +83,8 @@ export async function login(_prev: ActionState, formData: FormData): Promise<Act
     }
     return { error: "Wrong email or password." };
   }
-  redirect("/dashboard");
+  // /start sends shop owners to their shop and everyone else to My bookings.
+  redirect(afterAuth(formData, "/start"));
 }
 
 /**

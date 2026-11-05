@@ -1,9 +1,22 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
+import { safeNextPath } from "@/lib/validation";
 import { login } from "../actions";
 import { AuthForm } from "../auth-form";
 
 export const metadata: Metadata = { title: "Log in" };
 
-export default function LoginPage() {
-  return <AuthForm mode="login" action={login} />;
+async function Form({ searchParams }: Pick<PageProps<"/login">, "searchParams">) {
+  const query = await searchParams;
+  const next = typeof query.next === "string" ? safeNextPath(query.next, "") || undefined : undefined;
+  return <AuthForm mode="login" action={login} as={query.as === "customer" ? "customer" : "owner"} next={next} />;
+}
+
+// The form reads the web address (who it is for, and where to go next), so it waits for a real visit.
+export default function Page(props: PageProps<"/login">) {
+  return (
+    <Suspense>
+      <Form searchParams={props.searchParams} />
+    </Suspense>
+  );
 }

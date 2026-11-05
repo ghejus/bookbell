@@ -1,17 +1,20 @@
 // Bookbell's look, for pictures drawn on the server (icons and link previews).
 // These pictures can't use Tailwind classes, so the colours live here too.
-// They match the brand colours in src/app/globals.css.
+// They match the Nocturne colours in src/app/globals.css.
 
 export const brand = {
-  violet: "#7c3aed", // brand-600
-  violetDark: "#5b21b6", // brand-800
-  violetSoft: "#ede9fe", // brand-100
-  ground: "#f3f4f6", // gray-100
-  ink: "#111827", // gray-900
-  muted: "#4b5563", // gray-600
+  violet: "#9184d9", // accent
+  violetLight: "#b5abfc", // accent-400
+  violetPale: "#d2cefd", // accent-300
+  violetDeep: "#2b2741", // accent-900
+  violetEdge: "#423a6a", // accent-800
+  ground: "#161826",
+  surface: "#232532",
+  ink: "#e9e9ed",
+  muted: "#b2b6ca", // neutral-400
 };
 
-/** A white bell on a violet square: the app icon. `size` is in pixels. */
+/** A pale violet bell on a deep violet square: the app icon. `size` is in pixels. */
 export function BellMark({ size, rounded = true }: { size: number; rounded?: boolean }) {
   return (
     <div
@@ -21,17 +24,17 @@ export function BellMark({ size, rounded = true }: { size: number; rounded?: boo
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        background: brand.violet,
+        background: brand.violetDeep,
         borderRadius: rounded ? size * 0.22 : 0,
       }}
     >
-      {/* The bell drawing from the lucide icon set, which the app already uses. */}
+      {/* A bell drawing (from the lucide icon set). */}
       <svg
         width={size * 0.6}
         height={size * 0.6}
         viewBox="0 0 24 24"
         fill="none"
-        stroke="#ffffff"
+        stroke={brand.violetPale}
         strokeWidth={2.25}
         strokeLinecap="round"
         strokeLinejoin="round"
@@ -61,13 +64,13 @@ export function ShareCard({ title, subtitle, footer }: { title: string; subtitle
     >
       <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
         <BellMark size={64} />
-        <div style={{ fontSize: 40, fontWeight: 600, color: brand.violetDark }}>Bookbell</div>
+        <div style={{ fontSize: 40, fontWeight: 600, color: brand.violetLight }}>Bookbell</div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div
           style={{
             fontSize: title.length > 40 ? 60 : 76,
-            fontWeight: 700,
+            fontWeight: 600,
             lineHeight: 1.1,
             letterSpacing: "-0.02em",
             // Very long shop names stop after two lines instead of spilling off the picture.
@@ -89,8 +92,9 @@ export function ShareCard({ title, subtitle, footer }: { title: string; subtitle
             display: "flex",
             fontSize: 30,
             fontWeight: 600,
-            color: "#ffffff",
-            background: brand.violet,
+            color: brand.violetLight,
+            border: `2px solid ${brand.violet}`,
+            boxShadow: "0 0 40px rgba(145,132,217,0.25)",
             borderRadius: 14,
             padding: "16px 32px",
           }}

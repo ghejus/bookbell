@@ -1,45 +1,140 @@
 @import "tailwindcss";
 
 /*
-  Bookbell design tokens. The look is the familiar booking-app standard:
-  light grey ground, white surfaces, one violet accent for actions and focus.
+  Bookbell's look: "Nocturne", the dark design from design/mobile-app/.
+  A blue-grey night ground, slightly lighter cards, light text, and one
+  soft violet accent that shows up as lines and a glow, never as a big fill.
+
+  New code uses the named colours (ground, surface, ink, line, accent-*,
+  neutral-*, danger-*, success-*). Older screens were written with Tailwind's
+  gray / brand / red / green / amber names, so those names are re-pointed at
+  Nocturne colours below: "gray-900" is now the light text colour, "gray-200"
+  a card edge, and so on.
 */
 @theme {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
-  --color-brand-50: #f5f3ff;
-  --color-brand-100: #ede9fe;
-  --color-brand-200: #ddd6fe;
-  --color-brand-600: #7c3aed;
-  --color-brand-700: #6d28d9;
-  --color-brand-800: #5b21b6;
+  /* The named colours. */
+  --color-ground: #161826; /* the page */
+  --color-surface: #232532; /* cards, sheets */
+  --color-raised: #2b2d3b; /* hover on a card */
+  --color-ink: #e9e9ed; /* text */
+  --color-line: rgb(233 233 237 / 0.16); /* input and button edges */
+  --color-hairline: #3f424d; /* card edges */
 
-  --shadow-card: 0 1px 2px 0 rgb(17 24 39 / 0.05), 0 1px 3px 0 rgb(17 24 39 / 0.06);
+  --color-accent: #9184d9;
+  --color-accent-100: #f5f4ff;
+  --color-accent-200: #e7e5fe;
+  --color-accent-300: #d2cefd;
+  --color-accent-400: #b5abfc;
+  --color-accent-500: #968ae0;
+  --color-accent-600: #796cbf;
+  --color-accent-700: #5d5294;
+  --color-accent-800: #423a6a;
+  --color-accent-900: #2b2741;
+
+  --color-neutral-100: #f3f5fe;
+  --color-neutral-200: #e4e7f5;
+  --color-neutral-300: #cfd3e5;
+  --color-neutral-400: #b2b6ca;
+  --color-neutral-500: #9397ab;
+  --color-neutral-600: #75798c;
+  --color-neutral-700: #595d6c;
+  --color-neutral-800: #3f424d;
+  --color-neutral-900: #292b31;
+
+  --color-danger: #e5675e;
+  --color-danger-soft: #3a2226;
+  --color-danger-text: #f29a94;
+  --color-danger-ink: #f6b4ae;
+  --color-success-soft: #1d3328;
+  --color-success-ink: #a7e3bd;
+
+  /* Older names, re-pointed at Nocturne. */
+  --color-gray-50: #1d1f2d;
+  --color-gray-100: #2b2d3b;
+  --color-gray-200: #3f424d;
+  --color-gray-300: #4a4d5b;
+  --color-gray-400: #595d6c;
+  --color-gray-500: #9397ab;
+  --color-gray-600: #b2b6ca;
+  --color-gray-700: #cfd3e5;
+  --color-gray-800: #e4e7f5;
+  --color-gray-900: #e9e9ed;
+  --color-gray-950: #f3f5fe;
+
+  --color-brand-50: #2b2741;
+  --color-brand-100: #342f52;
+  --color-brand-200: #423a6a;
+  --color-brand-600: #9184d9;
+  --color-brand-700: #b5abfc;
+  --color-brand-800: #d2cefd;
+
+  --color-red-50: #3a2226;
+  --color-red-100: #4a2a2f;
+  --color-red-200: #6b3a3c;
+  --color-red-500: #e5675e;
+  --color-red-700: #f29a94;
+  --color-red-800: #f6b4ae;
+  --color-red-900: #f6b4ae;
+
+  --color-green-50: #1d3328;
+  --color-green-200: #2f5a44;
+  --color-green-600: #6cc492;
+  --color-green-800: #a7e3bd;
+  --color-green-900: #a7e3bd;
+  --color-green-950: #c9f0d6;
+
+  --color-amber-50: #352c1c;
+  --color-amber-200: #5e4c25;
+  --color-amber-900: #f2d38a;
+
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius-2xl: 14px;
+
+  /* On a dark ground, depth is a thin edge plus soft darkness. */
+  --shadow-card: 0 0 0 1px var(--color-hairline);
+  --shadow-sm: 0 0 0 0 transparent;
+  --shadow-lg: 0 0 0 1px #595d6c, 0 6px 18px rgb(0 0 0 / 0.55);
+  --shadow-sheet: 0 0 0 1px #595d6c, 0 -16px 40px rgb(0 0 0 / 0.5);
+  --shadow-glow: 0 0 20px rgb(145 132 217 / 0.14);
 }
 
 @layer base {
   html {
-    color-scheme: light;
+    color-scheme: dark;
+    background: var(--color-ground);
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
-    scrollbar-color: var(--color-gray-300) transparent;
+    scrollbar-color: var(--color-neutral-700) transparent;
   }
 
   body {
-    background: var(--color-gray-100);
-    color: var(--color-gray-900);
+    background: var(--color-ground);
+    color: var(--color-ink);
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
   }
 
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.015em;
+  }
+
   ::selection {
-    background: var(--color-brand-100);
-    color: var(--color-brand-800);
+    background: rgb(145 132 217 / 0.3);
+    color: var(--color-ink);
   }
 
   input,
   textarea {
-    caret-color: var(--color-brand-700);
+    caret-color: var(--color-accent);
+  }
+
+  ::placeholder {
+    color: var(--color-neutral-600);
   }
 
   a {
@@ -55,7 +150,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-brand-600);
+    outline: 2px solid var(--color-accent);
     outline-offset: 2px;
   }
 
@@ -63,5 +158,103 @@
   time,
   .tabular {
     font-variant-numeric: tabular-nums;
+  }
+}
+
+/* A hairline at the top of a row that fades out at both ends: a Nocturne signature. */
+@utility rule-top {
+  background: linear-gradient(to right, transparent, rgb(233 233 237 / 0.1) 48px, rgb(233 233 237 / 0.1) calc(100% - 48px), transparent) no-repeat top / 100% 1px;
+}
+
+/* Choice buttons (days, times, workers): picked, free, or closed. */
+@utility chip-on {
+  border-color: var(--color-accent);
+  background-color: var(--color-accent-900);
+  color: var(--color-accent-200);
+  box-shadow: 0 0 14px rgb(145 132 217 / 0.24);
+}
+@utility chip-off {
+  border-color: var(--color-line);
+  background-color: rgb(233 233 237 / 0.04);
+  color: var(--color-ink);
+  &:hover {
+    background-color: rgb(233 233 237 / 0.08);
+  }
+}
+@utility chip-shut {
+  border-style: dashed;
+  border-color: rgb(233 233 237 / 0.14);
+  background-color: transparent;
+  color: var(--color-neutral-600);
+}
+
+/* Hide scroll bars on sideways strips (the day picker). */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/*
+  Home-screen app on iPhone: the page runs under the status bar, so keep a
+  ground-coloured strip there and start the content below it.
+*/
+@layer base {
+  body {
+    padding-top: env(safe-area-inset-top);
+  }
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 60;
+    height: env(safe-area-inset-top);
+    background: var(--color-ground);
+  }
+}
+
+/* Sheets slide up from the bottom on phones and in from the right on computers. */
+@theme {
+  --animate-sheet-up: sheet-up 0.38s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-drawer-in: drawer-in 0.34s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-toast-in: toast-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-fade-in: fade-in 0.3s ease-out;
+
+  @keyframes sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+  }
+  @keyframes drawer-in {
+    from {
+      transform: translateX(100%);
+    }
+  }
+  @keyframes toast-in {
+    from {
+      transform: translateY(-130%);
+      opacity: 0;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+@layer base {
+  /* The page behind an open sheet stays still. */
+  html:has(dialog[open]) {
+    overflow: hidden;
+  }
+  dialog::backdrop {
+    background: rgb(8 9 16 / 0.62);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    dialog[open]::backdrop {
+      animation: fade-in 0.3s ease-out;
+    }
   }
 }

@@ -1,9 +1,10 @@
-import { Trash2, Users } from "lucide-react";
+import { TrashIcon, UsersIcon } from "@/components/icons";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ActionForm } from "@/components/action-form";
 import { ConfirmDelete, Field, SubmitButton } from "@/components/form";
-import { Badge, Card, CardSection, EmptyState, PageHeader, PageSkeleton } from "@/components/ui";
+import { Badge, Card, CardSection, EmptyState, PageSkeleton } from "@/components/ui";
+import { OwnerHeader } from "../account";
 import { requireShop } from "@/lib/shop";
 import { addStaff, deleteStaff, renameStaff, toggleStaff } from "../actions";
 
@@ -24,7 +25,7 @@ async function TeamContent() {
 
   return (
     <>
-      <PageHeader
+      <OwnerHeader back
         title="Team"
         description="Everyone who takes bookings. Each person has their own calendar, so two people can be booked at the same time."
       />
@@ -32,7 +33,7 @@ async function TeamContent() {
       <div className="space-y-6">
         {team.length === 0 ? (
           <Card>
-            <EmptyState icon={Users} title="Nobody here yet">
+            <EmptyState icon={UsersIcon} title="Nobody here yet">
               Add yourself below. Customers can only book when at least one person is taking bookings.
             </EmptyState>
           </Card>
@@ -57,7 +58,7 @@ async function TeamContent() {
                         required
                         maxLength={60}
                         autoComplete="off"
-                        className={`h-9 min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 font-semibold hover:border-gray-300 focus:border-gray-300 focus:bg-white ${
+                        className={`h-9 min-w-0 flex-1 rounded-lg border border-transparent bg-transparent px-2 font-medium hover:border-gray-300 focus:border-gray-300 focus:bg-surface ${
                           w.active ? "text-gray-900" : "text-gray-600"
                         }`}
                       />
@@ -84,7 +85,7 @@ async function TeamContent() {
                         <form action={deleteStaff}>
                           <input type="hidden" name="id" value={w.id} />
                           <ConfirmDelete label={`Remove ${w.name}`}>
-                            <Trash2 aria-hidden className="size-4.5" />
+                            <TrashIcon aria-hidden className="size-4.5" />
                           </ConfirmDelete>
                         </form>
                       )}

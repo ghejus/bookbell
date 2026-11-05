@@ -9,7 +9,7 @@ web
 ## Users
 
 - **Shop owners** of small, appointment-based local businesses (any kind: barbers, salons, nail studios, dentists, tutors, repair shops). Often not technical. Often setting things up on a phone between customers. Their job: describe the shop once (services, hours, days off, common answers) and then get bookings without answering the phone.
-- **Customers** of those shops (phase 3 and later). They arrive from a link the shop shared, usually on a phone, want to know "can I get in, when, and how much", and book without creating an account.
+- **Customers** of those shops (phase 3 and later). They arrive from a link the shop shared, usually on a phone, want to know "can I get in, when, and how much", and book without creating an account. Since 2026-11-05 they can also make a customer account, so all their bookings show up in "My bookings" (booking without one still works).
 - **Portfolio reviewers** (recruiters, hiring managers, developers) who open the project from the creator's portfolio to judge whether the creator can build real software.
 
 ## Product Purpose
@@ -40,7 +40,7 @@ The AI helper only knows what the owner wrote (shop details, services, hours, an
 ## Brand Commitments
 
 - Name: **Bookbell**, like the little bell on a shop door that rings when a customer walks in; here it rings for a new booking. Chosen by the user on 2026-10-30 (the earlier working name was Bookbell, which still appears in old database files and test email addresses). Written "bookbell" in code and URLs.
-- Visual stance (chosen by the user on 2026-10-29): the familiar booking-app look, played straight and at full craft. It should sit alongside **Booksy** and the **Stripe Dashboard**; their finish is the quality bar.
+- Visual stance (updated by the user on 2026-11-05): a dark phone app, design system **Nocturne**, from the user's own Claude Design file (`design/mobile-app/`). It is used everywhere, phones and computers, and opens from the home screen like a real app (no app stores). The finish of **Booksy** and the **Stripe Dashboard** is still the quality bar. Before this, Bookbell had a light look (2026-10-29).
 
 ## Evidence on Hand
 

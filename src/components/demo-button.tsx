@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle } from "lucide-react";
+import { CircleNotchIcon } from "@/components/icons";
 import { useState, useTransition } from "react";
 import { startDemo } from "@/app/(auth)/actions";
 import { FormMessage } from "@/components/form";
@@ -39,7 +39,7 @@ export function DemoButton({ variant = "secondary", full = true }: { variant?: "
   return (
     <div className={full ? "w-full sm:w-auto" : undefined}>
       <button type="button" onClick={start} disabled={pending} aria-busy={pending} className={`${buttonClass(variant, { full })} ${full ? "w-full" : ""}`}>
-        {pending ? <LoaderCircle aria-hidden className="size-4 motion-safe:animate-spin" /> : null}
+        {pending ? <CircleNotchIcon aria-hidden className="size-4 motion-safe:animate-spin" /> : null}
         {pending ? "Making your demo shop…" : "Try a demo shop"}
       </button>
       {error ? (

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Copy } from "lucide-react";
+import { CheckIcon, CopyIcon } from "@/components/icons";
 import { useState } from "react";
 import { buttonClass } from "@/components/ui";
 
@@ -22,19 +22,19 @@ export function CopyLink({ url }: { url: string }) {
   }
 
   return (
-    <div className="flex flex-col gap-2 sm:flex-row">
+    <div className="flex gap-2">
       <label htmlFor="booking-link" className="sr-only">
         Your booking link
       </label>
       <input
         id="booking-link"
         readOnly
-        value={url}
+        value={url.replace(/^https?:\/\//, "")}
         onFocus={(e) => e.currentTarget.select()}
-        className="h-11 w-full min-w-0 rounded-lg border border-gray-300 bg-gray-50 px-3 text-sm text-gray-900 shadow-sm sm:flex-1"
+        className="h-11 min-w-0 flex-1 rounded-lg border border-line bg-ground px-3 text-sm text-ink focus:border-accent focus:outline-none"
       />
-      <button type="button" onClick={copy} className={buttonClass("secondary", { full: true })}>
-        {copied ? <Check aria-hidden className="size-4 text-green-600" /> : <Copy aria-hidden className="size-4" />}
+      <button type="button" onClick={copy} className={`${buttonClass("secondary")} shrink-0 whitespace-nowrap ${copied ? "text-success-ink" : ""}`}>
+        {copied ? <CheckIcon aria-hidden className="size-4" /> : <CopyIcon aria-hidden className="size-4" />}
         {copied ? "Copied." : "Copy link"}
       </button>
       <span role="status" className="sr-only">

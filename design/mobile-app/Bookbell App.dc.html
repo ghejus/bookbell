@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="_ds/nocturne-4b2b74e1-4119-4a7d-8745-3635245fc41b/styles.css">
+<script src="_ds/nocturne-4b2b74e1-4119-4a7d-8745-3635245fc41b/_ds_bundle.js"></script>
+<script src="https://unpkg.com/@phosphor-icons/web@2.1.1"></script>
+<style>body{margin:0;background:#0e0f18;font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;font-feature-settings:"cv11","ss01"}a{color:#b5abfc;text-decoration:none}a:hover{color:#d2cefd}input::placeholder{color:#75798c}.bb-scroll::-webkit-scrollbar{display:none}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px;box-sizing:border-box">
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="402px,874px">
+<div data-screen-label="Bookbell app" style="position:relative;width:402px;height:874px;background:#161826;color:#e9e9ed;overflow:hidden;font-family:Inter,system-ui,sans-serif;font-size:14px;line-height:1.45;text-align:left">
+
+<div ref="{{ scrollRef }}" class="bb-scroll" style="position:absolute;inset:0;overflow-y:auto;padding:62px 0 132px;box-sizing:border-box;scrollbar-width:none">
+
+<sc-if value="{{ isToday }}" hint-placeholder-val="{{ true }}">
+<div data-screen-label="Owner · Today">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:12px 20px 20px">
+    <div style="min-width:0"><p style="margin:0;font-size:13px;color:#b2b6ca">Wednesday 4 November</p><h1 style="margin:2px 0 0;font-size:28px;font-weight:500;letter-spacing:-0.015em;line-height:1.15">Today</h1></div>
+    <button onClick="{{ openAccount }}" aria-label="Account and view" style="width:36px;height:36px;flex:none;border-radius:50%;background:#2b2741;border:1px solid #423a6a;color:#d2cefd;font:500 14px Inter,sans-serif;cursor:pointer;padding:0">{{ avatar }}</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:24px;padding:0 16px">
+    <sc-if value="{{ next.has }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:14px;padding:18px;border-radius:8px;background:#232532;box-shadow:0 0 0 1px #423a6a, 0 0 40px rgba(145,132,217,0.08)">
+      <div style="display:flex;align-items:center;gap:8px;font-size:13px;color:#d2cefd"><span style="width:6px;height:6px;border-radius:50%;background:#9184d9;box-shadow:0 0 8px #9184d9"></span><span>Next up, {{ next.inText }}</span></div>
+      <div style="display:flex;flex-direction:column;gap:3px">
+        <p style="margin:0;font-size:22px;font-weight:500;letter-spacing:-0.01em;line-height:1.2">{{ next.name }}</p>
+        <p style="margin:0;font-size:14px;color:#b2b6ca">{{ next.detail }}</p>
+        <p style="margin:4px 0 0;font-size:16px;font-weight:500;font-variant-numeric:tabular-nums">{{ next.range }}</p>
+      </div>
+      <sc-if value="{{ next.also }}"><p style="margin:0;font-size:13px;color:#b2b6ca">{{ next.also }}</p></sc-if>
+      <div style="display:flex;gap:8px">
+        <a href="{{ next.tel }}" style="flex:1;height:40px;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(233,233,237,0.16);border-radius:8px;color:#e9e9ed;font-size:14px;font-weight:500" style-hover="background:rgba(233,233,237,0.07);color:#e9e9ed"><i class="ph ph-phone" style="font-size:17px"></i>Call</a>
+        <a href="{{ next.mail }}" style="flex:1;height:40px;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(233,233,237,0.16);border-radius:8px;color:#e9e9ed;font-size:14px;font-weight:500" style-hover="background:rgba(233,233,237,0.07);color:#e9e9ed"><i class="ph ph-envelope-simple" style="font-size:17px"></i>Email</a>
+        <button onClick="{{ next.open }}" style="flex:1;height:40px;display:flex;align-items:center;justify-content:center;gap:4px;border:1px solid #9184d9;border-radius:8px;background:transparent;color:#b5abfc;font:500 14px Inter,sans-serif;cursor:pointer" style-hover="background:rgba(145,132,217,0.12)">Details</button>
+      </div>
+    </div>
+    </sc-if>
+    <section style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 4px"><h2 style="margin:0;font-size:15px;font-weight:500">All of today</h2><span style="font-size:13px;color:#b2b6ca;font-variant-numeric:tabular-nums">{{ todayCount }}</span></div>
+      <div style="border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;overflow:hidden">
+        <sc-for list="{{ todayRows }}" as="r" hint-placeholder-count="6">
+          <sc-if value="{{ r.isNow }}">
+            <div style="display:flex;align-items:center;gap:12px;padding:4px 16px"><span style="width:48px;font-size:12px;font-weight:500;color:#b5abfc;font-variant-numeric:tabular-nums">Now 9:41</span><span style="flex:1;height:1px;background:linear-gradient(to right,#9184d9,transparent);box-shadow:0 0 6px rgba(145,132,217,0.6)"></span></div>
+          </sc-if>
+          <sc-if value="{{ r.isBooking }}">
+            <button onClick="{{ r.open }}" style="all:unset;box-sizing:border-box;width:100%;display:grid;grid-template-columns:48px minmax(0,1fr) auto;align-items:start;gap:0 12px;padding:12px 16px;cursor:pointer;opacity:{{ r.op }};background:linear-gradient(to right,transparent,rgba(233,233,237,0.1) 48px,rgba(233,233,237,0.1) calc(100% - 48px),transparent) no-repeat top / 100% 1px" style-hover="background-color:rgba(233,233,237,0.04)">
+              <span style="font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;padding-top:1px">{{ r.time }}</span>
+              <span style="min-width:0;display:flex;flex-direction:column;gap:2px"><span style="font-size:15px;font-weight:500;overflow-wrap:anywhere">{{ r.name }}</span><span style="font-size:13px;color:#b2b6ca">{{ r.detail }}</span></span>
+              <sc-if value="{{ r.past }}"><span style="font-size:11px;padding:3px 8px;border-radius:6px;background:#3f424d;color:#e4e7f5">Done</span></sc-if>
+              <sc-if value="{{ r.upcoming }}"><i class="ph ph-caret-right" style="font-size:16px;color:#75798c;padding-top:3px"></i></sc-if>
+            </button>
+          </sc-if>
+        </sc-for>
+      </div>
+    </section>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isCalendar }}">
+<div data-screen-label="Owner · Calendar">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:12px 20px 16px">
+    <div style="min-width:0"><p style="margin:0;font-size:13px;color:#b2b6ca">{{ calMonth }}</p><h1 style="margin:2px 0 0;font-size:28px;font-weight:500;letter-spacing:-0.015em;line-height:1.15">Calendar</h1></div>
+    <button onClick="{{ openAccount }}" aria-label="Account and view" style="width:36px;height:36px;flex:none;border-radius:50%;background:#2b2741;border:1px solid #423a6a;color:#d2cefd;font:500 14px Inter,sans-serif;cursor:pointer;padding:0">{{ avatar }}</button>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:0 12px 8px 20px">
+    <span style="font-size:13px;color:#b2b6ca;font-variant-numeric:tabular-nums">{{ weekLabel }}</span>
+    <div style="display:flex;gap:2px">
+      <button onClick="{{ prevWeek }}" aria-label="Earlier week" style="width:36px;height:36px;border:0;border-radius:8px;background:transparent;color:#cfd3e5;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(233,233,237,0.07)"><i class="ph ph-caret-left" style="font-size:18px"></i></button>
+      <button onClick="{{ nextWeek }}" aria-label="Later week" style="width:36px;height:36px;border:0;border-radius:8px;background:transparent;color:#cfd3e5;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(233,233,237,0.07)"><i class="ph ph-caret-right" style="font-size:18px"></i></button>
+    </div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;padding:0 16px">
+    <sc-for list="{{ weekDays }}" as="d" hint-placeholder-count="7">
+      <button onClick="{{ d.onClick }}" style="height:60px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;border-radius:8px;border:1px {{ d.bs }} {{ d.bd }};background:{{ d.bg }};color:{{ d.fg }};box-shadow:{{ d.glow }};cursor:pointer;font-family:Inter,sans-serif;padding:0">
+        <span style="font-size:11px;font-weight:500">{{ d.wd }}</span>
+        <span style="font-size:17px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.2">{{ d.num }}</span>
+        <span style="width:4px;height:4px;border-radius:50%;background:{{ d.dot }}"></span>
+      </button>
+    </sc-for>
+  </div>
+  <sc-if value="{{ calClosed }}">
+    <div style="margin:20px 16px 0;padding:40px 24px;border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px">
+      <span style="width:44px;height:44px;border-radius:50%;background:#3f424d;color:#cfd3e5;display:flex;align-items:center;justify-content:center;margin-bottom:8px"><i class="ph ph-calendar-x" style="font-size:20px"></i></span>
+      <p style="margin:0;font-weight:500">Closed</p>
+      <p style="margin:0;font-size:14px;color:#b2b6ca">There are no opening hours on this day.</p>
+    </div>
+  </sc-if>
+  <sc-if value="{{ calOpen }}">
+    <div style="display:grid;grid-template-columns:44px repeat(2,minmax(0,1fr));gap:0 6px;padding:20px 16px 8px 8px">
+      <span></span>
+      <sc-for list="{{ calCols }}" as="c" hint-placeholder-count="2"><div style="display:flex;align-items:baseline;gap:6px;padding-left:4px"><span style="font-size:14px;font-weight:500">{{ c.name }}</span><span style="font-size:12px;color:#b2b6ca;font-variant-numeric:tabular-nums">{{ c.count }}</span></div></sc-for>
+    </div>
+    <div style="position:relative;display:grid;grid-template-columns:44px repeat(2,minmax(0,1fr));gap:0 6px;padding:0 16px 0 8px">
+      <div style="position:relative;height:594px">
+        <sc-for list="{{ hourMarks }}" as="h" hint-placeholder-count="10"><span style="position:absolute;right:6px;top:{{ h.top }}px;transform:translateY(-50%);font-size:11px;color:#75798c;font-variant-numeric:tabular-nums">{{ h.label }}</span></sc-for>
+      </div>
+      <sc-for list="{{ calCols }}" as="c" hint-placeholder-count="2">
+        <div onClick="{{ c.onTap }}" style="position:relative;height:594px;border-radius:8px;cursor:copy;box-shadow:inset 0 0 0 1px rgba(233,233,237,0.06);background:repeating-linear-gradient(to bottom,rgba(233,233,237,0.07) 0 1px,transparent 1px 66px)">
+          <sc-for list="{{ c.closed }}" as="z"><div style="position:absolute;left:0;right:0;top:{{ z.top }}px;height:{{ z.h }}px;background:repeating-linear-gradient(135deg,rgba(233,233,237,0.045) 0 6px,transparent 6px 12px);pointer-events:none"></div></sc-for>
+          <sc-for list="{{ c.blocks }}" as="b">
+            <button onClick="{{ b.open }}" style="all:unset;box-sizing:border-box;position:absolute;left:3px;right:3px;top:{{ b.top }}px;height:{{ b.h }}px;padding:{{ b.pad }};border-radius:6px;background:{{ b.bg }};box-shadow:inset 0 0 0 1px {{ b.bd }};color:{{ b.fg }};overflow:hidden;cursor:pointer;display:flex;flex-wrap:{{ b.wrap }};align-content:flex-start;align-items:center;column-gap:6px;line-height:14px">
+              <span style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-width:0;flex-shrink:1">{{ b.name }}</span>
+              <span style="font-size:11px;opacity:0.75;font-variant-numeric:tabular-nums;white-space:nowrap">{{ b.time }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-for>
+      <sc-if value="{{ calIsToday }}"><div style="position:absolute;left:52px;right:16px;top:{{ nowTop }}px;height:1px;background:#9184d9;box-shadow:0 0 6px #9184d9;pointer-events:none"><span style="position:absolute;left:-4px;top:-3.5px;width:8px;height:8px;border-radius:50%;background:#9184d9"></span></div></sc-if>
+    </div>
+    <p style="margin:12px 20px 0;font-size:13px;color:#b2b6ca">Tap an empty time to add a booking there.</p>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBookings }}">
+<div data-screen-label="Owner · Bookings">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:12px 20px 16px">
+    <div style="min-width:0"><p style="margin:0;font-size:13px;color:#b2b6ca">{{ bkCaption }}</p><h1 style="margin:2px 0 0;font-size:28px;font-weight:500;letter-spacing:-0.015em;line-height:1.15">Bookings</h1></div>
+    <button onClick="{{ openAccount }}" aria-label="Account and view" style="width:36px;height:36px;flex:none;border-radius:50%;background:#2b2741;border:1px solid #423a6a;color:#d2cefd;font:500 14px Inter,sans-serif;cursor:pointer;padding:0">{{ avatar }}</button>
+  </div>
+  <div style="padding:0 16px 20px">
+    <div style="display:inline-flex;border:1px solid rgba(233,233,237,0.16);border-radius:8px;overflow:hidden">
+      <sc-for list="{{ bkSeg }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.onClick }}" style="border:0;background:{{ o.bg }};box-shadow:{{ o.ring }};color:{{ o.fg }};font:500 13px Inter,sans-serif;padding:8px 16px;cursor:pointer">{{ o.label }}</button></sc-for>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:22px;padding:0 16px">
+    <sc-for list="{{ bkGroups }}" as="g" hint-placeholder-count="2">
+      <section style="display:flex;flex-direction:column;gap:8px">
+        <h2 style="margin:0;padding:0 4px;font-size:13px;font-weight:500;color:#e9e9ed">{{ g.title }}</h2>
+        <div style="border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;overflow:hidden">
+          <sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+            <div style="display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:0 12px;padding:12px 8px 13px 16px;background:linear-gradient(to right,transparent,rgba(233,233,237,0.1) 48px,rgba(233,233,237,0.1) calc(100% - 48px),transparent) no-repeat top / 100% 1px">
+              <span style="font-size:14px;font-weight:500;font-variant-numeric:tabular-nums;padding-top:7px">{{ r.time }}</span>
+              <button onClick="{{ r.open }}" style="all:unset;cursor:pointer;min-width:0;padding-top:6px;font-size:15px;font-weight:500;overflow-wrap:anywhere" style-hover="text-decoration:underline">{{ r.name }}</button>
+              <div style="display:flex;justify-content:flex-end;min-width:36px">
+                <sc-if value="{{ r.showX }}"><button onClick="{{ r.onCancel }}" aria-label="{{ r.cancelLabel }}" style="width:36px;height:36px;border:0;border-radius:8px;background:transparent;color:#9397ab;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="color:#f29a94;background:rgba(242,154,148,0.1)"><i class="ph ph-x" style="font-size:17px"></i></button></sc-if>
+                <sc-if value="{{ r.armed }}"><button onClick="{{ r.onCancel }}" style="height:36px;padding:0 12px;border:1px solid #e5675e;border-radius:8px;background:#3a2226;color:#f6b4ae;font:500 13px Inter,sans-serif;cursor:pointer">Cancel?</button></sc-if>
+              </div>
+              <div style="grid-column:2 / 4;min-width:0;display:flex;flex-direction:column;gap:4px;padding-right:8px">
+                <p style="margin:0;font-size:13px;color:#b2b6ca">{{ r.detail }}</p>
+                <div style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px">
+                  <sc-if value="{{ r.email }}"><a href="{{ r.mail }}" style="display:flex;align-items:flex-start;gap:5px;color:#cfd3e5;min-width:0;overflow-wrap:anywhere"><i class="ph ph-envelope-simple" style="font-size:14px;color:#9397ab;margin-top:2px;flex:none"></i>{{ r.email }}</a></sc-if>
+                  <sc-if value="{{ r.phone }}"><a href="{{ r.tel }}" style="display:flex;align-items:flex-start;gap:5px;color:#cfd3e5"><i class="ph ph-phone" style="font-size:14px;color:#9397ab;margin-top:2px;flex:none"></i>{{ r.phone }}</a></sc-if>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+    <sc-if value="{{ bkEmpty }}">
+      <div style="padding:40px 24px;border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px">
+        <span style="width:44px;height:44px;border-radius:50%;background:#3f424d;color:#cfd3e5;display:flex;align-items:center;justify-content:center;margin-bottom:8px"><i class="ph ph-calendar-blank" style="font-size:20px"></i></span>
+        <p style="margin:0;font-weight:500">No bookings yet</p>
+        <p style="margin:0;font-size:14px;color:#b2b6ca">Share your booking page with customers. New bookings show up here right away.</p>
+      </div>
+    </sc-if>
+    <sc-if value="{{ bkUpcoming }}"><p style="margin:0;padding:0 4px;font-size:13px;color:#b2b6ca">Cancelling frees the time for others. Emails aren’t switched on yet, so please let the customer know.</p></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isShop }}">
+<div data-screen-label="Owner · Shop">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:12px 20px 20px">
+    <div style="min-width:0"><p style="margin:0;font-size:13px;color:#b2b6ca">Your shop</p><h1 style="margin:2px 0 0;font-size:28px;font-weight:500;letter-spacing:-0.015em;line-height:1.15;overflow-wrap:anywhere">Demo Barber Shop</h1></div>
+    <button onClick="{{ openAccount }}" aria-label="Account and view" style="width:36px;height:36px;flex:none;border-radius:50%;background:#2b2741;border:1px solid #423a6a;color:#d2cefd;font:500 14px Inter,sans-serif;cursor:pointer;padding:0">{{ avatar }}</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:22px;padding:0 16px">
+    <div style="padding:18px;border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;display:flex;flex-direction:column;gap:14px">
+      <div><h2 style="margin:0;font-size:16px;font-weight:500">Your booking page</h2><p style="margin:3px 0 0;font-size:14px;color:#b2b6ca">Share this link with customers. New bookings show up right away.</p></div>
+      <div style="display:flex;gap:8px">
+        <input readonly="readonly" value="bookbell.vercel.app/s/demo-4f2a9c1e" style="flex:1;min-width:0;height:44px;box-sizing:border-box;padding:0 12px;font:14px Inter,sans-serif;color:#e9e9ed;background:#161826;border:1px solid rgba(233,233,237,0.16);border-radius:8px;outline:none">
+        <button onClick="{{ copyLink }}" style="height:44px;padding:0 14px;display:flex;align-items:center;gap:6px;border:1px solid rgba(233,233,237,0.16);border-radius:8px;background:transparent;color:{{ copyFg }};font:500 14px Inter,sans-serif;cursor:pointer;white-space:nowrap" style-hover="background:rgba(233,233,237,0.07)"><i class="{{ copyIcon }}" style="font-size:16px"></i>{{ copyText }}</button>
+      </div>
+      <button onClick="{{ viewAsCustomer }}" style="align-self:flex-start;border:0;background:transparent;padding:4px 0;color:#b5abfc;font:500 14px Inter,sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="color:#d2cefd"><i class="ph ph-arrow-square-out" style="font-size:16px"></i>Open it as a customer</button>
+    </div>
+    <section style="display:flex;flex-direction:column;gap:8px">
+      <h2 style="margin:0;padding:0 4px;font-size:13px;font-weight:500">Set up</h2>
+      <div style="border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;overflow:hidden">
+        <sc-for list="{{ setupRows }}" as="s" hint-placeholder-count="4">
+          <button onClick="{{ s.open }}" style="all:unset;box-sizing:border-box;width:100%;min-height:56px;display:flex;align-items:center;gap:12px;padding:0 14px 0 16px;cursor:pointer;background:linear-gradient(to right,transparent,rgba(233,233,237,0.1) 48px,rgba(233,233,237,0.1) calc(100% - 48px),transparent) no-repeat top / 100% 1px" style-hover="background-color:rgba(233,233,237,0.04)">
+            <i class="{{ s.icon }}" style="font-size:20px;color:#9397ab"></i>
+            <span style="flex:1;font-size:15px;font-weight:500">{{ s.label }}</span>
+            <span style="font-size:13px;color:#b2b6ca">{{ s.value }}</span>
+            <i class="ph ph-caret-right" style="font-size:16px;color:#75798c"></i>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+    <div style="display:flex;flex-direction:column;gap:4px;padding:0 4px">
+      <p style="margin:0;font-size:13px;color:#b2b6ca;display:flex;gap:6px;align-items:flex-start"><i class="ph ph-map-pin" style="font-size:15px;color:#9397ab;margin-top:1px"></i>Strada Exemplu 1, București</p>
+      <p style="margin:0;font-size:13px;color:#b2b6ca;display:flex;gap:6px;align-items:flex-start"><i class="ph ph-phone" style="font-size:15px;color:#9397ab;margin-top:1px"></i>+40 700 000 000</p>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isBook }}">
+<div data-screen-label="Customer · Shop page">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 20px 0">
+    <h1 style="margin:0;font-size:28px;font-weight:500;letter-spacing:-0.015em;line-height:1.15;overflow-wrap:anywhere">Demo Barber Shop</h1>
+    <button onClick="{{ openAccount }}" aria-label="Account and view" style="width:36px;height:36px;flex:none;border-radius:50%;background:#2b2741;border:1px solid #423a6a;color:#d2cefd;font:500 14px Inter,sans-serif;cursor:pointer;padding:0">{{ avatar }}</button>
+  </div>
+  <div style="padding:8px 20px 0;display:flex;flex-direction:column;gap:10px">
+    <p style="margin:0;font-size:14px;color:#b2b6ca;text-wrap:pretty">This is your own demo shop. Change anything you like, try booking a time, or ask the chat helper a question. Nobody else sees your changes.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:6px 18px;font-size:14px;color:#b2b6ca">
+      <span style="display:flex;gap:6px;align-items:flex-start"><i class="ph ph-map-pin" style="font-size:16px;color:#9397ab;margin-top:1px"></i>Strada Exemplu 1, București</span>
+      <a href="tel:+40700000000" style="display:flex;gap:6px;align-items:flex-start;color:#b2b6ca"><i class="ph ph-phone" style="font-size:16px;color:#9397ab;margin-top:1px"></i>+40 700 000 000</a>
+    </div>
+  </div>
+
+  <sc-if value="{{ cbBooked }}">
+    <div style="margin:24px 16px 0;padding:28px 20px 24px;border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;display:flex;flex-direction:column;align-items:center;text-align:center">
+      <span style="width:44px;height:44px;border-radius:50%;background:#1d3328;color:#a7e3bd;display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1px rgba(134,217,165,0.3)"><i class="ph ph-calendar-check" style="font-size:21px"></i></span>
+      <h2 style="margin:12px 0 0;font-size:19px;font-weight:500">You’re booked</h2>
+      <p style="margin:8px 0 0;font-size:15px">{{ receipt.summary }}</p>
+      <p style="margin:2px 0 0;font-size:15px;font-weight:500;font-variant-numeric:tabular-nums">{{ receipt.when }}</p>
+      <p style="margin:10px 0 0;font-size:14px;color:#b2b6ca;max-width:300px">{{ receipt.note }}</p>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:18px">
+        <button style="height:44px;padding:0 14px;display:flex;align-items:center;gap:6px;border:1px solid rgba(233,233,237,0.16);border-radius:8px;background:transparent;color:#e9e9ed;font:500 14px Inter,sans-serif;cursor:pointer" style-hover="background:rgba(233,233,237,0.07)"><i class="ph ph-calendar-plus" style="font-size:16px"></i>Add to calendar</button>
+        <button onClick="{{ goMine }}" style="height:44px;padding:0 14px;display:flex;align-items:center;gap:6px;border:1px solid rgba(233,233,237,0.16);border-radius:8px;background:transparent;color:#e9e9ed;font:500 14px Inter,sans-serif;cursor:pointer" style-hover="background:rgba(233,233,237,0.07)"><i class="ph ph-calendar-dots" style="font-size:16px"></i>Change or cancel</button>
+      </div>
+      <div style="align-self:stretch;margin-top:22px;padding-top:18px;background:linear-gradient(to right,transparent,rgba(233,233,237,0.14) 48px,rgba(233,233,237,0.14) calc(100% - 48px),transparent) no-repeat top / 100% 1px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:14px;color:#cfd3e5">
+        <span style="display:flex;gap:6px;align-items:center"><i class="ph ph-map-pin" style="font-size:16px;color:#9397ab"></i>Strada Exemplu 1, București</span>
+        <a href="tel:+40700000000" style="display:flex;gap:6px;align-items:center;font-weight:500"><i class="ph ph-phone" style="font-size:16px"></i>Call +40 700 000 000</a>
+      </div>
+      <button onClick="{{ bookAgain }}" style="margin-top:18px;border:0;background:transparent;color:#b5abfc;font:500 14px Inter,sans-serif;cursor:pointer;padding:6px" style-hover="color:#d2cefd">Book another time</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ cbSteps }}" hint-placeholder-val="{{ true }}">
+  <div style="display:flex;flex-direction:column;gap:26px;padding-top:26px">
+    <section style="display:flex;flex-direction:column;gap:10px;padding:0 16px">
+      <h2 style="margin:0;padding:0 4px;font-size:16px;font-weight:500">1. Choose a service</h2>
+      <sc-for list="{{ cbSvcRows }}" as="s" hint-placeholder-count="4">
+        <button onClick="{{ s.onClick }}" style="all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:12px;padding:13px 16px;border-radius:8px;cursor:pointer;background:{{ s.bg }};box-shadow:{{ s.ring }};transition:box-shadow .15s, background .15s">
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><span style="font-size:15px;font-weight:500;overflow-wrap:anywhere">{{ s.name }}</span><span style="font-size:13px;color:#b2b6ca;font-variant-numeric:tabular-nums">{{ s.dur }}</span></span>
+          <span style="font-size:15px;font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap">{{ s.price }}</span>
+        </button>
+      </sc-for>
+    </section>
+    <sc-if value="{{ cbHasSvc }}">
+      <section style="display:flex;flex-direction:column;gap:10px;padding:0 16px">
+        <h2 style="margin:0;padding:0 4px;font-size:16px;font-weight:500">2. Who would you like?</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ cbWho }}" as="w" hint-placeholder-count="3"><button onClick="{{ w.onClick }}" style="height:44px;padding:0 16px;border-radius:8px;border:1px solid {{ w.bd }};background:{{ w.bg }};color:{{ w.fg }};box-shadow:{{ w.glow }};font:500 14px Inter,sans-serif;cursor:pointer">{{ w.name }}</button></sc-for>
+        </div>
+      </section>
+      <section style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 20px"><h2 style="margin:0;font-size:16px;font-weight:500">3. Choose a day</h2><span style="font-size:13px;color:#b2b6ca;white-space:nowrap">{{ cbMonths }}</span></div>
+        <div class="bb-scroll" style="display:flex;gap:8px;overflow-x:auto;padding:2px 16px 4px;scrollbar-width:none">
+          <sc-for list="{{ cbDays }}" as="d" hint-placeholder-count="7">
+            <button onClick="{{ d.onClick }}" disabled="{{ d.closed }}" style="flex:none;width:56px;height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;border:1px {{ d.bs }} {{ d.bd }};background:{{ d.bg }};color:{{ d.fg }};box-shadow:{{ d.glow }};cursor:pointer;font-family:Inter,sans-serif;padding:0">
+              <span style="font-size:12px;font-weight:500">{{ d.wd }}</span>
+              <span style="font-size:18px;font-weight:500;font-variant-numeric:tabular-nums;line-height:1.25">{{ d.num }}</span>
+            </button>
+          </sc-for>
+        </div>
+        <p style="margin:0;padding:0 20px;font-size:13px;color:#b2b6ca">Times are Bucharest time.</p>
+      </section>
+      <section style="display:flex;flex-direction:column;gap:10px;padding:0 16px">
+        <h2 style="margin:0;padding:0 4px;font-size:16px;font-weight:500">4. Choose a time</h2>
+        <div style="padding:18px;border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;display:flex;flex-direction:column;gap:18px">
+          <sc-if value="{{ cbNoSlots }}"><p style="margin:0;font-size:14px;color:#b2b6ca">No free times on this day. Please pick another day.</p></sc-if>
+          <sc-if value="{{ cbHasSlots }}">
+            <p style="margin:0;font-size:14px;font-weight:500">Free times on {{ cbDayLabel }}</p>
+            <sc-for list="{{ cbGroups }}" as="g" hint-placeholder-count="2">
+              <div style="display:flex;flex-direction:column;gap:8px">
+                <p style="margin:0;font-size:12px;font-weight:500;color:#b2b6ca">{{ g.name }}</p>
+                <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+                  <sc-for list="{{ g.slots }}" as="t"><button onClick="{{ t.onClick }}" style="height:44px;border-radius:8px;border:1px solid {{ t.bd }};background:{{ t.bg }};color:{{ t.fg }};box-shadow:{{ t.glow }};font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">{{ t.label }}</button></sc-for>
+                </div>
+              </div>
+            </sc-for>
+          </sc-if>
+          <div style="display:flex;flex-direction:column;gap:16px;padding-top:18px;background:linear-gradient(to right,transparent,rgba(233,233,237,0.14) 48px,rgba(233,233,237,0.14) calc(100% - 48px),transparent) no-repeat top / 100% 1px">
+            <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500">Your name</span><input value="{{ cb.name }}" onChange="{{ onCbName }}" autocomplete="name" style="height:44px;box-sizing:border-box;padding:0 12px;font:16px Inter,sans-serif;color:#e9e9ed;background:#161826;border:1px solid rgba(233,233,237,0.16);border-radius:8px;outline:none" style-focus="border-color:#9184d9;box-shadow:0 0 0 3px rgba(145,132,217,0.2)"></label>
+            <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500">Email</span><input type="email" value="{{ cb.email }}" onChange="{{ onCbEmail }}" autocomplete="email" style="height:44px;box-sizing:border-box;padding:0 12px;font:16px Inter,sans-serif;color:#e9e9ed;background:#161826;border:1px solid rgba(233,233,237,0.16);border-radius:8px;outline:none" style-focus="border-color:#9184d9;box-shadow:0 0 0 3px rgba(145,132,217,0.2)"><span style="font-size:13px;color:#b2b6ca">Only the shop sees it.</span></label>
+            <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500">Phone <span style="font-weight:400;color:#b2b6ca">(optional)</span></span><input type="tel" value="{{ cb.phone }}" onChange="{{ onCbPhone }}" autocomplete="tel" style="height:44px;box-sizing:border-box;padding:0 12px;font:16px Inter,sans-serif;color:#e9e9ed;background:#161826;border:1px solid rgba(233,233,237,0.16);border-radius:8px;outline:none" style-focus="border-color:#9184d9;box-shadow:0 0 0 3px rgba(145,132,217,0.2)"></label>
+            <sc-if value="{{ cb.err }}"><div role="alert" style="display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:#3a2226;color:#f6b4ae;box-shadow:inset 0 0 0 1px rgba(242,154,148,0.3);font-size:14px"><i class="ph ph-warning-circle" style="font-size:17px;margin-top:1px"></i>{{ cb.err }}</div></sc-if>
+            <button onClick="{{ submitCb }}" style="height:48px;border-radius:8px;border:1px solid #9184d9;background:transparent;color:#b5abfc;box-shadow:0 0 20px rgba(145,132,217,0.14);font:500 15px Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer" style-hover="background:rgba(145,132,217,0.12)" style-active="background:rgba(145,132,217,0.22)">{{ cbCta }}</button>
+          </div>
+        </div>
+      </section>
+    </sc-if>
+    <p style="margin:6px 0 0;text-align:center;font-size:13px;color:#b2b6ca">Booking by <span style="color:#b5abfc;font-weight:500">Bookbell</span></p>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMine }}">
+<div data-screen-label="Customer · My bookings">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:12px 20px 20px">
+    <div style="min-width:0"><p style="margin:0;font-size:13px;color:#b2b6ca">{{ mineCaption }}</p><h1 style="margin:2px 0 0;font-size:28px;font-weight:500;letter-spacing:-0.015em;line-height:1.15">My bookings</h1></div>
+    <button onClick="{{ openAccount }}" aria-label="Account and view" style="width:36px;height:36px;flex:none;border-radius:50%;background:#2b2741;border:1px solid #423a6a;color:#d2cefd;font:500 14px Inter,sans-serif;cursor:pointer;padding:0">{{ avatar }}</button>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:14px;padding:0 16px">
+    <sc-if value="{{ myMsg }}"><div role="status" style="display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:#1d3328;color:#a7e3bd;box-shadow:inset 0 0 0 1px rgba(134,217,165,0.3);font-size:14px"><i class="ph ph-check-circle" style="font-size:17px;margin-top:1px"></i>{{ myMsg }}</div></sc-if>
+    <sc-for list="{{ myCards }}" as="m" hint-placeholder-count="1">
+      <div style="padding:18px;border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <p style="margin:0;font-size:13px;color:#d2cefd">{{ m.dateLabel }}</p>
+          <p style="margin:0;font-size:24px;font-weight:500;letter-spacing:-0.01em;font-variant-numeric:tabular-nums">{{ m.range }}</p>
+          <p style="margin:4px 0 0;font-size:15px">{{ m.svcLine }}</p>
+          <p style="margin:0;font-size:14px;color:#b2b6ca">{{ m.where }}</p>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <button onClick="{{ m.onReschedule }}" style="height:40px;padding:0 14px;display:flex;align-items:center;gap:6px;border:1px solid #9184d9;border-radius:8px;background:transparent;color:#b5abfc;font:500 14px Inter,sans-serif;cursor:pointer" style-hover="background:rgba(145,132,217,0.12)"><i class="ph ph-clock-clockwise" style="font-size:16px"></i>Change time</button>
+          <button style="height:40px;padding:0 14px;display:flex;align-items:center;gap:6px;border:1px solid rgba(233,233,237,0.16);border-radius:8px;background:transparent;color:#e9e9ed;font:500 14px Inter,sans-serif;cursor:pointer" style-hover="background:rgba(233,233,237,0.07)"><i class="ph ph-calendar-plus" style="font-size:16px"></i>Add to calendar</button>
+          <sc-if value="{{ m.showX }}"><button onClick="{{ m.onCancel }}" style="height:40px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:#cfd3e5;font:500 14px Inter,sans-serif;cursor:pointer" style-hover="color:#f29a94;background:rgba(242,154,148,0.1)">Cancel</button></sc-if>
+          <sc-if value="{{ m.armed }}"><button onClick="{{ m.onCancel }}" style="height:40px;padding:0 12px;border:1px solid #e5675e;border-radius:8px;background:#3a2226;color:#f6b4ae;font:500 14px Inter,sans-serif;cursor:pointer">Cancel?</button></sc-if>
+        </div>
+      </div>
+    </sc-for>
+    <sc-if value="{{ myEmpty }}">
+      <div style="padding:40px 24px;border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px">
+        <span style="width:44px;height:44px;border-radius:50%;background:#3f424d;color:#cfd3e5;display:flex;align-items:center;justify-content:center;margin-bottom:8px"><i class="ph ph-calendar-blank" style="font-size:20px"></i></span>
+        <p style="margin:0;font-weight:500">No upcoming bookings</p>
+        <p style="margin:0;font-size:14px;color:#b2b6ca">Times you book show up here, so you can change or cancel them.</p>
+        <button onClick="{{ goBook }}" style="margin-top:12px;height:40px;padding:0 14px;border:1px solid rgba(233,233,237,0.16);border-radius:8px;background:transparent;color:#e9e9ed;font:500 14px Inter,sans-serif;cursor:pointer">Book a time</button>
+      </div>
+    </sc-if>
+    <section style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+      <h2 style="margin:0;padding:0 4px;font-size:13px;font-weight:500">Past</h2>
+      <div style="border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;overflow:hidden">
+        <sc-for list="{{ myPast }}" as="p" hint-placeholder-count="1">
+          <div style="display:flex;justify-content:space-between;gap:12px;padding:13px 16px;font-size:14px;background:linear-gradient(to right,transparent,rgba(233,233,237,0.1) 48px,rgba(233,233,237,0.1) calc(100% - 48px),transparent) no-repeat top / 100% 1px"><span>{{ p.svc }}</span><span style="color:#b2b6ca;font-variant-numeric:tabular-nums">{{ p.when }}</span></div>
+        </sc-for>
+      </div>
+    </section>
+  </div>
+</div>
+</sc-if>
+</div>
+
+<div style="position:absolute;inset:0;z-index:5;background:#161826;transform:{{ subTf }};transition:transform .34s cubic-bezier(.2,.8,.2,1);overflow-y:auto;padding:58px 0 132px;box-sizing:border-box;scrollbar-width:none" class="bb-scroll">
+  <button onClick="{{ closeSub }}" style="display:flex;align-items:center;gap:2px;margin:4px 0 0 8px;height:40px;padding:0 10px 0 4px;border:0;border-radius:8px;background:transparent;color:#b5abfc;font:500 15px Inter,sans-serif;cursor:pointer" style-hover="background:rgba(145,132,217,0.1)"><i class="ph ph-caret-left" style="font-size:20px"></i>Shop</button>
+  <sc-if value="{{ subServices }}">
+    <div data-screen-label="Owner · Services" style="padding:6px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="padding:0 4px"><h1 style="margin:0;font-size:28px;font-weight:500;letter-spacing:-0.015em">Services</h1><p style="margin:3px 0 0;font-size:14px;color:#b2b6ca">What customers can book. Hidden services stay saved but don’t show on your page.</p></div>
+      <div style="border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;overflow:hidden">
+        <sc-for list="{{ svcRows }}" as="s" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:10px;padding:12px 8px 12px 16px;background:linear-gradient(to right,transparent,rgba(233,233,237,0.1) 48px,rgba(233,233,237,0.1) calc(100% - 48px),transparent) no-repeat top / 100% 1px">
+            <div style="flex:1;min-width:0;opacity:{{ s.op }}"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:15px;font-weight:500">{{ s.name }}</span><sc-if value="{{ s.hidden }}"><span style="font-size:11px;padding:2px 8px;border-radius:6px;background:#3f424d;color:#e4e7f5">Hidden</span></sc-if></div><span style="font-size:13px;color:#b2b6ca;font-variant-numeric:tabular-nums">{{ s.meta }}</span></div>
+            <button onClick="{{ s.toggle }}" aria-label="{{ s.toggleLabel }}" style="height:36px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:#cfd3e5;font:500 13px Inter,sans-serif;cursor:pointer" style-hover="background:rgba(233,233,237,0.07)">{{ s.toggleText }}</button>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ subHours }}">
+    <div data-screen-label="Owner · Hours" style="padding:6px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="padding:0 4px"><h1 style="margin:0;font-size:28px;font-weight:500;letter-spacing:-0.015em">Hours and days off</h1><p style="margin:3px 0 0;font-size:14px;color:#b2b6ca">Customers can only book inside these hours.</p></div>
+      <div style="border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;overflow:hidden">
+        <sc-for list="{{ hourRows }}" as="h" hint-placeholder-count="7">
+          <div style="display:grid;grid-template-columns:6rem minmax(0,1fr);gap:10px;align-items:start;padding:12px 16px;background:linear-gradient(to right,transparent,rgba(233,233,237,0.1) 48px,rgba(233,233,237,0.1) calc(100% - 48px),transparent) no-repeat top / 100% 1px">
+            <span style="font-size:14px;font-weight:500;line-height:30px">{{ h.name }}</span>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <sc-for list="{{ h.chips }}" as="c"><span style="height:30px;display:inline-flex;align-items:center;padding:0 10px;border-radius:6px;background:#161826;box-shadow:inset 0 0 0 1px rgba(233,233,237,0.12);font-size:13px;font-variant-numeric:tabular-nums">{{ c }}</span></sc-for>
+              <sc-if value="{{ h.closed }}"><span style="height:24px;margin-top:3px;display:inline-flex;align-items:center;padding:0 9px;border-radius:6px;background:#3f424d;color:#e4e7f5;font-size:12px">Closed</span></sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+      <h2 style="margin:8px 0 0;padding:0 4px;font-size:13px;font-weight:500">Days off</h2>
+      <div style="border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;padding:13px 16px;display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:15px;font-weight:500;font-variant-numeric:tabular-nums">Thu 24 Dec – Sat 26 Dec</span>
+        <span style="font-size:13px;color:#b2b6ca">Christmas · Only you see the reason.</span>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ subNotes }}">
+    <div data-screen-label="Owner · AI notes" style="padding:6px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="padding:0 4px"><h1 style="margin:0;font-size:28px;font-weight:500;letter-spacing:-0.015em">AI notes</h1><p style="margin:3px 0 0;font-size:14px;color:#b2b6ca">The chat helper answers only from these notes and your shop details.</p></div>
+      <div style="border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;overflow:hidden">
+        <sc-for list="{{ notes }}" as="n" hint-placeholder-count="4">
+          <div style="padding:13px 16px;display:flex;flex-direction:column;gap:3px;background:linear-gradient(to right,transparent,rgba(233,233,237,0.1) 48px,rgba(233,233,237,0.1) calc(100% - 48px),transparent) no-repeat top / 100% 1px"><span style="font-size:15px;font-weight:500">{{ n.q }}</span><span style="font-size:14px;color:#b2b6ca">{{ n.a }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ subTeam }}">
+    <div data-screen-label="Owner · Team" style="padding:6px 16px 0;display:flex;flex-direction:column;gap:14px">
+      <div style="padding:0 4px"><h1 style="margin:0;font-size:28px;font-weight:500;letter-spacing:-0.015em">Team</h1><p style="margin:3px 0 0;font-size:14px;color:#b2b6ca">Customers can pick who they’d like, or anyone.</p></div>
+      <div style="border-radius:8px;background:#232532;box-shadow:0 0 0 1px #3f424d;overflow:hidden">
+        <sc-for list="{{ teamRows }}" as="t" hint-placeholder-count="2">
+          <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:linear-gradient(to right,transparent,rgba(233,233,237,0.1) 48px,rgba(233,233,237,0.1) calc(100% - 48px),transparent) no-repeat top / 100% 1px">
+            <span style="width:36px;height:36px;border-radius:50%;background:#3f424d;color:#e4e7f5;display:flex;align-items:center;justify-content:center;font-weight:500">{{ t.initial }}</span>
+            <span style="flex:1;font-size:15px;font-weight:500">{{ t.name }}</span>
+            <span style="font-size:13px;color:#b2b6ca;font-variant-numeric:tabular-nums">{{ t.count }}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+<nav style="position:absolute;left:0;right:0;bottom:0;z-index:20;height:86px;padding:7px 10px 0;box-sizing:border-box;background:rgba(22,24,38,0.9);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:flex;align-items:flex-start">
+  <div style="position:absolute;left:0;right:0;top:0;height:1px;background:linear-gradient(to right,transparent,rgba(233,233,237,0.14) 48px,rgba(233,233,237,0.14) calc(100% - 48px),transparent)"></div>
+  <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+    <sc-if value="{{ t.isGap }}"><div style="width:72px;flex:none"></div></sc-if>
+    <sc-if value="{{ t.isTab }}"><button onClick="{{ t.onClick }}" aria-current="{{ t.current }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 0;border:0;background:transparent;color:{{ t.fg }};font:500 11px Inter,sans-serif;cursor:pointer"><i class="{{ t.icon }}" style="font-size:24px"></i>{{ t.label }}</button></sc-if>
+  </sc-for>
+</nav>
+<sc-if value="{{ fabCenter }}">
+  <button onClick="{{ openNew }}" aria-label="New booking" style="position:absolute;z-index:21;left:50%;bottom:42px;margin-left:-29px;width:58px;height:58px;border-radius:50%;background:#232532;border:1px solid #9184d9;color:#b5abfc;box-shadow:0 0 0 5px #161826, 0 0 26px rgba(145,132,217,0.38);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0" style-hover="background:#2b2741" style-active="background:#423a6a"><i class="ph ph-plus" style="font-size:26px"></i></button>
+</sc-if>
+<sc-if value="{{ fabPill }}">
+  <button onClick="{{ openNew }}" style="position:absolute;z-index:21;right:16px;bottom:102px;height:48px;padding:0 18px 0 14px;border-radius:999px;background:#232532;border:1px solid #9184d9;color:#b5abfc;box-shadow:0 0 24px rgba(145,132,217,0.3), 0 8px 24px rgba(0,0,0,0.5);display:flex;align-items:center;gap:6px;font:500 15px Inter,sans-serif;cursor:pointer" style-hover="background:#2b2741"><i class="ph ph-plus" style="font-size:20px"></i>New booking</button>
+</sc-if>
+
+<div style="position:absolute;left:12px;right:12px;top:54px;z-index:40;display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:#232532;box-shadow:0 0 0 1px #595d6c, 0 6px 18px rgba(0,0,0,0.55);transform:{{ toastTf }};opacity:{{ toastOp }};transition:transform .35s cubic-bezier(.2,.8,.2,1), opacity .25s;pointer-events:none">
+  <span style="width:32px;height:32px;flex:none;border-radius:8px;background:#2b2741;color:#b5abfc;display:flex;align-items:center;justify-content:center"><i class="{{ toast.icon }}" style="font-size:18px"></i></span>
+  <div style="min-width:0"><p style="margin:0;font-size:14px;font-weight:500">{{ toast.title }}</p><p style="margin:1px 0 0;font-size:13px;color:#b2b6ca">{{ toast.text }}</p></div>
+</div>
+
+<div onClick="{{ closeSheet }}" style="position:absolute;inset:0;z-index:30;background:rgba(8,9,16,0.62);opacity:{{ sheetOp }};pointer-events:{{ sheetPe }};transition:opacity .3s"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;z-index:31;max-height:90%;display:flex;flex-direction:column;background:#232532;border-radius:14px 14px 0 0;box-shadow:0 0 0 1px #595d6c, 0 -16px 40px rgba(0,0,0,0.5);transform:{{ sheetTf }};transition:transform .38s cubic-bezier(.2,.8,.2,1)">
+  <div style="display:flex;justify-content:center;padding:8px 0 4px"><span style="width:36px;height:5px;border-radius:3px;background:#595d6c"></span></div>
+  <div class="bb-scroll" style="overflow-y:auto;padding:6px 20px 44px;scrollbar-width:none">
+
+    <sc-if value="{{ shDetail }}">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div style="min-width:0;display:flex;flex-direction:column;gap:6px;align-items:flex-start"><h2 style="margin:0;font-size:22px;font-weight:500;overflow-wrap:anywhere">{{ det.name }}</h2><span style="font-size:11px;padding:3px 9px;border-radius:6px;background:{{ det.tagBg }};color:{{ det.tagFg }}">{{ det.tag }}</span></div>
+          <button onClick="{{ closeSheet }}" aria-label="Close" style="width:36px;height:36px;flex:none;border:0;border-radius:8px;background:transparent;color:#cfd3e5;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(233,233,237,0.07)"><i class="ph ph-x" style="font-size:18px"></i></button>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ det.rows }}" as="r" hint-placeholder-count="4"><div style="display:flex;gap:12px;align-items:center;padding:11px 0;font-size:15px;background:linear-gradient(to right,transparent,rgba(233,233,237,0.1) 48px,rgba(233,233,237,0.1) calc(100% - 48px),transparent) no-repeat top / 100% 1px"><i class="{{ r.icon }}" style="font-size:18px;color:#9397ab"></i><span style="font-variant-numeric:tabular-nums;overflow-wrap:anywhere;min-width:0">{{ r.text }}</span></div></sc-for>
+        </div>
+        <div style="display:flex;gap:8px">
+          <sc-if value="{{ det.phone }}"><a href="{{ det.tel }}" style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(233,233,237,0.16);border-radius:8px;color:#e9e9ed;font-size:14px;font-weight:500"><i class="ph ph-phone" style="font-size:17px"></i>Call</a></sc-if>
+          <sc-if value="{{ det.email }}"><a href="{{ det.mail }}" style="flex:1;height:44px;display:flex;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(233,233,237,0.16);border-radius:8px;color:#e9e9ed;font-size:14px;font-weight:500"><i class="ph ph-envelope-simple" style="font-size:17px"></i>Email</a></sc-if>
+          <sc-if value="{{ det.noContact }}"><p style="margin:0;font-size:14px;color:#b2b6ca">No contact details for this booking.</p></sc-if>
+        </div>
+        <sc-if value="{{ det.showCancel }}"><button onClick="{{ det.onCancel }}" style="height:44px;border:1px solid rgba(233,233,237,0.16);border-radius:8px;background:transparent;color:#f29a94;font:500 14px Inter,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px" style-hover="background:rgba(242,154,148,0.08)"><i class="ph ph-x" style="font-size:16px"></i>Cancel booking</button></sc-if>
+        <sc-if value="{{ det.armed }}"><button onClick="{{ det.onCancel }}" style="height:44px;border:1px solid #e5675e;border-radius:8px;background:#3a2226;color:#f6b4ae;font:500 14px Inter,sans-serif;cursor:pointer">Cancel? Tap again to confirm</button></sc-if>
+        <sc-if value="{{ det.canCancel }}"><p style="margin:-6px 0 0;font-size:13px;color:#b2b6ca">Cancelling frees the time for others. Please let the customer know.</p></sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ shNew }}">
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div><h2 style="margin:0;font-size:22px;font-weight:500">New booking</h2><p style="margin:3px 0 0;font-size:14px;color:#b2b6ca">For walk-ins and phone calls.</p></div>
+          <button onClick="{{ closeSheet }}" aria-label="Close" style="width:36px;height:36px;flex:none;border:0;border-radius:8px;background:transparent;color:#cfd3e5;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(233,233,237,0.07)"><i class="ph ph-x" style="font-size:18px"></i></button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <p style="margin:0;font-size:14px;font-weight:500">Service</p>
+          <sc-for list="{{ nbSvc }}" as="s" hint-placeholder-count="4"><button onClick="{{ s.onClick }}" style="all:unset;box-sizing:border-box;width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:8px;cursor:pointer;background:{{ s.bg }};box-shadow:{{ s.ring }}"><span style="flex:1;font-size:14px;font-weight:500">{{ s.name }}</span><span style="font-size:13px;color:#b2b6ca;font-variant-numeric:tabular-nums">{{ s.dur }}</span></button></sc-for>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <p style="margin:0;font-size:14px;font-weight:500">With</p>
+          <div style="display:flex;gap:8px"><sc-for list="{{ nbWho }}" as="w" hint-placeholder-count="2"><button onClick="{{ w.onClick }}" style="height:40px;padding:0 16px;border-radius:8px;border:1px solid {{ w.bd }};background:{{ w.bg }};color:{{ w.fg }};box-shadow:{{ w.glow }};font:500 14px Inter,sans-serif;cursor:pointer">{{ w.name }}</button></sc-for></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <p style="margin:0;font-size:14px;font-weight:500">Day</p>
+          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px">
+            <sc-for list="{{ nbDays }}" as="d" hint-placeholder-count="7"><button onClick="{{ d.onClick }}" disabled="{{ d.closed }}" style="height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;border:1px {{ d.bs }} {{ d.bd }};background:{{ d.bg }};color:{{ d.fg }};box-shadow:{{ d.glow }};cursor:pointer;font-family:Inter,sans-serif;padding:0"><span style="font-size:11px;font-weight:500">{{ d.wd }}</span><span style="font-size:16px;font-weight:500;font-variant-numeric:tabular-nums">{{ d.num }}</span></button></sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <p style="margin:0;font-size:14px;font-weight:500">Time</p>
+          <sc-if value="{{ nbNoSlots }}"><p style="margin:0;font-size:14px;color:#b2b6ca">{{ nbNoSlotsText }}</p></sc-if>
+          <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px">
+            <sc-for list="{{ nbSlots }}" as="t"><button onClick="{{ t.onClick }}" style="height:40px;border-radius:8px;border:1px solid {{ t.bd }};background:{{ t.bg }};color:{{ t.fg }};box-shadow:{{ t.glow }};font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">{{ t.label }}</button></sc-for>
+          </div>
+        </div>
+        <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500">Customer name</span><input value="{{ nb.name }}" onChange="{{ onNbName }}" style="height:44px;box-sizing:border-box;padding:0 12px;font:16px Inter,sans-serif;color:#e9e9ed;background:#161826;border:1px solid rgba(233,233,237,0.16);border-radius:8px;outline:none" style-focus="border-color:#9184d9;box-shadow:0 0 0 3px rgba(145,132,217,0.2)"></label>
+        <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;font-weight:500">Phone <span style="font-weight:400;color:#b2b6ca">(optional)</span></span><input type="tel" value="{{ nb.phone }}" onChange="{{ onNbPhone }}" style="height:44px;box-sizing:border-box;padding:0 12px;font:16px Inter,sans-serif;color:#e9e9ed;background:#161826;border:1px solid rgba(233,233,237,0.16);border-radius:8px;outline:none" style-focus="border-color:#9184d9;box-shadow:0 0 0 3px rgba(145,132,217,0.2)"></label>
+        <sc-if value="{{ nb.err }}"><div role="alert" style="display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:#3a2226;color:#f6b4ae;box-shadow:inset 0 0 0 1px rgba(242,154,148,0.3);font-size:14px"><i class="ph ph-warning-circle" style="font-size:17px;margin-top:1px"></i>{{ nb.err }}</div></sc-if>
+        <button onClick="{{ submitNb }}" style="height:48px;border-radius:8px;border:1px solid #9184d9;background:transparent;color:#b5abfc;box-shadow:0 0 20px rgba(145,132,217,0.14);font:500 15px Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer" style-hover="background:rgba(145,132,217,0.12)">{{ nbCta }}</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ shResched }}">
+      <div style="display:flex;flex-direction:column;gap:18px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+          <div><h2 style="margin:0;font-size:22px;font-weight:500">Change time</h2><p style="margin:3px 0 0;font-size:14px;color:#b2b6ca;font-variant-numeric:tabular-nums">{{ rsNow }}</p></div>
+          <button onClick="{{ closeSheet }}" aria-label="Close" style="width:36px;height:36px;flex:none;border:0;border-radius:8px;background:transparent;color:#cfd3e5;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(233,233,237,0.07)"><i class="ph ph-x" style="font-size:18px"></i></button>
+        </div>
+        <div class="bb-scroll" style="display:flex;gap:8px;overflow-x:auto;margin:0 -20px;padding:2px 20px 4px;scrollbar-width:none">
+          <sc-for list="{{ rsDays }}" as="d" hint-placeholder-count="7"><button onClick="{{ d.onClick }}" disabled="{{ d.closed }}" style="flex:none;width:56px;height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;border:1px {{ d.bs }} {{ d.bd }};background:{{ d.bg }};color:{{ d.fg }};box-shadow:{{ d.glow }};cursor:pointer;font-family:Inter,sans-serif;padding:0"><span style="font-size:12px;font-weight:500">{{ d.wd }}</span><span style="font-size:18px;font-weight:500;font-variant-numeric:tabular-nums">{{ d.num }}</span></button></sc-for>
+        </div>
+        <sc-for list="{{ rsGroups }}" as="g" hint-placeholder-count="2">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <p style="margin:0;font-size:12px;font-weight:500;color:#b2b6ca">{{ g.name }}</p>
+            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px"><sc-for list="{{ g.slots }}" as="t"><button onClick="{{ t.onClick }}" style="height:40px;border-radius:8px;border:1px solid {{ t.bd }};background:{{ t.bg }};color:{{ t.fg }};box-shadow:{{ t.glow }};font:500 14px Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer">{{ t.label }}</button></sc-for></div>
+          </div>
+        </sc-for>
+        <sc-if value="{{ rsErr }}"><div role="alert" style="display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-radius:8px;background:#3a2226;color:#f6b4ae;box-shadow:inset 0 0 0 1px rgba(242,154,148,0.3);font-size:14px"><i class="ph ph-warning-circle" style="font-size:17px;margin-top:1px"></i>{{ rsErr }}</div></sc-if>
+        <button onClick="{{ submitRs }}" style="height:48px;border-radius:8px;border:1px solid #9184d9;background:transparent;color:#b5abfc;box-shadow:0 0 20px rgba(145,132,217,0.14);font:500 15px Inter,sans-serif;font-variant-numeric:tabular-nums;cursor:pointer" style-hover="background:rgba(145,132,217,0.12)">{{ rsCta }}</button>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ shAccount }}">
+      <div style="display:flex;flex-direction:column;gap:20px">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="width:44px;height:44px;border-radius:50%;background:#2b2741;border:1px solid #423a6a;color:#d2cefd;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500">{{ avatar }}</span>
+          <div style="flex:1;min-width:0"><p style="margin:0;font-size:16px;font-weight:500">{{ acctName }}</p><p style="margin:0;font-size:13px;color:#b2b6ca">{{ acctSub }}</p></div>
+          <button onClick="{{ closeSheet }}" aria-label="Close" style="width:36px;height:36px;flex:none;border:0;border-radius:8px;background:transparent;color:#cfd3e5;cursor:pointer;display:flex;align-items:center;justify-content:center" style-hover="background:rgba(233,233,237,0.07)"><i class="ph ph-x" style="font-size:18px"></i></button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <p style="margin:0;font-size:14px;font-weight:500">Use Bookbell as</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid rgba(233,233,237,0.16);border-radius:8px;overflow:hidden">
+            <sc-for list="{{ modeSeg }}" as="o" hint-placeholder-count="2"><button onClick="{{ o.onClick }}" style="height:56px;border:0;background:{{ o.bg }};box-shadow:{{ o.ring }};color:{{ o.fg }};font:500 14px Inter,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px"><i class="{{ o.icon }}" style="font-size:18px"></i>{{ o.label }}</button></sc-for>
+          </div>
+          <p style="margin:0;font-size:13px;color:#b2b6ca">{{ modeHint }}</p>
+        </div>
+        <button style="align-self:flex-start;height:40px;padding:0 12px;margin-left:-12px;border:0;border-radius:8px;background:transparent;color:#cfd3e5;font:500 14px Inter,sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px" style-hover="background:rgba(233,233,237,0.07)"><i class="ph ph-sign-out" style="font-size:17px"></i>Log out</button>
+      </div>
+    </sc-if>
+  </div>
+</div>
+
+</div>
+</x-import>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startMode&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Shop owner&quot;, &quot;Customer&quot;], &quot;default&quot;: &quot;Shop owner&quot;, &quot;tsType&quot;: &quot;'Shop owner' | 'Customer'&quot;, &quot;section&quot;: &quot;App&quot;}, &quot;ownerHome&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;Today&quot;, &quot;Calendar&quot;], &quot;default&quot;: &quot;Today&quot;, &quot;tsType&quot;: &quot;'Today' | 'Calendar'&quot;, &quot;section&quot;: &quot;App&quot;}, &quot;fab&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;options&quot;: [&quot;In tab bar&quot;, &quot;Floating pill&quot;], &quot;default&quot;: &quot;In tab bar&quot;, &quot;tsType&quot;: &quot;'In tab bar' | 'Floating pill'&quot;, &quot;section&quot;: &quot;App&quot;}}">
+const NB = '\u00a0';
+const SV = [
+  { id: 's1', name: 'Haircut', dur: 30, price: 2500 },
+  { id: 's2', name: 'Haircut and beard', dur: 45, price: 3500 },
+  { id: 's3', name: 'Kids haircut (under 12)', dur: 20, price: 1500 },
+  { id: 's4', name: 'Beard trim', dur: 15, price: 1200 },
+];
+const ST = [{ id: 'a', name: 'Andrei' }, { id: 'm', name: 'Maria' }];
+const WK = [[540, 780], [840, 1080]];
+const HRS = { 1: WK, 2: WK, 3: WK, 4: WK, 5: WK, 6: [[600, 840]], 7: [] };
+const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const NOTES = [
+  { q: 'Is there parking?', a: 'Yes, free parking behind the shop for 30 minutes.' },
+  { q: 'Can I pay by card?', a: 'Yes, cash and card are both fine.' },
+  { q: "Do you cut kids' hair?", a: 'Yes, for children of any age. Under 12s book the Kids haircut.' },
+  { q: 'Can I walk in without booking?', a: 'If a chair is free, yes. Booking online is the surest way to get a time.' },
+];
+const TODAY = '2026-11-04';
+const NOW = 9 * 60 + 41;
+const PX = 1.1;
+const ME = { name: 'Alex Pop', email: 'alex.pop@example.com' };
+
+const price = (c) => (c == null ? '' : c === 0 ? 'Free' : '€' + (c % 100 ? (c / 100).toFixed(2) : c / 100));
+const dur = (m) => { const h = Math.floor(m / 60), r = m % 60; return h ? (r ? `${h}${NB}h ${r}${NB}min` : `${h}${NB}h`) : `${r}${NB}min`; };
+const hm = (t) => String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+const D = (s) => new Date(s + 'T12:00:00Z');
+const add = (s, n) => { const d = D(s); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const wd = (s) => { const w = D(s).getUTCDay(); return w === 0 ? 7 : w; };
+const F = (o) => { const f = new Intl.DateTimeFormat('en-GB', { timeZone: 'UTC', ...o }); return (s) => f.format(D(s)); };
+const fShort = F({ weekday: 'short' }), fNum = F({ day: 'numeric' }), fLong = F({ weekday: 'long', day: 'numeric', month: 'long' });
+const fMed = F({ weekday: 'short', day: 'numeric', month: 'short' }), fMonth = F({ month: 'long', year: 'numeric' }), fDM = F({ day: 'numeric', month: 'short' });
+const fMon = F({ month: 'short' }), fYear = F({ year: 'numeric' }), fDMY = F({ day: 'numeric', month: 'short', year: 'numeric' });
+const svc = (id) => SV.find((s) => s.id === id);
+const stf = (id) => ST.find((s) => s.id === id);
+const endOf = (b) => b.start + svc(b.svc).dur;
+const isUpcoming = (b) => b.date > TODAY || (b.date === TODAY && endOf(b) > NOW);
+const sortB = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : a.start - b.start || a.staff.localeCompare(b.staff));
+
+const SEL = { bg: '#2b2741', bd: '#9184d9', fg: '#e7e5fe', glow: '0 0 14px rgba(145,132,217,0.24)', bs: 'solid' };
+const OPEN = { bg: 'rgba(233,233,237,0.04)', bd: 'rgba(233,233,237,0.16)', fg: '#e9e9ed', glow: 'none', bs: 'solid' };
+const SHUT = { bg: 'transparent', bd: 'rgba(233,233,237,0.14)', fg: '#75798c', glow: 'none', bs: 'dashed' };
+const rowSel = (on) => (on
+  ? { bg: '#2b2741', ring: '0 0 0 1px #9184d9, 0 0 18px rgba(145,132,217,0.18)' }
+  : { bg: '#232532', ring: '0 0 0 1px #3f424d' });
+const rowSelIn = (on) => (on
+  ? { bg: '#2b2741', ring: 'inset 0 0 0 1px #9184d9' }
+  : { bg: 'rgba(233,233,237,0.04)', ring: 'inset 0 0 0 1px rgba(233,233,237,0.12)' });
+
+function busy(B, staff, date, t, d, ex) {
+  return B.some((b) => b.id !== ex && b.staff === staff && b.date === date && t < endOf(b) && b.start < t + d);
+}
+function freeSlots(B, date, sid, who, mode, ex) {
+  const s = svc(sid); const out = [];
+  if (!s || date < TODAY) return out;
+  for (const [o, c] of HRS[wd(date)]) {
+    for (let t = o; t + s.dur <= c; t += 15) {
+      if (date === TODAY && mode === 'cust' && t < NOW + 120) continue;
+      if (date === TODAY && mode === 'owner' && t < NOW - 11) continue;
+      const cand = who === 'any' ? ST.map((x) => x.id) : [who];
+      const f = cand.find((x) => !busy(B, x, date, t, s.dur, ex));
+      if (f) out.push({ t, label: hm(t), staff: f });
+    }
+  }
+  return out;
+}
+function groupSlots(slots, picked, onPick) {
+  const g = [
+    { name: 'Morning', f: (t) => t < 720 },
+    { name: 'Afternoon', f: (t) => t >= 720 && t < 1020 },
+    { name: 'Evening', f: (t) => t >= 1020 },
+  ];
+  return g.map((x) => ({ name: x.name, slots: slots.filter((s) => x.f(s.t)).map((s) => ({ label: s.label, ...(picked === s.t ? SEL : OPEN), onClick: () => onPick(s) })) })).filter((x) => x.slots.length);
+}
+function seed() {
+  let n = 0; const B = [];
+  const mk = (date, start, s, staff, name, email = '', phone = '', src = 'online', mine = false) => B.push({ id: 'b' + ++n, date, start, svc: s, staff, name, email, phone, src, mine });
+  mk(TODAY, 540, 's1', 'a', 'Ioana Stan', 'ioana.stan@example.com');
+  mk(TODAY, 555, 's4', 'm', 'Walk-in', '', '', 'owner');
+  mk(TODAY, 600, 's1', 'a', 'Ana Popescu', 'ana.popescu@example.com', '+40 700 111 222');
+  mk(TODAY, 600, 's4', 'm', 'Radu Marin', 'radu.marin@example.com');
+  mk(TODAY, 660, 's2', 'a', 'Mihai Ionescu', 'mihai@example.com');
+  mk(TODAY, 720, 's3', 'm', 'Elena Dumitru', 'elena.d@example.com', '+40 700 333 444');
+  mk(TODAY, 870, 's2', 'a', 'George Vasile', 'george.v@example.com', '+40 700 555 666');
+  mk(TODAY, 960, 's1', 'm', 'Sofia Ilie', 'sofia.ilie@example.com');
+  mk('2026-11-06', 660, 's1', 'a', ME.name, ME.email, '', 'online', true);
+  mk('2026-10-14', 900, 's1', 'a', ME.name, ME.email, '', 'online', true);
+  const names = ['Andreea Matei', 'Bogdan Rusu', 'Cristina Pavel', 'Dan Stoica', 'Ioana Radu', 'Florin Neagu', 'Gabriela Tudor', 'Horia Lungu', 'Irina Costea', 'Luca Barbu', 'Mara Enache', 'Nicu Oprea', 'Oana Sima', 'Paul Dragomir', 'Raluca Moldovan', 'Sorin Badea'];
+  let r = 11; const rnd = () => { r = (r * 16807) % 2147483647; return r / 2147483647; };
+  for (let i = -3; i <= 20; i++) {
+    const d = add(TODAY, i); if (i === 0) continue;
+    const iv = HRS[wd(d)]; if (!iv.length) continue;
+    const want = 3 + Math.floor(rnd() * 4); let got = 0;
+    for (let k = 0; k < 30 && got < want; k++) {
+      const [o, c] = iv[Math.floor(rnd() * iv.length)];
+      const s = SV[Math.floor(rnd() * SV.length)]; const st = ST[Math.floor(rnd() * 2)].id;
+      const steps = Math.floor((c - o - s.dur) / 15); const t = o + Math.floor(rnd() * (steps + 1)) * 15;
+      if (busy(B, st, d, t, s.dur)) continue;
+      const nm = names[Math.floor(rnd() * names.length)];
+      const walk = rnd() < 0.12;
+      mk(d, t, s.id, st, walk ? 'Walk-in' : nm, walk ? '' : nm.toLowerCase().replace(' ', '.') + '@example.com', rnd() < 0.4 && !walk ? '+40 700 ' + String(100 + Math.floor(rnd() * 900)) + ' ' + String(100 + Math.floor(rnd() * 900)) : '', walk ? 'owner' : 'online');
+      got++;
+    }
+  }
+  return B;
+}
+
+class Component extends DCLogic {
+  scrollRef = React.createRef();
+  state = (() => {
+    const mode = this.props.startMode === 'Customer' ? 'customer' : 'owner';
+    return {
+      mode, tab: mode === 'owner' ? this.homeTab() : 'book', sub: null, subOpen: false,
+      sheet: null, sheetOpen: false, detailId: null, calDay: TODAY, bkView: 'upcoming',
+      B: seed(), armed: null, toast: { title: '', text: '', icon: 'ph ph-bell-ringing' }, toastOn: false, copied: false, hidden: {},
+      cb: { svc: null, staff: 'any', day: null, t: null, name: '', email: '', phone: '', err: '', booked: null },
+      nb: { svc: 's1', staff: 'a', day: TODAY, t: null, name: '', phone: '', err: '' },
+      rs: { id: null, day: null, t: null, err: '' }, myMsg: '',
+    };
+  })();
+
+  homeTab() { return (this.props.ownerHome ?? 'Today') === 'Calendar' ? 'calendar' : 'today'; }
+  componentDidUpdate(prev) {
+    if (prev.startMode !== this.props.startMode) this.switchMode(this.props.startMode === 'Customer' ? 'customer' : 'owner');
+    else if (prev.ownerHome !== this.props.ownerHome && this.state.mode === 'owner') this.go(this.homeTab());
+  }
+  componentWillUnmount() { [this._tt, this._at, this._ct, this._mt, this._rt].forEach(clearTimeout); }
+
+  toastMsg(title, text, icon = 'ph ph-bell-ringing') {
+    clearTimeout(this._tt);
+    this.setState({ toast: { title, text, icon }, toastOn: true });
+    this._tt = setTimeout(() => this.setState({ toastOn: false }), 3400);
+  }
+  go(tab) {
+    this.setState({ tab, subOpen: false, armed: null });
+    requestAnimationFrame(() => { if (this.scrollRef.current) this.scrollRef.current.scrollTop = 0; });
+  }
+  switchMode(mode) {
+    this.setState({ mode, sheetOpen: false, subOpen: false, armed: null, tab: mode === 'owner' ? this.homeTab() : 'book' });
+    requestAnimationFrame(() => { if (this.scrollRef.current) this.scrollRef.current.scrollTop = 0; });
+    if (mode === 'owner' && this._ring) {
+      const r = this._ring; this._ring = null;
+      clearTimeout(this._rt); this._rt = setTimeout(() => this.toastMsg(r.title, r.text), 450);
+    }
+  }
+  openSheet(sheet, extra = {}) { this.setState({ sheet, sheetOpen: true, armed: null, ...extra }); }
+  closeSheet = () => this.setState({ sheetOpen: false, armed: null });
+  arm(key, confirm) {
+    if (this.state.armed === key) { clearTimeout(this._at); this.setState({ armed: null }); confirm(); return; }
+    clearTimeout(this._at);
+    this.setState({ armed: key });
+    this._at = setTimeout(() => this.setState((s) => (s.armed === key ? { armed: null } : null)), 4000);
+  }
+  removeBooking(id) { this.setState((s) => ({ B: s.B.filter((b) => b.id !== id) })); }
+  openNew(pre = {}) {
+    const day = pre.day || TODAY; const staff = pre.staff || 'a';
+    let t = pre.t ?? null;
+    if (t != null && !freeSlots(this.state.B, day, 's1', staff, 'owner').some((x) => x.t === t)) t = null;
+    this.openSheet('new', { nb: { svc: 's1', staff, day, t, name: '', phone: '', err: '' } });
+  }
+  setCb(patch) { this.setState((s) => ({ cb: { ...s.cb, ...patch } })); }
+  pickCbSvc(id, staff) {
+    const B = this.state.B; const who = staff ?? this.state.cb.staff;
+    let day = null;
+    for (let i = 0; i < 21; i++) { const d = add(TODAY, i); if (freeSlots(B, d, id, who, 'cust').length) { day = d; break; } }
+    this.setCb({ svc: id, staff: who, day, t: null, err: '' });
+  }
+  flashMine(msg) { clearTimeout(this._mt); this.setState({ myMsg: msg }); this._mt = setTimeout(() => this.setState({ myMsg: '' }), 5000); }
+
+  dayCells(n, start, isOpen, selDay, onPick) {
+    return Array.from({ length: n }, (_, i) => {
+      const d = add(start, i); const open = isOpen(d);
+      return { wd: fShort(d), num: fNum(d), closed: !open, ...(d === selDay ? SEL : open ? OPEN : SHUT), onClick: () => open && onPick(d) };
+    });
+  }
+
+  renderVals() {
+    const s = this.state; const B = s.B; const owner = s.mode === 'owner';
+    const tab = s.tab;
+    const fab = this.props.fab ?? 'In tab bar';
+
+    // Today
+    const todayB = B.filter((b) => b.date === TODAY).sort(sortB);
+    const todayRows = []; let placed = false;
+    todayB.forEach((b) => {
+      if (!placed && b.start >= NOW) { todayRows.push({ isNow: true }); placed = true; }
+      const past = endOf(b) <= NOW; const sv = svc(b.svc);
+      todayRows.push({ isBooking: true, time: hm(b.start), name: b.name, detail: `${sv.name} · until${NB}${hm(endOf(b))} · ${stf(b.staff).name}`, op: past ? 0.55 : 1, past, upcoming: !past, open: () => this.openSheet('detail', { detailId: b.id }) });
+    });
+    if (!placed) todayRows.push({ isNow: true });
+    const nb0 = todayB.find((b) => b.start >= NOW);
+    let next = { has: false };
+    if (nb0) {
+      const m = nb0.start - NOW; const sv = svc(nb0.svc);
+      const others = todayB.filter((b) => b !== nb0 && b.start === nb0.start);
+      next = {
+        has: true, name: nb0.name, inText: m < 60 ? `in ${m}${NB}min` : `at ${hm(nb0.start)}`,
+        detail: `${sv.name}, ${dur(sv.dur)} · with ${stf(nb0.staff).name}`, range: `${hm(nb0.start)}–${hm(endOf(nb0))}`,
+        also: others.length ? `Also at ${hm(nb0.start)}: ${others.map((o) => `${o.name} with ${stf(o.staff).name}`).join(', ')}.` : '',
+        tel: nb0.phone ? 'tel:' + nb0.phone.replace(/[^\d+]/g, '') : '#', mail: nb0.email ? 'mailto:' + nb0.email : '#',
+        open: () => this.openSheet('detail', { detailId: nb0.id }),
+      };
+    }
+    const leftToday = todayB.filter((b) => b.start >= NOW).length;
+
+    // Calendar
+    const cd = s.calDay; const mon = add(cd, 1 - wd(cd));
+    const weekDays = Array.from({ length: 7 }, (_, i) => {
+      const d = add(mon, i); const closed = !HRS[wd(d)].length;
+      return { wd: fShort(d), num: fNum(d), ...(d === cd ? SEL : closed ? SHUT : OPEN), dot: d === TODAY ? '#9184d9' : 'transparent', onClick: () => this.setState({ calDay: d }) };
+    });
+    const iv = HRS[wd(cd)];
+    const closedZ = []; let cur = 540;
+    iv.forEach(([o, c]) => { if (o > cur) closedZ.push({ top: (cur - 540) * PX, h: (o - cur) * PX }); cur = c; });
+    if (cur < 1080) closedZ.push({ top: (cur - 540) * PX, h: (1080 - cur) * PX });
+    const calCols = ST.map((st) => {
+      const list = B.filter((b) => b.date === cd && b.staff === st.id).sort(sortB);
+      return {
+        name: st.name, count: list.length ? String(list.length) : '', closed: closedZ,
+        blocks: list.map((b) => {
+          const past = b.date < TODAY || (b.date === TODAY && endOf(b) <= NOW);
+          const bh = Math.max(svc(b.svc).dur * PX - 2, 15);
+          return { name: b.name, time: bh < 30 ? hm(b.start) : `${hm(b.start)}–${hm(endOf(b))}`, top: (b.start - 540) * PX + 1, h: bh, wrap: bh < 30 ? 'nowrap' : 'wrap', pad: bh < 30 ? '1px 7px' : '3px 7px',
+            bg: past ? 'rgba(233,233,237,0.05)' : '#2b2741', bd: past ? 'rgba(233,233,237,0.14)' : 'rgba(145,132,217,0.75)', fg: past ? '#b2b6ca' : '#e7e5fe',
+            open: (e) => { e.stopPropagation(); this.openSheet('detail', { detailId: b.id }); } };
+        }),
+        onTap: (e) => {
+          const r = e.currentTarget.getBoundingClientRect(); const scale = r.height / 594 || 1;
+          const y = (e.clientY - r.top) / scale; const t = 540 + Math.floor(y / PX / 15) * 15;
+          this.openNew({ day: cd, staff: st.id, t });
+        },
+      };
+    });
+    const hourMarks = Array.from({ length: 10 }, (_, i) => ({ top: i * 60 * PX, label: hm(540 + i * 60) }));
+
+    // Bookings
+    const up = s.bkView === 'upcoming';
+    const list = (up ? B.filter(isUpcoming).sort(sortB) : B.filter((b) => !isUpcoming(b)).sort((a, b) => -sortB(a, b)));
+    const gmap = new Map();
+    list.forEach((b) => { if (!gmap.has(b.date)) gmap.set(b.date, []); gmap.get(b.date).push(b); });
+    const bkGroups = [...gmap.entries()].map(([d, rows]) => ({
+      title: d === TODAY ? `Today, ${fLong(d)}` : d === add(TODAY, 1) ? `Tomorrow, ${fLong(d)}` : d < TODAY && d < '2026-11-01' ? fDMY(d) : fLong(d),
+      rows: rows.map((b) => {
+        const sv = svc(b.svc); const key = 'l' + b.id; const armed = s.armed === key;
+        return { time: hm(b.start), name: b.name, detail: `${sv.name}, ${dur(sv.dur)} · until${NB}${hm(endOf(b))} · with ${stf(b.staff).name}`,
+          email: b.email, phone: b.phone, mail: 'mailto:' + b.email, tel: 'tel:' + b.phone.replace(/[^\d+]/g, ''),
+          showX: up && !armed, armed: up && armed, cancelLabel: `Cancel ${b.name}’s booking at ${hm(b.start)}`,
+          onCancel: () => this.arm(key, () => { this.removeBooking(b.id); this.toastMsg('Booking cancelled', `${b.name}, ${fMed(b.date)} ${hm(b.start)}. Please let them know.`, 'ph ph-calendar-x'); }),
+          open: () => this.openSheet('detail', { detailId: b.id }) };
+      }),
+    }));
+    const segStyle = (on) => (on ? { bg: '#2b2741', ring: 'inset 0 0 0 1px #9184d9', fg: '#d2cefd' } : { bg: 'transparent', ring: 'none', fg: '#cfd3e5' });
+
+    // Shop
+    const visible = SV.filter((x) => !s.hidden[x.id]);
+    const setupRows = [
+      { icon: 'ph ph-scissors', label: 'Services', value: `${visible.length} shown`, open: () => this.setState({ sub: 'services', subOpen: true }) },
+      { icon: 'ph ph-clock', label: 'Hours and days off', value: 'Mon–Sat', open: () => this.setState({ sub: 'hours', subOpen: true }) },
+      { icon: 'ph ph-chat-circle-text', label: 'AI notes', value: `${NOTES.length} answers`, open: () => this.setState({ sub: 'notes', subOpen: true }) },
+      { icon: 'ph ph-users', label: 'Team', value: 'Andrei, Maria', open: () => this.setState({ sub: 'team', subOpen: true }) },
+    ];
+    const svcRows = SV.map((x) => { const h = !!s.hidden[x.id]; return { name: x.name, meta: `${dur(x.dur)} · ${price(x.price)}`, hidden: h, op: h ? 0.55 : 1, toggleText: h ? 'Show' : 'Hide', toggleLabel: `${h ? 'Show' : 'Hide'} ${x.name}`, toggle: () => this.setState((st) => ({ hidden: { ...st.hidden, [x.id]: !h } })) }; });
+    const hourRows = WEEKDAYS.map((name, i) => { const h = HRS[i + 1]; return { name, chips: h.map(([o, c]) => `${hm(o)}–${hm(c)}`), closed: !h.length }; });
+    const weekEnd = add(TODAY, 7 - wd(TODAY)); const weekStart = add(TODAY, 1 - wd(TODAY));
+    const teamRows = ST.map((t) => { const n = B.filter((b) => b.staff === t.id && b.date >= weekStart && b.date <= weekEnd).length; return { name: t.name, initial: t.name[0], count: `${n} this week` }; });
+
+    // Customer booking
+    const cb = s.cb; const cs = svc(cb.svc);
+    const cbSvcRows = visible.map((x) => ({ name: x.name, dur: dur(x.dur), price: price(x.price), ...rowSel(cb.svc === x.id), onClick: () => this.pickCbSvc(x.id) }));
+    const cbWho = [{ id: 'any', name: 'Anyone' }, ...ST].map((w) => ({ name: w.name, ...(cb.staff === w.id ? SEL : OPEN), onClick: () => this.pickCbSvc(cb.svc, w.id) }));
+    const cbDays = cs ? this.dayCells(21, TODAY, (d) => freeSlots(B, d, cb.svc, cb.staff, 'cust').length > 0, cb.day, (d) => this.setCb({ day: d, t: null, err: '' })) : [];
+    const lastDay = add(TODAY, 20);
+    const cbMonths = fMon(TODAY) === fMon(lastDay) ? `${fMon(TODAY)} ${fYear(TODAY)}` : `${fMon(TODAY)} – ${fMon(lastDay)} ${fYear(lastDay)}`;
+    const cbSl = cs && cb.day ? freeSlots(B, cb.day, cb.svc, cb.staff, 'cust') : [];
+    const cbGroups = groupSlots(cbSl, cb.t, (x) => this.setCb({ t: x.t, err: '' }));
+    const submitCb = () => {
+      const c = this.state.cb;
+      if (c.t == null) return this.setCb({ err: 'Please choose a time.' });
+      if (!c.name.trim()) return this.setCb({ err: 'Please add your name.' });
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email.trim())) return this.setCb({ err: 'Please add an email like name@example.com.' });
+      const slot = freeSlots(this.state.B, c.day, c.svc, c.staff, 'cust').find((x) => x.t === c.t);
+      if (!slot) return this.setCb({ err: 'Someone just took that time. Please choose another.', t: null });
+      const id = 'n' + Date.now(); const sv = svc(c.svc);
+      const b = { id, date: c.day, start: c.t, svc: c.svc, staff: slot.staff, name: c.name.trim(), email: c.email.trim(), phone: c.phone.trim(), src: 'online', mine: true };
+      this._ring = { title: 'New booking', text: `${b.name} · ${sv.name}, ${fMed(b.date)} ${hm(b.start)}` };
+      this.setState((st) => ({ B: [...st.B, b], cb: { ...st.cb, err: '', booked: { summary: `${sv.name}, ${dur(sv.dur)}, ${price(sv.price)}, with ${stf(slot.staff).name}`, when: `${fLong(b.date)}, ${hm(b.start)}`, note: `Booked for ${b.email}. Keep this page or add it to your calendar.` } } }));
+      requestAnimationFrame(() => { if (this.scrollRef.current) this.scrollRef.current.scrollTop = 0; });
+    };
+
+    // My bookings
+    const mine = B.filter((b) => b.mine);
+    const myCards = mine.filter(isUpcoming).sort(sortB).map((b) => {
+      const sv = svc(b.svc); const key = 'm' + b.id; const armed = s.armed === key;
+      return { dateLabel: fLong(b.date), range: `${hm(b.start)}–${hm(endOf(b))}`, svcLine: `${sv.name}, ${dur(sv.dur)}, ${price(sv.price)} · with ${stf(b.staff).name}`, where: 'Demo Barber Shop · Strada Exemplu 1',
+        showX: !armed, armed,
+        onReschedule: () => this.openSheet('resched', { rs: { id: b.id, day: b.date, t: null, err: '' } }),
+        onCancel: () => this.arm(key, () => { this.removeBooking(b.id); this._ring = { title: 'Booking cancelled', text: `${b.name} cancelled ${fMed(b.date)} ${hm(b.start)}.` }; this.flashMine('Booking cancelled. The time is free for others.'); }) };
+    });
+    const myPast = mine.filter((b) => !isUpcoming(b)).sort((a, b) => -sortB(a, b)).map((b) => ({ svc: svc(b.svc).name, when: `${fDMY(b.date)}, ${hm(b.start)}` }));
+
+    // Reschedule sheet
+    const rb = B.find((b) => b.id === s.rs.id) || this._lastRs;
+    if (rb) this._lastRs = rb;
+    let rsDays = [], rsGroups = [], rsNow = '', rsCta = 'Choose a new time';
+    if (rb) {
+      rsNow = `Now: ${fLong(rb.date)}, ${hm(rb.start)} with ${stf(rb.staff).name}`;
+      rsDays = this.dayCells(21, TODAY, (d) => freeSlots(B, d, rb.svc, rb.staff, 'cust', rb.id).length > 0, s.rs.day, (d) => this.setState((st) => ({ rs: { ...st.rs, day: d, t: null, err: '' } })));
+      rsGroups = groupSlots(freeSlots(B, s.rs.day, rb.svc, rb.staff, 'cust', rb.id), s.rs.t, (x) => this.setState((st) => ({ rs: { ...st.rs, t: x.t, err: '' } })));
+      if (s.rs.t != null) rsCta = `Move to ${hm(s.rs.t)}`;
+    }
+    const submitRs = () => {
+      const r = this.state.rs;
+      if (r.t == null) return this.setState({ rs: { ...r, err: 'Please choose a new time.' } });
+      const b = this.state.B.find((x) => x.id === r.id); if (!b) return;
+      this._ring = { title: 'Booking moved', text: `${b.name}: now ${fMed(r.day)} ${hm(r.t)}` };
+      this.setState((st) => ({ B: st.B.map((x) => (x.id === r.id ? { ...x, date: r.day, start: r.t } : x)), sheetOpen: false }));
+      this.flashMine(`Moved to ${fLong(r.day)}, ${hm(r.t)}.`);
+    };
+
+    // Detail sheet
+    const db = B.find((b) => b.id === s.detailId) || this._lastDet;
+    if (db) this._lastDet = db;
+    let det = { rows: [] };
+    if (db) {
+      const sv = svc(db.svc); const canCancel = isUpcoming(db); const armed = s.armed === 'd' + db.id;
+      det = {
+        name: db.name, tag: db.src === 'owner' ? 'Added by you' : 'Booked online',
+        tagBg: db.src === 'owner' ? '#3f424d' : '#423a6a', tagFg: db.src === 'owner' ? '#e4e7f5' : '#f5f4ff',
+        rows: [
+          { icon: 'ph ph-calendar-blank', text: db.date === TODAY ? `Today, ${fLong(db.date)}` : fLong(db.date) },
+          { icon: 'ph ph-clock', text: `${hm(db.start)}–${hm(endOf(db))}` },
+          { icon: 'ph ph-scissors', text: `${sv.name}, ${dur(sv.dur)}, ${price(sv.price)}` },
+          { icon: 'ph ph-user', text: `With ${stf(db.staff).name}` },
+          ...(db.email ? [{ icon: 'ph ph-envelope-simple', text: db.email }] : []),
+          ...(db.phone ? [{ icon: 'ph ph-phone', text: db.phone }] : []),
+        ],
+        email: db.email, phone: db.phone, mail: 'mailto:' + db.email, tel: 'tel:' + db.phone.replace(/[^\d+]/g, ''), noContact: !db.email && !db.phone,
+        canCancel, showCancel: canCancel && !armed, armed: canCancel && armed,
+        onCancel: () => this.arm('d' + db.id, () => { this.removeBooking(db.id); this.closeSheet(); this.toastMsg('Booking cancelled', `${db.name}, ${fMed(db.date)} ${hm(db.start)}. Please let them know.`, 'ph ph-calendar-x'); }),
+      };
+    }
+
+    // New booking sheet
+    const nb = s.nb;
+    const setNb = (p) => this.setState((st) => ({ nb: { ...st.nb, ...p } }));
+    const nbSl = freeSlots(B, nb.day, nb.svc, nb.staff, 'owner');
+    const submitNb = () => {
+      const n = this.state.nb;
+      if (n.t == null) return setNb({ err: 'Please choose a time.' });
+      if (!n.name.trim()) return setNb({ err: 'Please add the customer’s name. “Walk-in” is fine.' });
+      const b = { id: 'o' + Date.now(), date: n.day, start: n.t, svc: n.svc, staff: n.staff, name: n.name.trim(), email: '', phone: n.phone.trim(), src: 'owner', mine: false };
+      this.setState((st) => ({ B: [...st.B, b], sheetOpen: false, calDay: n.day }));
+      this.toastMsg('Booking added', `${b.name}, ${fMed(b.date)} ${hm(b.start)} with ${stf(b.staff).name}.`, 'ph ph-check-circle');
+    };
+
+    const ownerTabs = [
+      { key: 'today', label: 'Today', icon: 'sun' }, { key: 'calendar', label: 'Calendar', icon: 'calendar-blank' },
+      ...(fab === 'In tab bar' ? [{ gap: true }] : []),
+      { key: 'bookings', label: 'Bookings', icon: 'list-checks' }, { key: 'shop', label: 'Shop', icon: 'storefront' },
+    ];
+    const custTabs = [{ key: 'book', label: 'Book', icon: 'storefront' }, { key: 'mine', label: 'My bookings', icon: 'calendar-check' }];
+    const tabs = (owner ? ownerTabs : custTabs).map((t) => (t.gap ? { isGap: true } : {
+      isTab: true, label: t.label, icon: `${tab === t.key ? 'ph-fill' : 'ph'} ph-${t.icon}`, fg: tab === t.key ? '#b5abfc' : '#9397ab', current: tab === t.key ? 'page' : undefined, onClick: () => this.go(t.key),
+    }));
+
+    return {
+      scrollRef: this.scrollRef, avatar: owner ? 'D' : 'A',
+      isToday: owner && tab === 'today', isCalendar: owner && tab === 'calendar', isBookings: owner && tab === 'bookings', isShop: owner && tab === 'shop',
+      isBook: !owner && tab === 'book', isMine: !owner && tab === 'mine',
+      openAccount: () => this.openSheet('account'),
+      next, todayRows, todayCount: `${todayB.length} bookings · ${leftToday} to go`,
+      calMonth: fMonth(cd), weekLabel: `${fDM(mon)} – ${fDM(add(mon, 6))}`, weekDays,
+      prevWeek: () => this.setState({ calDay: add(cd, -7) }), nextWeek: () => this.setState({ calDay: add(cd, 7) }),
+      calClosed: !iv.length, calOpen: iv.length > 0, calCols, hourMarks, calIsToday: cd === TODAY, nowTop: (NOW - 540) * PX,
+      bkCaption: up ? 'Upcoming, soonest first' : 'Already happened, newest first',
+      bkSeg: [{ label: 'Upcoming', ...segStyle(up), onClick: () => this.setState({ bkView: 'upcoming', armed: null }) }, { label: 'Past', ...segStyle(!up), onClick: () => this.setState({ bkView: 'past', armed: null }) }],
+      bkGroups, bkEmpty: bkGroups.length === 0, bkUpcoming: up && bkGroups.length > 0,
+      copyText: s.copied ? 'Copied.' : 'Copy link', copyIcon: s.copied ? 'ph ph-check' : 'ph ph-copy', copyFg: s.copied ? '#a7e3bd' : '#e9e9ed',
+      copyLink: () => { try { navigator.clipboard.writeText('https://bookbell.vercel.app/s/demo-4f2a9c1e'); } catch (e) {} clearTimeout(this._ct); this.setState({ copied: true }); this._ct = setTimeout(() => this.setState({ copied: false }), 2500); },
+      viewAsCustomer: () => this.switchMode('customer'),
+      setupRows, svcRows, hourRows, notes: NOTES, teamRows,
+      subTf: s.subOpen ? 'translateX(0)' : 'translateX(102%)', closeSub: () => this.setState({ subOpen: false }),
+      subServices: s.sub === 'services', subHours: s.sub === 'hours', subNotes: s.sub === 'notes', subTeam: s.sub === 'team',
+      cb, cbBooked: !!cb.booked, cbSteps: !cb.booked, receipt: cb.booked || {}, cbSvcRows, cbHasSvc: !!cs, cbWho, cbDays, cbMonths,
+      cbDayLabel: cb.day ? fLong(cb.day) : '', cbGroups, cbHasSlots: cbSl.length > 0, cbNoSlots: !!cs && cbSl.length === 0,
+      cbCta: cb.t != null ? `Book ${hm(cb.t)}` : 'Choose a time',
+      onCbName: (e) => this.setCb({ name: e.target.value }), onCbEmail: (e) => this.setCb({ email: e.target.value }), onCbPhone: (e) => this.setCb({ phone: e.target.value }),
+      submitCb, bookAgain: () => this.setState((st) => ({ cb: { ...st.cb, svc: null, day: null, t: null, booked: null, err: '' } })),
+      goMine: () => this.go('mine'), goBook: () => this.go('book'),
+      mineCaption: myCards.length ? `${myCards.length} upcoming at Demo Barber Shop` : 'Demo Barber Shop', myCards, myEmpty: myCards.length === 0, myPast, myMsg: s.myMsg,
+      rsDays, rsGroups, rsNow, rsCta, rsErr: s.rs.err, submitRs,
+      det,
+      nb, nbSvc: visible.map((x) => ({ name: x.name, dur: dur(x.dur), ...rowSelIn(nb.svc === x.id), onClick: () => setNb({ svc: x.id, t: null, err: '' }) })),
+      nbWho: ST.map((w) => ({ name: w.name, ...(nb.staff === w.id ? SEL : OPEN), onClick: () => setNb({ staff: w.id, t: null, err: '' }) })),
+      nbDays: this.dayCells(7, TODAY, (d) => HRS[wd(d)].length > 0, nb.day, (d) => setNb({ day: d, t: null, err: '' })),
+      nbSlots: nbSl.map((x) => ({ label: x.label, ...(nb.t === x.t ? SEL : OPEN), onClick: () => setNb({ t: x.t, err: '' }) })),
+      nbNoSlots: nbSl.length === 0, nbNoSlotsText: `${stf(nb.staff).name} has no free time left on this day.`,
+      nbCta: nb.t != null ? `Add ${hm(nb.t)}` : 'Choose a time',
+      onNbName: (e) => setNb({ name: e.target.value }), onNbPhone: (e) => setNb({ phone: e.target.value }), submitNb,
+      openNew: () => this.openNew(),
+      acctName: owner ? 'Demo account' : ME.name, acctSub: owner ? 'Nobody else sees your changes.' : ME.email,
+      modeSeg: [
+        { label: 'Shop owner', icon: 'ph ph-storefront', ...segStyle(owner), onClick: () => this.switchMode('owner') },
+        { label: 'Customer', icon: 'ph ph-user', ...segStyle(!owner), onClick: () => this.switchMode('customer') },
+      ],
+      modeHint: owner ? 'Run your shop: bookings, calendar and setup.' : 'Book at a shop and manage your own bookings.',
+      tabs, fabCenter: owner && fab === 'In tab bar', fabPill: owner && fab === 'Floating pill',
+      toast: s.toast, toastTf: s.toastOn ? 'translateY(0)' : 'translateY(-130%)', toastOp: s.toastOn ? 1 : 0,
+      sheetOp: s.sheetOpen ? 1 : 0, sheetPe: s.sheetOpen ? 'auto' : 'none', sheetTf: s.sheetOpen ? 'translateY(0)' : 'translateY(105%)', closeSheet: this.closeSheet,
+      shDetail: s.sheet === 'detail', shNew: s.sheet === 'new', shResched: s.sheet === 'resched', shAccount: s.sheet === 'account',
+    };
+  }
+}
+</script>
+</body>
+</html>

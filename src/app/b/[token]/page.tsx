@@ -1,4 +1,4 @@
-import { CalendarCheck, CalendarX, ChevronLeft, ChevronRight, CircleCheck, MapPin, Phone } from "lucide-react";
+import { CalendarCheckIcon, CalendarXIcon, CaretLeftIcon, CaretRightIcon, CheckCircleIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -8,7 +8,10 @@ import { whenLabel } from "@/lib/assistant/facts";
 import { getAvailability, getPublicShop, shopToday } from "@/lib/booking";
 import { bookingByToken, toBookingInfo } from "@/lib/booking-emails";
 import { serviceLine } from "@/lib/email/templates";
+import { getCurrentUser } from "@/lib/shop";
 import { addDays } from "@/lib/slots";
+import { createClient } from "@/lib/supabase/server";
+import { saveToMyBookings } from "./actions";
 import { CancelForm, MoveForm } from "./manage-forms";
 
 // The customer's private booking page, reached from the link in their emails
@@ -30,7 +33,7 @@ const longDay = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "lo
 function BrokenLink() {
   return (
     <Card>
-      <EmptyState icon={CalendarX} title="This link doesn’t work" as="h1">
+      <EmptyState icon={CalendarXIcon} title="This link doesn’t work" as="h1">
         It may be mistyped or very old. Please check the newest email about your booking, or call the shop.
       </EmptyState>
     </Card>
@@ -45,10 +48,14 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
   const row = await bookingByToken(token);
   if (!row) return <BrokenLink />;
 
+  // Is it in the signed-in person's My bookings already?
+  const [user, supabase] = await Promise.all([getCurrentUser(), createClient()]);
+  const { data: saved } = await supabase.rpc("booking_saved_by_token", { p_token: token });
+
   const info = toBookingInfo(row);
   const now = new Date();
   const live = row.status === "booked" && Date.parse(row.starts_at) > now.getTime();
-  const done = query.done === "moved" || query.done === "cancelled" ? query.done : null;
+  const done = ["moved", "cancelled", "saved", "not-saved"].includes(String(query.done)) ? String(query.done) : null;
   const moving = live && query.move === "1";
   const base = `/b/${token}`;
 
@@ -79,18 +86,18 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
       picker = (
         <section aria-labelledby="move-title" className="space-y-4">
           <div className="flex items-center justify-between gap-3">
-            <h2 id="move-title" className="text-base font-semibold text-gray-900">
+            <h2 id="move-title" className="text-base font-medium text-gray-900">
               Pick a new time
             </h2>
             <div className="flex items-center gap-1">
               {prevFrom ? (
                 <Link href={link({ from: prevFrom === today ? null : prevFrom })} scroll={false} aria-label="Earlier days" className="flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
-                  <ChevronLeft aria-hidden className="size-4.5" />
+                  <CaretLeftIcon aria-hidden className="size-4.5" />
                 </Link>
               ) : null}
               {nextFrom ? (
                 <Link href={link({ from: nextFrom })} scroll={false} aria-label="Later days" className="flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
-                  <ChevronRight aria-hidden className="size-4.5" />
+                  <CaretRightIcon aria-hidden className="size-4.5" />
                 </Link>
               ) : null}
             </div>
@@ -102,7 +109,7 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
               const inner = (
                 <>
                   <span className="text-xs font-medium">{dayName.format(asUtc(d.date))}</span>
-                  <span className="text-lg font-semibold tabular">{dayNum.format(asUtc(d.date))}</span>
+                  <span className="text-lg font-medium tabular">{dayNum.format(asUtc(d.date))}</span>
                 </>
               );
               return (
@@ -114,7 +121,7 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
                       aria-current={active ? "date" : undefined}
                       aria-label={`${longDay.format(asUtc(d.date))}, ${d.slots.length} free times`}
                       className={`flex h-16 w-14 flex-col items-center justify-center rounded-lg border transition-colors duration-150 sm:w-full ${
-                        active ? "border-brand-700 bg-brand-700 text-white" : "border-gray-300 bg-white text-gray-900 hover:border-gray-400"
+                        active ? "chip-on" : "chip-off"
                       }`}
                     >
                       {inner}
@@ -137,12 +144,12 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
             </Card>
           ) : (
             <Card>
-              <EmptyState icon={CalendarX} title="No free times in these two weeks">
+              <EmptyState icon={CalendarXIcon} title="No free times in these two weeks">
                 {nextFrom ? "Try the later days with the arrow above." : "Please call the shop to find a time."}
               </EmptyState>
             </Card>
           )}
-          <Link href={base} className="inline-block text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline">
+          <Link href={base} className="inline-block text-sm font-medium text-accent-400 hover:text-accent-300 hover:underline">
             Keep the current time
           </Link>
         </section>
@@ -152,10 +159,27 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
 
   return (
     <div className="space-y-6">
-      {done ? (
-        <p role="status" className="flex items-start gap-2 rounded-lg bg-green-50 px-4 py-3 text-sm text-green-900 ring-1 ring-green-200 ring-inset">
-          <CircleCheck aria-hidden className="mt-0.5 size-4 shrink-0" />
-          {done === "moved" ? "Done: your booking has its new time." : "Done: your booking is cancelled."}
+      {saved === "mine" ? (
+        <Link
+          href="/my"
+          className="-mb-2 -ml-2.5 inline-flex h-10 items-center gap-0.5 rounded-lg pr-2.5 pl-1 text-[15px] font-medium text-accent-400 transition-colors duration-150 hover:bg-accent/10"
+        >
+          <CaretLeftIcon aria-hidden className="size-5" />
+          My bookings
+        </Link>
+      ) : null}
+      {done === "not-saved" ? (
+        <p role="alert" className="rounded-lg bg-danger-soft px-4 py-3 text-sm text-danger-ink ring-1 ring-danger-text/30 ring-inset">
+          This booking is already saved to another account.
+        </p>
+      ) : done ? (
+        <p role="status" className="flex items-start gap-2 rounded-lg bg-success-soft px-4 py-3 text-sm text-success-ink ring-1 ring-success-ink/30 ring-inset">
+          <CheckCircleIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
+          {done === "moved"
+            ? "Done: your booking has its new time."
+            : done === "saved"
+              ? "Saved to My bookings."
+              : "Done: your booking is cancelled."}
         </p>
       ) : null}
 
@@ -163,7 +187,7 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-sm text-gray-600">Your booking at</p>
-            <h1 className="text-xl font-bold tracking-tight wrap-anywhere text-gray-900">{row.shop_name}</h1>
+            <h1 className="text-[22px] leading-tight font-medium tracking-tight wrap-anywhere">{row.shop_name}</h1>
           </div>
           {row.status === "cancelled" ? <Badge tone="warning">Cancelled</Badge> : live ? <Badge tone="success">Booked</Badge> : <Badge>Past</Badge>}
         </div>
@@ -171,13 +195,13 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
         <dl className="mt-5 space-y-3 text-sm">
           <div>
             <dt className="text-gray-600">When</dt>
-            <dd className={`font-semibold tabular ${row.status === "cancelled" ? "text-gray-600 line-through" : "text-gray-900"}`}>
+            <dd className={`font-medium tabular ${row.status === "cancelled" ? "text-gray-600 line-through" : "text-gray-900"}`}>
               {whenLabel(row.starts_at, row.shop_timezone)}
             </dd>
           </div>
           <div>
             <dt className="text-gray-600">What</dt>
-            <dd className="font-semibold wrap-anywhere text-gray-900">{serviceLine(info)}</dd>
+            <dd className="font-medium wrap-anywhere text-gray-900">{serviceLine(info)}</dd>
           </div>
           <div>
             <dt className="text-gray-600">Booked for</dt>
@@ -188,17 +212,17 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
         </dl>
 
         {row.shop_address || row.shop_phone ? (
-          <ul className="mt-5 space-y-1.5 border-t border-gray-100 pt-4 text-sm text-gray-700">
+          <ul className="rule-top mt-5 space-y-1.5 pt-4 text-sm text-neutral-300">
             {row.shop_address ? (
               <li className="flex items-start gap-1.5">
-                <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-gray-500" />
+                <MapPinIcon aria-hidden className="mt-0.5 size-4 shrink-0 text-gray-500" />
                 {row.shop_address}
               </li>
             ) : null}
             {row.shop_phone ? (
               <li>
-                <a href={`tel:${row.shop_phone.replace(/[^\d+]/g, "")}`} className="flex items-center gap-1.5 font-semibold text-brand-700 hover:text-brand-800 hover:underline">
-                  <Phone aria-hidden className="size-4" />
+                <a href={`tel:${row.shop_phone.replace(/[^\d+]/g, "")}`} className="flex items-center gap-1.5 font-medium text-accent-400 hover:text-accent-300 hover:underline">
+                  <PhoneIcon aria-hidden className="size-4" />
                   Call {row.shop_phone}
                 </a>
               </li>
@@ -209,7 +233,7 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
         {live && !moving ? (
           <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:items-start">
             <Link href={`${base}?move=1`} className={buttonClass("primary", { full: true })}>
-              <CalendarCheck aria-hidden className="size-4" />
+              <CalendarCheckIcon aria-hidden className="size-4" />
               Change time
             </Link>
             <div className="sm:ml-auto">
@@ -225,6 +249,35 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
           </div>
         ) : null}
       </Card>
+
+      {saved === "none" && live ? (
+        user ? (
+          <form action={saveToMyBookings} className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-surface px-4 py-3 shadow-card">
+            <input type="hidden" name="token" value={token} />
+            <p className="text-sm text-neutral-300">Keep it with your other bookings.</p>
+            <button type="submit" className={buttonClass("secondary", { size: "sm" })}>
+              Add to My bookings
+            </button>
+          </form>
+        ) : (
+          <p className="text-center text-[13px] text-neutral-400">
+            <Link
+              href={`/login?as=customer&next=${encodeURIComponent(base)}`}
+              className="font-medium text-accent-400 hover:text-accent-300 hover:underline"
+            >
+              Log in
+            </Link>{" "}
+            or{" "}
+            <Link
+              href={`/signup?as=customer&next=${encodeURIComponent(base)}`}
+              className="font-medium text-accent-400 hover:text-accent-300 hover:underline"
+            >
+              make a free account
+            </Link>{" "}
+            to keep all your bookings in one place.
+          </p>
+        )
+      ) : null}
 
       {picker}
     </div>

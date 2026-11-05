@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasSupabaseEnv } from "@/lib/env";
+import { safeNextPath } from "@/lib/validation";
 
 // Runs before every page. Keeps the login fresh and sends logged-out
 // visitors away from the dashboard.
@@ -37,18 +38,21 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   if (!signedIn && path.startsWith("/dashboard")) return redirectKeepingCookies(request, response, "/login");
+  // Customers come back to My bookings after logging in.
+  if (!signedIn && (path === "/my" || path.startsWith("/my/"))) {
+    return redirectKeepingCookies(request, response, "/login", { as: "customer", next: path });
+  }
   if (signedIn && (path === "/login" || path === "/signup")) {
-    return redirectKeepingCookies(request, response, "/dashboard");
+    return redirectKeepingCookies(request, response, safeNextPath(request.nextUrl.searchParams.get("next"), "/start"));
   }
 
   return response;
 }
 
 // A redirect that still carries any refreshed login cookies and "don't cache" headers.
-function redirectKeepingCookies(request: NextRequest, response: NextResponse, pathname: string) {
-  const url = request.nextUrl.clone();
-  url.pathname = pathname;
-  url.search = "";
+function redirectKeepingCookies(request: NextRequest, response: NextResponse, target: string, query: Record<string, string> = {}) {
+  const url = new URL(target, request.nextUrl.origin);
+  for (const [k, v] of Object.entries(query)) url.searchParams.set(k, v);
   const redirect = NextResponse.redirect(url);
   response.cookies.getAll().forEach((cookie) => redirect.cookies.set(cookie));
   for (const header of ["cache-control", "expires", "pragma"]) {

@@ -16,6 +16,8 @@ export const bookingErrors: Record<string, string> = {
   not_found: "This booking link doesn’t work any more.",
   not_booked: "This booking is already cancelled.",
   too_late: "This booking has already started, so it can’t be changed online. Please call the shop.",
+  not_signed_in: "Please log in first.",
+  other_account: "This booking is already saved to another account.",
 };
 
 export function bookingError(code: string | undefined, fallback = "Something went wrong. Please try again."): string {

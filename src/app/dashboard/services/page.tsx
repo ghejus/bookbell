@@ -1,9 +1,10 @@
-import { Tags, Trash2 } from "lucide-react";
+import { ScissorsIcon, TrashIcon } from "@/components/icons";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ActionForm } from "@/components/action-form";
 import { ConfirmDelete, Field, SubmitButton } from "@/components/form";
-import { Badge, Card, CardSection, EmptyState, PageHeader, PageSkeleton } from "@/components/ui";
+import { Badge, Card, CardSection, EmptyState, PageSkeleton } from "@/components/ui";
+import { OwnerHeader } from "../account";
 import { CURRENCY_UNIT, formatDuration, formatPrice } from "@/lib/format";
 import { requireShop } from "@/lib/shop";
 import { addService, deleteService, toggleService } from "../actions";
@@ -24,12 +25,12 @@ async function ServicesContent() {
 
   return (
     <>
-      <PageHeader title="Services" description="What customers can book, how long each one takes, and what it costs." />
+      <OwnerHeader back title="Services" description="What customers can book, how long each one takes, and what it costs." />
 
       <div className="space-y-6">
         {services.length === 0 ? (
           <Card>
-            <EmptyState icon={Tags} title="No services yet">
+            <EmptyState icon={ScissorsIcon} title="No services yet">
               Add your first one below, for example “Haircut, 30 minutes”. Customers can only book what you list here.
             </EmptyState>
           </Card>
@@ -39,7 +40,7 @@ async function ServicesContent() {
               <li key={s.id}>
                 <Card className="flex items-center gap-3 py-3 pr-2 pl-4 sm:pl-5">
                   <div className="min-w-0 flex-1">
-                    <p className={`font-semibold break-words ${s.active ? "text-gray-900" : "text-gray-600"}`}>{s.name}</p>
+                    <p className={`font-medium break-words ${s.active ? "text-gray-900" : "text-gray-600"}`}>{s.name}</p>
                     <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
                       <span className="tabular">{formatDuration(s.duration_minutes)}</span>
                       {/* On phones the price sits here, so a long name keeps the room it needs. */}
@@ -50,7 +51,7 @@ async function ServicesContent() {
                     </p>
                   </div>
                   {s.price_cents !== null ? (
-                    <span className={`hidden font-semibold tabular whitespace-nowrap sm:inline ${s.active ? "text-gray-900" : "text-gray-600"}`}>
+                    <span className={`hidden font-medium tabular whitespace-nowrap sm:inline ${s.active ? "text-gray-900" : "text-gray-600"}`}>
                       {formatPrice(s.price_cents, shop.currency)}
                     </span>
                   ) : null}
@@ -69,7 +70,7 @@ async function ServicesContent() {
                     <form action={deleteService}>
                       <input type="hidden" name="id" value={s.id} />
                       <ConfirmDelete label={`Delete ${s.name}`}>
-                        <Trash2 aria-hidden className="size-4.5" />
+                        <TrashIcon aria-hidden className="size-4.5" />
                       </ConfirmDelete>
                     </form>
                   </div>

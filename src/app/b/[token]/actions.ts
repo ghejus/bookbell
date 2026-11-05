@@ -45,3 +45,12 @@ export async function moveMyBooking(_prev: ActionState, formData: FormData): Pro
   after(() => sendCustomerChangeEmails(parsed.data.token, "moved", site));
   redirect(`/b/${parsed.data.token}?done=moved`);
 }
+
+/** "Add to My bookings": links this booking to the signed-in account. The secret link is the proof. */
+export async function saveToMyBookings(formData: FormData) {
+  const parsed = cancelSchema.safeParse(fields(formData));
+  if (!parsed.success) redirect("/my");
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("claim_booking_by_token", { p_token: parsed.data.token });
+  redirect(`/b/${parsed.data.token}?done=${error ? "not-saved" : "saved"}`);
+}

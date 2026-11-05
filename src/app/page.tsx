@@ -1,4 +1,4 @@
-import { CalendarCheck, MessageSquareText, ShieldCheck } from "lucide-react";
+import { CalendarCheckIcon, ChatCircleTextIcon, ShieldCheckIcon } from "@/components/icons";
 import Link from "next/link";
 import { DemoButton } from "@/components/demo-button";
 import { buttonClass, Logo } from "@/components/ui";
@@ -7,14 +7,14 @@ import { hasSupabaseEnv } from "@/lib/env";
 // A simple holding page. The full landing page comes with the public booking page.
 
 const points = [
-  { icon: CalendarCheck, text: "Customers pick a free time themselves. Two people can never get the same slot." },
-  { icon: MessageSquareText, text: "An AI helper answers their questions, using only the notes you wrote." },
-  { icon: ShieldCheck, text: "Free, no app to install. Your customers don’t need an account." },
+  { icon: CalendarCheckIcon, text: "Customers pick a free time themselves. Two people can never get the same slot." },
+  { icon: ChatCircleTextIcon, text: "An AI helper answers their questions, using only the notes you wrote." },
+  { icon: ShieldCheckIcon, text: "Free, no app to install. Your customers don’t need an account." },
 ];
 
 export default function Home() {
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-white">
+    <div className="flex min-h-full flex-1 flex-col">
       <header className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between px-4 sm:px-6">
         <Logo />
         {hasSupabaseEnv ? (
@@ -25,7 +25,7 @@ export default function Home() {
       </header>
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-12 pb-20 sm:px-6 sm:pt-20">
-        <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-gray-900 text-balance sm:text-5xl">
+        <h1 className="max-w-2xl text-4xl font-medium tracking-tight text-gray-900 text-balance sm:text-5xl">
           Online booking for your shop, with a helper that answers questions.
         </h1>
         <p className="mt-5 max-w-xl text-lg text-gray-600">
@@ -42,7 +42,7 @@ export default function Home() {
           </div>
         ) : (
           <div role="status" className="mt-8 max-w-xl rounded-lg bg-amber-50 p-4 text-sm text-amber-900 ring-1 ring-amber-200 ring-inset">
-            <p className="font-semibold">The database isn’t connected yet.</p>
+            <p className="font-medium">The database isn’t connected yet.</p>
             <p className="mt-1">
               Copy <code className="font-mono">.env.example</code> to <code className="font-mono">.env.local</code>, add your
               Supabase URL and publishable key, then restart <code className="font-mono">npm run dev</code>.

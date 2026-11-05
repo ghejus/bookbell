@@ -35,6 +35,8 @@ export const requireUser = cache(async () => {
     supabase,
     userId: claims.sub,
     email: typeof claims.email === "string" ? claims.email : "",
+    // The name a customer gave when signing up (owners usually have none).
+    name: typeof claims.user_metadata?.full_name === "string" ? (claims.user_metadata.full_name as string) : "",
     // "Try a demo shop" visitors have a no-email (anonymous) account.
     isDemo: claims.is_anonymous === true,
   };
@@ -58,3 +60,21 @@ export async function requireShop() {
   if (!result.shop) redirect("/dashboard");
   return { ...result, shop: result.shop };
 }
+
+/**
+ * The signed-in person, or null for visitors who aren't logged in. Unlike
+ * requireUser, it never sends anyone away (public pages use it).
+ */
+export const getCurrentUser = cache(async () => {
+  if (!hasSupabaseEnv) return null;
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims?.sub) return null;
+  return {
+    userId: claims.sub,
+    email: typeof claims.email === "string" ? claims.email : "",
+    name: typeof claims.user_metadata?.full_name === "string" ? (claims.user_metadata.full_name as string) : "",
+    isDemo: claims.is_anonymous === true,
+  };
+});

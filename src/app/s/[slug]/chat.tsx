@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarCheck, CalendarPlus, LoaderCircle, MessageCircle, SendHorizontal, X } from "lucide-react";
+import { CalendarCheckIcon, CalendarPlusIcon, CircleNotchIcon, ChatCircleIcon, PaperPlaneRightIcon, XIcon } from "@/components/icons";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { Field, FormMessage, SubmitButton } from "@/components/form";
@@ -24,6 +24,8 @@ type Props = {
   timezone: string;
   /** True when no AI key is set and the simple practice helper answers. */
   practice: boolean;
+  /** Lift the button above a bottom tab bar. */
+  raised?: boolean;
 };
 
 type Message = ChatTurn & {
@@ -144,9 +146,9 @@ export function ShopChat(props: Props) {
           ref={launcher}
           type="button"
           onClick={() => setOpen(true)}
-          className="fixed right-4 bottom-[max(1rem,env(safe-area-inset-bottom))] z-30 inline-flex h-12 items-center gap-2 rounded-full bg-brand-700 pr-5 pl-4 text-sm font-semibold text-white shadow-lg transition-colors duration-150 hover:bg-brand-800 active:bg-brand-800 sm:right-6 sm:bottom-6"
+          className={`fixed right-4 z-30 ${props.raised ? "bottom-[calc(100px+env(safe-area-inset-bottom))]" : "bottom-[max(1rem,env(safe-area-inset-bottom))] sm:right-6 sm:bottom-6"} inline-flex h-12 items-center gap-2 rounded-full border border-accent bg-surface pr-5 pl-4 text-sm font-medium text-accent-400 shadow-[0_0_24px_rgb(145_132_217/0.3),0_8px_24px_rgb(0_0_0/0.5)] transition-colors duration-150 hover:bg-accent-900 active:bg-accent-800`}
         >
-          <MessageCircle aria-hidden className="size-5" />
+          <ChatCircleIcon aria-hidden className="size-5" />
           Ask a question
         </button>
       ) : null}
@@ -158,11 +160,11 @@ export function ShopChat(props: Props) {
           onKeyDown={(e) => {
             if (e.key === "Escape") setOpen(false);
           }}
-          className="fixed inset-0 z-40 flex flex-col bg-white sm:inset-auto sm:right-6 sm:bottom-6 sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[400px] sm:rounded-xl sm:border sm:border-gray-200 sm:shadow-lg"
+          className="fixed inset-0 z-40 flex flex-col bg-surface sm:inset-auto sm:right-6 sm:bottom-6 sm:h-[min(680px,calc(100dvh-3rem))] sm:w-[400px] sm:rounded-xl sm:border sm:border-gray-200 sm:shadow-lg"
         >
           <header className="flex items-start gap-3 border-b border-gray-100 px-4 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-3">
             <div className="min-w-0 flex-1">
-              <h2 id={titleId} className="truncate font-semibold text-gray-900">
+              <h2 id={titleId} className="truncate font-medium text-gray-900">
                 Ask {shopName}
               </h2>
               <p className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
@@ -183,14 +185,14 @@ export function ShopChat(props: Props) {
               title="Close chat"
               className="-mr-1.5 flex size-9 shrink-0 items-center justify-center rounded-lg text-gray-500 transition-colors duration-150 hover:bg-gray-100 hover:text-gray-900"
             >
-              <X aria-hidden className="size-5" />
+              <XIcon aria-hidden className="size-5" />
             </button>
           </header>
 
           <div ref={log} role="log" aria-live="polite" aria-label="Conversation" className="flex-1 space-y-4 overflow-y-auto overscroll-contain px-4 py-4">
             {messages.map((m) =>
               m.role === "user" ? (
-                <p key={m.id} data-message="user" className="ml-auto w-fit max-w-[85%] rounded-lg bg-gray-900 px-3 py-2 text-sm wrap-anywhere whitespace-pre-wrap text-white">
+                <p key={m.id} data-message="user" className="ml-auto w-fit max-w-[85%] rounded-lg bg-accent-900 px-3 py-2 text-sm wrap-anywhere whitespace-pre-wrap text-accent-100 ring-1 ring-accent-800 ring-inset">
                   {m.text}
                 </p>
               ) : (
@@ -218,7 +220,7 @@ export function ShopChat(props: Props) {
 
             {pending ? (
               <p className="flex w-fit items-center gap-2 rounded-lg bg-gray-100 px-3 py-2 text-sm text-gray-600">
-                <LoaderCircle aria-hidden className="size-4 motion-safe:animate-spin" />
+                <CircleNotchIcon aria-hidden className="size-4 motion-safe:animate-spin" />
                 Thinking…
               </p>
             ) : null}
@@ -249,10 +251,10 @@ export function ShopChat(props: Props) {
                 placeholder="Type a question…"
                 autoComplete="off"
                 enterKeyHint="send"
-                className="block h-11 min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-base text-gray-900 shadow-sm transition-colors duration-150 placeholder:text-gray-500 hover:border-gray-400 focus:border-brand-600 focus:ring-3 focus:ring-brand-100 focus:outline-none sm:text-sm"
+                className="block h-11 min-w-0 flex-1 rounded-lg border border-gray-300 bg-surface px-3 text-base text-gray-900 shadow-sm transition-colors duration-150 placeholder:text-gray-500 hover:border-gray-400 focus:border-brand-600 focus:ring-3 focus:ring-brand-100 focus:outline-none sm:text-sm"
               />
               <button type="submit" disabled={pending} aria-label="Send" title="Send" className={`${buttonClass("primary")} w-11 shrink-0 px-0`}>
-                <SendHorizontal aria-hidden className="size-4.5" />
+                <PaperPlaneRightIcon aria-hidden className="size-4.5" />
               </button>
             </div>
           </form>
@@ -288,7 +290,7 @@ function TimeChoices(props: Props & { times: ChatTimes; onBooked: BookedFn }) {
                   aria-label={`${day.label}, ${s.label}`}
                   onClick={() => setPicked(active ? null : s.iso)}
                   className={`flex h-9 items-center justify-center rounded-lg border text-sm font-medium tabular shadow-sm transition-colors duration-150 ${
-                    active ? "border-brand-700 bg-brand-700 text-white" : "border-gray-300 bg-white text-gray-900 hover:border-gray-400"
+                    active ? "chip-on" : "chip-off"
                   }`}
                 >
                   {s.label}
@@ -349,16 +351,16 @@ function ChatBookingForm(props: Props & { booking: ChatBooking; onBooked: Booked
   if (booked) {
     return (
       <div role="status" className="rounded-lg bg-green-50 p-4 text-sm text-green-900 ring-1 ring-green-200 ring-inset">
-        <p className="flex items-center gap-2 font-semibold">
-          <CalendarCheck aria-hidden className="size-4.5" />
+        <p className="flex items-center gap-2 font-medium">
+          <CalendarCheckIcon aria-hidden className="size-4.5" />
           You’re booked
         </p>
         <p className="mt-1">{booking.service.summary}</p>
-        <p className="font-semibold tabular">{booking.whenLabel}</p>
+        <p className="font-medium tabular">{booking.whenLabel}</p>
         <p className="mt-1 text-green-800">
           Booked for {booked.customer_email}.{" "}
           {booked.manage_path ? (
-            <Link href={booked.manage_path} className="font-semibold underline hover:text-green-950">
+            <Link href={booked.manage_path} className="font-medium underline hover:text-green-950">
               Change or cancel
             </Link>
           ) : (
@@ -376,7 +378,7 @@ function ChatBookingForm(props: Props & { booking: ChatBooking; onBooked: Booked
           download="booking.ics"
           className={`${buttonClass("secondary", { size: "sm" })} mt-3`}
         >
-          <CalendarPlus aria-hidden className="size-4" />
+          <CalendarPlusIcon aria-hidden className="size-4" />
           Add to calendar
         </a>
       </div>
@@ -386,7 +388,7 @@ function ChatBookingForm(props: Props & { booking: ChatBooking; onBooked: Booked
   return (
     <form {...formProps} className="space-y-4 rounded-lg bg-gray-50 p-4">
       <div className="text-sm">
-        <p className="font-semibold text-gray-900">{booking.service.summary}</p>
+        <p className="font-medium text-gray-900">{booking.service.summary}</p>
         <p className="text-gray-700 tabular">{booking.whenLabel}</p>
       </div>
       <input type="hidden" name="shop_id" value={shopId} />

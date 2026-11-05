@@ -1,14 +1,18 @@
-import { CalendarX, ChevronLeft, ChevronRight, MapPin, Phone } from "lucide-react";
+import { CalendarXIcon, CaretLeftIcon, CaretRightIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { AccountButton } from "@/components/account-sheet";
+import { CustomerTabs } from "@/components/customer-tabs";
 import { Card, EmptyState, Logo, PageSkeleton } from "@/components/ui";
+import { accountFor } from "@/lib/account";
 import { aiProvider } from "@/lib/assistant/provider";
 import { getAvailability, getPublicShop, getShopMeta, shopToday } from "@/lib/booking";
 import { emailMode } from "@/lib/email/send";
 import { formatDuration, formatPrice } from "@/lib/format";
+import { getCurrentUser } from "@/lib/shop";
 import { addDays } from "@/lib/slots";
 import { AboutText } from "./about-text";
 import { BookingFlow, HideWhenBooked, LinkPending, PendingSwap } from "./booking-flow";
@@ -30,7 +34,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   // Free times depend on the current time, so this part always waits for a real visit.
   await connection();
-  const data = await getPublicShop(slug);
+  const [data, user] = await Promise.all([getPublicShop(slug), getCurrentUser()]);
   if (!data) notFound();
   const { shop, services, hours, staff } = data;
 
@@ -81,19 +85,31 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
     <>
       <div className="space-y-6">
         <header>
-          <h1 className="text-2xl font-bold tracking-tight text-balance wrap-anywhere text-gray-900">{shop.name}</h1>
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-[28px] leading-tight font-medium tracking-tight text-balance wrap-anywhere">{shop.name}</h1>
+            {user ? (
+              <AccountButton account={accountFor(user)} mode="customer" />
+            ) : (
+              <Link
+                href={`/login?as=customer&next=${encodeURIComponent(`/s/${shop.slug}`)}`}
+                className="mt-1 shrink-0 rounded-lg px-2 py-1.5 text-sm font-medium text-accent-400 transition-colors duration-150 hover:bg-accent/10"
+              >
+                Log in
+              </Link>
+            )}
+          </div>
           {shop.about ? <AboutText text={shop.about} /> : null}
           {shop.address || shop.phone ? (
             <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-gray-600">
               {shop.address ? (
                 <li className="flex min-w-0 items-start gap-1.5">
-                  <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-gray-500" />
+                  <MapPinIcon aria-hidden className="mt-0.5 size-4 shrink-0 text-gray-500" />
                   {shop.address}
                 </li>
               ) : null}
               {shop.phone ? (
                 <li className="flex min-w-0 items-start gap-1.5">
-                  <Phone aria-hidden className="mt-0.5 size-4 shrink-0 text-gray-500" />
+                  <PhoneIcon aria-hidden className="mt-0.5 size-4 shrink-0 text-gray-500" />
                   <a href={`tel:${shop.phone.replace(/[^\d+]/g, "")}`} className="hover:text-gray-900 hover:underline">
                     {shop.phone}
                   </a>
@@ -105,7 +121,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
 
         {!takingBookings ? (
           <Card>
-            <EmptyState icon={CalendarX} title="Online booking isn’t open yet" as="h2">
+            <EmptyState icon={CalendarXIcon} title="Online booking isn’t open yet" as="h2">
               {shop.phone ? `Please call the shop at ${shop.phone} to book.` : "Please contact the shop to book."}
             </EmptyState>
           </Card>
@@ -114,7 +130,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
             <HideWhenBooked>
             {/* Step 1: service */}
             <section aria-labelledby="step-service">
-              <h2 id="step-service" className="mb-3 text-base font-semibold text-gray-900">
+              <h2 id="step-service" className="mb-3 text-base font-medium text-gray-900">
                 1. Choose a service
               </h2>
               <ul className="space-y-2.5">
@@ -126,17 +142,19 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
                         href={href({ service: s.id })}
                         scroll={false}
                         aria-current={active ? "true" : undefined}
-                        className={`flex items-center gap-3 rounded-xl border bg-white px-4 py-3 shadow-card transition-colors duration-150 sm:px-5 ${
-                          active ? "border-brand-700 ring-1 ring-brand-700" : "border-gray-200 hover:border-gray-300"
+                        className={`flex items-center gap-3 rounded-lg px-4 py-[13px] transition-[background-color,box-shadow] duration-150 ${
+                          active
+                            ? "bg-accent-900 shadow-[0_0_0_1px_var(--color-accent),0_0_18px_rgb(145_132_217/0.18)]"
+                            : "bg-surface shadow-card hover:bg-raised"
                         }`}
                       >
                         <span className="min-w-0 flex-1">
-                          <span className="block font-semibold break-words text-gray-900">{s.name}</span>
+                          <span className="block font-medium break-words text-gray-900">{s.name}</span>
                           <span className="block text-sm text-gray-600 tabular">{formatDuration(s.duration_minutes)}</span>
                         </span>
                         <LinkPending className="text-gray-500" />
                         {s.price_cents !== null ? (
-                          <span className="font-semibold whitespace-nowrap text-gray-900 tabular">
+                          <span className="font-medium whitespace-nowrap text-gray-900 tabular">
                             {formatPrice(s.price_cents, shop.currency)}
                           </span>
                         ) : null}
@@ -150,7 +168,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
             {/* Step 2: who (only for shops with two or more workers) */}
             {service && pickWorker ? (
               <section aria-labelledby="step-staff">
-                <h2 id="step-staff" className="mb-3 text-base font-semibold text-gray-900">
+                <h2 id="step-staff" className="mb-3 text-base font-medium text-gray-900">
                   2. Who would you like?
                 </h2>
                 <ul className="flex flex-wrap gap-2">
@@ -163,11 +181,11 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
                           scroll={false}
                           aria-current={active ? "true" : undefined}
                           className={`flex min-h-11 items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium wrap-anywhere transition-colors duration-150 ${
-                            active ? "border-brand-700 bg-brand-700 text-white" : "border-gray-300 bg-white text-gray-900 hover:border-gray-400"
+                            active ? "chip-on" : "chip-off"
                           }`}
                         >
                           {w.name}
-                          <LinkPending className={active ? "text-white" : "text-gray-500"} />
+                          <LinkPending className={active ? "text-accent-200" : "text-gray-500"} />
                         </Link>
                       </li>
                     );
@@ -180,20 +198,20 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
             {service ? (
               <section aria-labelledby="step-day">
                 <div className="mb-3 flex items-center justify-between gap-3">
-                  <h2 id="step-day" className="text-base font-semibold whitespace-nowrap text-gray-900">
+                  <h2 id="step-day" className="text-base font-medium whitespace-nowrap text-gray-900">
                     {step(3)}. Choose a day
                   </h2>
                   <div className="flex items-center gap-1">
                     <span className="mr-1 text-sm whitespace-nowrap text-gray-600 tabular">{shownMonths}</span>
                     {prevFrom ? (
                       <Link href={href({ service: service.id, from: prevFrom })} scroll={false} aria-label="Earlier days" className="relative flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
-                        <ChevronLeft aria-hidden className="size-4.5" />
+                        <CaretLeftIcon aria-hidden className="size-4.5" />
                         <LinkPending className="absolute text-gray-500" />
                       </Link>
                     ) : null}
                     {nextFrom ? (
                       <Link href={href({ service: service.id, from: nextFrom })} scroll={false} aria-label="Later days" className="relative flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
-                        <ChevronRight aria-hidden className="size-4.5" />
+                        <CaretRightIcon aria-hidden className="size-4.5" />
                         <LinkPending className="absolute text-gray-500" />
                       </Link>
                     ) : null}
@@ -204,7 +222,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
                     const open = d.slots.length > 0;
                     const active = d.date === chosenDate;
                     const weekday = dayName.format(asUtc(d.date));
-                    const number = <span className="text-lg font-semibold tabular">{dayNum.format(asUtc(d.date))}</span>;
+                    const number = <span className="text-lg font-medium tabular">{dayNum.format(asUtc(d.date))}</span>;
                     return (
                       <li key={d.date} className="shrink-0">
                         {open ? (
@@ -214,7 +232,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
                             aria-current={active ? "date" : undefined}
                             aria-label={`${longDay.format(asUtc(d.date))}, ${d.slots.length} free times`}
                             className={`relative flex h-16 w-14 flex-col items-center justify-center rounded-lg border transition-colors duration-150 sm:w-full ${
-                              active ? "border-brand-700 bg-brand-700 text-white" : "border-gray-300 bg-white text-gray-900 hover:border-gray-400"
+                              active ? "chip-on" : "chip-off"
                             }`}
                           >
                             {/* While the day loads, the spinner takes the weekday's place. */}
@@ -226,7 +244,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
                         ) : (
                           <span
                             aria-label={`${longDay.format(asUtc(d.date))}, no free times`}
-                            className="flex h-16 w-14 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 text-gray-600 sm:w-full"
+                            className="flex h-16 w-14 flex-col items-center justify-center rounded-lg border chip-shut sm:w-full"
                           >
                             <span className="flex h-4 items-center text-xs font-medium">{weekday}</span>
                             {number}
@@ -245,7 +263,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
             {service ? (
               <section aria-label="Choose a time">
                 <HideWhenBooked>
-                  <h2 className="mb-3 text-base font-semibold text-gray-900">{step(4)}. Choose a time</h2>
+                  <h2 className="mb-3 text-base font-medium text-gray-900">{step(4)}. Choose a time</h2>
                 </HideWhenBooked>
                 {chosenDay && chosenDay.slots.length > 0 ? (
                   <Card className="p-5 sm:p-6">
@@ -268,11 +286,13 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
                       slots={chosenDay.slots}
                       againHref={href({})}
                       emailsOn={emailMode() === "gmail"}
+                      account={user ? { name: user.name, email: user.email } : null}
+                      pagePath={`/s/${shop.slug}`}
                     />
                   </Card>
                 ) : (
                   <Card>
-                    <EmptyState icon={CalendarX} title="No free times in these two weeks">
+                    <EmptyState icon={CalendarXIcon} title="No free times in these two weeks">
                       {nextFrom ? "Try the later days with the arrow above." : "Please check again soon, or call the shop."}
                     </EmptyState>
                   </Card>
@@ -291,7 +311,9 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
         shopPhone={shop.phone}
         timezone={shop.timezone}
         practice={aiProvider() === "practice"}
+        raised={Boolean(user)}
       />
+      {user ? <CustomerTabs /> : null}
     </>
   );
 }
@@ -306,9 +328,9 @@ export default function Page(props: PageProps<"/s/[slug]">) {
         </Suspense>
       </main>
       {/* Extra room at the bottom so the chat button never covers the footer. */}
-      <footer className="pt-6 pb-24 text-center text-sm text-gray-600 sm:pb-28">
+      <footer className="pt-6 pb-36 text-center text-[13px] text-neutral-400">
         Booking by{" "}
-        <Link href="/" className="font-medium text-gray-900 hover:underline">
+        <Link href="/" className="font-medium hover:underline">
           <Logo className="text-sm" />
         </Link>
       </footer>

@@ -1,43 +1,31 @@
-import { CalendarPlus, ChevronLeft, ChevronRight, Mail, Phone, X } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ConfirmDelete } from "@/components/form";
-import { Badge, buttonClass, Card, PageSkeleton } from "@/components/ui";
+import { CalendarXIcon, CaretLeftIcon, CaretRightIcon } from "@/components/icons";
+import { PageSkeleton } from "@/components/ui";
 import { shopToday } from "@/lib/booking";
-import { hhmm, minuteOfDay, shownDays, stepDate, visibleHours, type CalendarView } from "@/lib/calendar";
-import { formatDuration } from "@/lib/format";
+import { hhmm, minuteOfDay, shownDays, visibleHours, weekStart, type CalendarView } from "@/lib/calendar";
 import { requireShop } from "@/lib/shop";
 import { addDays, isoWeekday } from "@/lib/slots";
 import { utcToZoned, zonedToUtc } from "@/lib/time";
-import { cancelBooking } from "../actions";
-import { AddBookingForm, MoveBookingForm } from "./panel-forms";
+import { OwnerHeader } from "../account";
+import { BookingSheet, isBookingId } from "../booking-sheet";
+import { NewBookingSheet } from "../new-booking";
 
 export const metadata: Metadata = { title: "Calendar" };
 
-/** Pixels per minute: one hour is 84px tall. */
-const PX = 1.4;
+/** Pixels per minute: one hour is 66px tall, like the design. */
+const PX = 1.1;
 const isDate = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
-const isId = (v: unknown): v is string => typeof v === "string" && /^[0-9a-f-]{36}$/.test(v);
 const asUtc = (d: string) => new Date(`${d}T12:00:00Z`);
+const toMinutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
 
 type Worker = { id: string; name: string; active: boolean };
-type Service = { id: string; name: string; duration_minutes: number; active: boolean };
 type Hours = { weekday: number; opens: string; closes: string };
 type Off = { id: string; starts_at: string; ends_at: string; staff_id: string | null };
-type Booking = {
-  id: string;
-  status: "booked" | "cancelled";
-  starts_at: string;
-  ends_at: string;
-  customer_name: string;
-  customer_email: string;
-  customer_phone: string;
-  staff_id: string;
-  services: { name: string } | null;
-};
+type Booking = { id: string; starts_at: string; ends_at: string; customer_name: string; staff_id: string };
 
-const BOOKING_FIELDS = "id, status, starts_at, ends_at, customer_name, customer_email, customer_phone, staff_id, services(name)";
+const hatch = "bg-[repeating-linear-gradient(135deg,rgb(233_233_237/0.045)_0_6px,transparent_6px_12px)]";
 
 async function CalendarContent({ searchParams }: PageProps<"/dashboard/calendar">) {
   const query = await searchParams;
@@ -48,50 +36,38 @@ async function CalendarContent({ searchParams }: PageProps<"/dashboard/calendar"
   const view: CalendarView = query.view === "week" ? "week" : "day";
   const date = isDate(query.date) ? query.date : today;
   const days = shownDays(view, date);
+  const monday = weekStart(date);
   const from = zonedToUtc(days[0], "00:00", tz);
   const to = zonedToUtc(addDays(days[days.length - 1], 1), "00:00", tz);
 
-  const [{ data: staffData }, { data: serviceData }, { data: hoursData }, { data: offData }, { data: bookingData }] =
-    await Promise.all([
-      supabase.from("staff").select("id, name, active").eq("shop_id", shop.id).order("created_at").returns<Worker[]>(),
-      supabase.from("services").select("id, name, duration_minutes, active").eq("shop_id", shop.id).order("created_at").returns<Service[]>(),
-      supabase.from("opening_hours").select("weekday, opens, closes").eq("shop_id", shop.id).returns<Hours[]>(),
-      supabase
-        .from("time_off")
-        .select("id, starts_at, ends_at, staff_id")
-        .eq("shop_id", shop.id)
-        .lt("starts_at", to.toISOString())
-        .gt("ends_at", from.toISOString())
-        .returns<Off[]>(),
-      supabase
-        .from("bookings")
-        .select(BOOKING_FIELDS)
-        .eq("shop_id", shop.id)
-        .eq("status", "booked")
-        .lt("starts_at", to.toISOString())
-        .gt("ends_at", from.toISOString())
-        .order("starts_at")
-        .returns<Booking[]>(),
-    ]);
+  const [{ data: staffData }, { data: hoursData }, { data: offData }, { data: bookingData }] = await Promise.all([
+    supabase.from("staff").select("id, name, active").eq("shop_id", shop.id).order("created_at").returns<Worker[]>(),
+    supabase.from("opening_hours").select("weekday, opens, closes").eq("shop_id", shop.id).returns<Hours[]>(),
+    supabase
+      .from("time_off")
+      .select("id, starts_at, ends_at, staff_id")
+      .eq("shop_id", shop.id)
+      .lt("starts_at", to.toISOString())
+      .gt("ends_at", from.toISOString())
+      .returns<Off[]>(),
+    supabase
+      .from("bookings")
+      .select("id, starts_at, ends_at, customer_name, staff_id")
+      .eq("shop_id", shop.id)
+      .eq("status", "booked")
+      .lt("starts_at", to.toISOString())
+      .gt("ends_at", from.toISOString())
+      .order("starts_at")
+      .returns<Booking[]>(),
+  ]);
   const allStaff = staffData ?? [];
-  const services = serviceData ?? [];
   const hours = hoursData ?? [];
   const offs = offData ?? [];
   const bookings = bookingData ?? [];
 
   // Columns: everyone taking bookings, plus anyone turned off who still has bookings here.
   const staff = allStaff.filter((w) => w.active || bookings.some((b) => b.staff_id === w.id));
-  const team = allStaff.filter((w) => w.active);
-  const nameOf = new Map(allStaff.map((w) => [w.id, w.name]));
-
-  // The booking whose details are open (it may be outside these days, or cancelled).
-  const selectedId = isId(query.b) ? query.b : null;
-  let selected = selectedId ? bookings.find((b) => b.id === selectedId) : undefined;
-  if (selectedId && !selected) {
-    const { data } = await supabase.from("bookings").select(BOOKING_FIELDS).eq("id", selectedId).eq("shop_id", shop.id).maybeSingle<Booking>();
-    selected = data ?? undefined;
-  }
-  const adding = query.add === "1" && !selected;
+  const openOn = (d: string) => hours.some((h) => h.weekday === isoWeekday(d));
 
   const window = visibleHours(
     hours,
@@ -109,44 +85,56 @@ async function CalendarContent({ searchParams }: PageProps<"/dashboard/calendar"
     for (const [k, v] of Object.entries(all)) if (v) p.set(k, v);
     return `/dashboard/calendar${p.size ? `?${p}` : ""}`;
   };
+  const closeHref = link({});
 
-  const dayTitle = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long", year: "numeric" });
-  const shortDay = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short", day: "numeric" });
-  const range = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "long", year: "numeric" });
-  const title = view === "day" ? dayTitle.format(asUtc(date)) : range.formatRange(asUtc(days[0]), asUtc(days[6]));
+  const dayTitle = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
+  const month = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", month: "long", year: "numeric" });
+  const shortDay = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short" });
+  const dayNum = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric" });
+  const dayMonth = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "short" });
   const nowMinute = minuteOfDay(now.toISOString(), tz, today);
+  const week = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
 
   /** One person's column on one day. */
   function Lane({ day, worker, showName }: { day: string; worker: Worker; showName: boolean }) {
-    const open = hours.filter((h) => h.weekday === isoWeekday(day));
+    const open = hours
+      .filter((h) => h.weekday === isoWeekday(day))
+      .map((h) => ({ s: toMinutes(h.opens), e: toMinutes(h.closes) }))
+      .sort((a, b) => a.s - b.s);
+    // Closed parts of the day are hatched.
+    const closed: { s: number; e: number }[] = [];
+    let cursor = window.start;
+    for (const o of open) {
+      if (o.s > cursor) closed.push({ s: cursor, e: o.s });
+      cursor = Math.max(cursor, o.e);
+    }
+    if (cursor < window.end) closed.push({ s: cursor, e: window.end });
     const laneOffs = offs.filter((o) => o.staff_id === null || o.staff_id === worker.id);
     const laneBookings = bookings.filter((b) => b.staff_id === worker.id);
     const marks: number[] = [];
     for (let m = window.start; m < window.end; m += 30) marks.push(m);
     return (
-      <div className="relative min-w-0 flex-1 border-l border-gray-200 bg-gray-50" style={{ height }}>
-        {open.map((h) => {
-          const s = minuteOfDay(zonedToUtc(day, h.opens.slice(0, 5), tz).toISOString(), tz, day);
-          const e = minuteOfDay(zonedToUtc(day, h.closes.slice(0, 5), tz).toISOString(), tz, day);
-          return <div key={h.opens} aria-hidden className="absolute inset-x-0 bg-white" style={{ top: top(s), height: top(e) - top(s) }} />;
-        })}
+      <div className="relative min-w-0 flex-1 rounded-lg shadow-[inset_0_0_0_1px_rgb(233_233_237/0.06)]" style={{ height }}>
         {marks.map((m) => (
-          <div key={m} aria-hidden className={`absolute inset-x-0 border-t ${m % 60 === 0 ? "border-gray-200" : "border-gray-100"}`} style={{ top: top(m) }} />
+          <div key={m} aria-hidden className={`absolute inset-x-0 border-t ${m % 60 === 0 ? "border-ink/7" : "border-ink/3"}`} style={{ top: top(m) }} />
         ))}
-        {/* Every half hour is a link that opens the "add booking" form there. */}
+        {closed.map((c) => (
+          <div key={c.s} aria-hidden className={`pointer-events-none absolute inset-x-0 ${hatch}`} style={{ top: top(c.s), height: top(c.e) - top(c.s) }} />
+        ))}
+        {/* Every half hour is a link that opens "New booking" there. */}
         {marks.map((m) => (
           <Link
             key={`add-${m}`}
             href={link({ date: day, add: "1", at: hhmm(m), staff: worker.id })}
             scroll={false}
-            className="group absolute inset-x-0 hover:bg-brand-50/80 focus-visible:z-10 focus-visible:bg-brand-50"
+            className="group absolute inset-x-0 rounded-md hover:bg-accent/10 focus-visible:z-10 focus-visible:bg-accent/10"
             style={{ top: top(m), height: 30 * PX }}
           >
             <span className="sr-only">
               Add a booking on {dayTitle.format(asUtc(day))} at {hhmm(m)}
               {staff.length > 1 ? ` with ${worker.name}` : ""}
             </span>
-            <span aria-hidden className="hidden px-2 pt-1 text-xs font-medium text-brand-700 group-hover:block">
+            <span aria-hidden className="hidden px-2 pt-0.5 text-[11px] font-medium text-accent-400 group-hover:block">
               + {hhmm(m)}
             </span>
           </Link>
@@ -158,247 +146,191 @@ async function CalendarContent({ searchParams }: PageProps<"/dashboard/calendar"
           return (
             <div
               key={o.id}
-              className="pointer-events-none absolute inset-x-0 bg-[repeating-linear-gradient(135deg,var(--color-gray-100)_0_6px,var(--color-gray-200)_6px_12px)] px-2 pt-1 text-xs font-medium text-gray-600"
+              className={`pointer-events-none absolute inset-x-0 rounded-md bg-ink/4 ${hatch} px-2 pt-1 text-[11px] font-medium text-neutral-400`}
               style={{ top: top(s), height: top(e) - top(s) }}
             >
               {o.staff_id ? "Off" : "Closed"}
             </div>
           );
         })}
-        {day === today && nowMinute > window.start && nowMinute < window.end ? (
-          <div aria-hidden className="pointer-events-none absolute inset-x-0 z-10 border-t-2 border-red-500" style={{ top: top(nowMinute) }} />
-        ) : null}
         {laneBookings.map((b) => {
           const s = minuteOfDay(b.starts_at, tz, day);
           const e = minuteOfDay(b.ends_at, tz, day);
           if (e <= s) return null;
-          const h = Math.max(top(e) - top(s), 22);
-          const active = b.id === selected?.id;
+          const h = Math.max(top(e) - top(s) - 2, 15);
+          const past = Date.parse(b.ends_at) <= now.getTime();
+          const active = b.id === query.b;
+          const start = utcToZoned(new Date(b.starts_at), tz).time;
+          const end = utcToZoned(new Date(b.ends_at), tz).time;
           return (
             <Link
               key={b.id}
               href={link({ b: b.id })}
               scroll={false}
               aria-current={active ? "true" : undefined}
-              title={`${utcToZoned(new Date(b.starts_at), tz).time}–${utcToZoned(new Date(b.ends_at), tz).time} ${b.customer_name}${b.services ? `, ${b.services.name}` : ""}${staff.length > 1 ? `, with ${worker.name}` : ""}`}
-              className={`absolute inset-x-1 z-20 overflow-hidden rounded-md border-l-4 px-1.5 py-0.5 text-xs leading-tight shadow-sm transition-colors duration-150 ${
-                active ? "border-brand-800 bg-brand-700 text-white" : "border-brand-600 bg-brand-100 text-brand-800 hover:bg-brand-200"
+              title={`${start}–${end} ${b.customer_name}${staff.length > 1 ? `, with ${worker.name}` : ""}`}
+              className={`absolute inset-x-[3px] z-20 flex content-start items-center gap-x-1.5 overflow-hidden rounded-md text-xs leading-[14px] transition-colors duration-150 ${
+                h < 30 ? "flex-nowrap px-[7px] py-px" : "flex-wrap px-[7px] py-[3px]"
+              } ${
+                active
+                  ? "bg-accent-800 text-accent-100 shadow-[inset_0_0_0_1px_var(--color-accent)]"
+                  : past
+                    ? "bg-ink/5 text-neutral-400 shadow-[inset_0_0_0_1px_rgb(233_233_237/0.14)] hover:bg-ink/8"
+                    : "bg-accent-900 text-accent-200 shadow-[inset_0_0_0_1px_rgb(145_132_217/0.75)] hover:bg-accent-800"
               }`}
-              style={{ top: top(s) + 1, height: h - 2 }}
+              style={{ top: top(s) + 1, height: h }}
             >
-              {/* Short bookings put the time and name on one line, so the name still shows. */}
-              {h < 36 ? (
-                <span className="block truncate">
-                  <span className="font-semibold tabular">{utcToZoned(new Date(b.starts_at), tz).time}</span> {b.customer_name}
-                </span>
-              ) : (
-                <>
-                  <span className="block font-semibold tabular">{utcToZoned(new Date(b.starts_at), tz).time}</span>
-                  <span className="block truncate font-medium">{b.customer_name}</span>
-                </>
-              )}
-              {h > 52 ? <span className="block truncate opacity-80">{b.services?.name}</span> : null}
-              {showName && h > 66 ? <span className="block truncate opacity-80">{worker.name}</span> : null}
+              <span className="min-w-0 shrink truncate font-medium">{b.customer_name}</span>
+              {/* Narrow week columns keep short bookings to the name; the time is in the tooltip. */}
+              {showName && h < 30 ? null : <span className="text-[11px] whitespace-nowrap opacity-75 tabular">{h < 30 ? start : `${start}–${end}`}</span>}
+              {showName && h > 44 ? <span className="w-full truncate text-[11px] opacity-75">{worker.name}</span> : null}
             </Link>
           );
         })}
+        {day === today && nowMinute > window.start && nowMinute < window.end ? (
+          <div aria-hidden className="pointer-events-none absolute inset-x-0 z-30 h-px bg-accent shadow-[0_0_6px_var(--color-accent)]" style={{ top: top(nowMinute) }}>
+            <span className="absolute -top-[3.5px] -left-1 size-2 rounded-full bg-accent" />
+          </div>
+        ) : null}
       </div>
     );
   }
 
   const hourLabels: number[] = [];
-  for (let m = window.start; m < window.end; m += 60) hourLabels.push(m);
+  for (let m = window.start; m <= window.end; m += 60) hourLabels.push(m);
 
-  // The side panel: one booking's details, or the "add booking" form.
-  const closeHref = link({});
-  let panel: React.ReactNode = null;
-  if (selected) {
-    const local = utcToZoned(new Date(selected.starts_at), tz);
-    const minutes = Math.round((Date.parse(selected.ends_at) - Date.parse(selected.starts_at)) / 60_000);
-    const live = selected.status === "booked";
-    panel = (
-      <Card className="p-5">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="text-base font-semibold wrap-anywhere text-gray-900">{selected.customer_name}</h2>
-            <p className="text-sm text-gray-600">
-              {selected.services?.name ?? "Booking"}, {formatDuration(minutes)}
-            </p>
-          </div>
-          <Link href={closeHref} scroll={false} aria-label="Close" className="-mt-1 -mr-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100">
-            <X aria-hidden className="size-4.5" />
-          </Link>
-        </div>
-        <p className="mt-3 text-sm font-semibold text-gray-900 tabular">
-          {dayTitle.format(asUtc(local.date))}, {local.time}–{utcToZoned(new Date(selected.ends_at), tz).time}
-        </p>
-        {staff.length > 1 ? <p className="text-sm text-gray-700">With {nameOf.get(selected.staff_id) ?? "someone"}</p> : null}
-        {!live ? (
-          <p className="mt-2">
-            <Badge tone="warning">Cancelled</Badge>
-          </p>
-        ) : null}
-        <div className="mt-3 space-y-1 text-sm">
-          {selected.customer_email ? (
-            <a href={`mailto:${selected.customer_email}`} className="flex min-w-0 items-start gap-1.5 text-gray-700 hover:text-gray-900 hover:underline">
-              <Mail aria-hidden className="mt-[3px] size-3.5 shrink-0 text-gray-500" />
-              <span className="min-w-0 wrap-anywhere">{selected.customer_email}</span>
-            </a>
-          ) : null}
-          {selected.customer_phone ? (
-            <a href={`tel:${selected.customer_phone.replace(/[^\d+]/g, "")}`} className="flex items-start gap-1.5 text-gray-700 hover:text-gray-900 hover:underline">
-              <Phone aria-hidden className="mt-[3px] size-3.5 shrink-0 text-gray-500" />
-              <span className="wrap-anywhere">{selected.customer_phone}</span>
-            </a>
-          ) : null}
-          {!selected.customer_email && !selected.customer_phone ? <p className="text-gray-600">No contact details.</p> : null}
-        </div>
-        {live ? (
-          <>
-            <div className="mt-5 border-t border-gray-100 pt-4">
-              <h3 className="mb-3 text-sm font-semibold text-gray-900">Move</h3>
-              <MoveBookingForm
-                key={`${selected.id}-${selected.starts_at}-${selected.staff_id}`}
-                bookingId={selected.id}
-                staff={team.length ? team : staff}
-                date={local.date}
-                time={local.time}
-                staffId={selected.staff_id}
-                view={view}
-              />
-            </div>
-            <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-4">
-              <p className="text-sm text-gray-600">{selected.customer_email ? "Cancelling emails the customer." : "Cancelling frees the time."}</p>
-              <form action={cancelBooking}>
-                <input type="hidden" name="id" value={selected.id} />
-                <ConfirmDelete label={`Cancel ${selected.customer_name}’s booking`} confirmText="Cancel?" busyText="Cancelling…">
-                  <X aria-hidden className="size-4.5" />
-                </ConfirmDelete>
-              </form>
-            </div>
-          </>
-        ) : null}
-      </Card>
-    );
-  } else if (adding) {
-    const at = typeof query.at === "string" && /^\d{2}:\d{2}$/.test(query.at) ? query.at : hhmm(Math.max(window.start, 9 * 60));
-    const choices = services.filter((s) => s.active).length ? services.filter((s) => s.active) : services;
-    panel = (
-      <Card className="p-5">
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <h2 className="text-base font-semibold text-gray-900">Add a booking</h2>
-          <Link href={closeHref} scroll={false} aria-label="Close" className="-mt-1 -mr-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100">
-            <X aria-hidden className="size-4.5" />
-          </Link>
-        </div>
-        {choices.length === 0 ? (
-          <p className="text-sm text-gray-600">
-            Add a service first, on the{" "}
-            <Link href="/dashboard/services" className="font-semibold text-brand-700 hover:underline">
-              Services
-            </Link>{" "}
-            page.
-          </p>
-        ) : (
-          <AddBookingForm
-            key={`${query.date}-${at}-${query.staff}`}
-            services={choices.map((s) => ({ id: s.id, name: s.name, label: `${s.name}, ${formatDuration(s.duration_minutes)}` }))}
-            staff={team.length ? team : staff}
-            date={isDate(query.date) ? query.date : date}
-            time={at}
-            staffId={isId(query.staff) ? query.staff : undefined}
-            view={view}
-          />
-        )}
-        <p className="mt-3 text-xs text-gray-600">For phone calls and walk-ins. Opening hours and notice rules don’t apply to you, but nobody can be booked twice.</p>
-      </Card>
-    );
-  }
-
-  const columns = view === "day" ? staff.map((w) => ({ key: w.id, label: w.name, day: date, workers: [w] })) : days.map((d) => ({ key: d, label: shortDay.format(asUtc(d)), day: d, workers: staff }));
+  const columns =
+    view === "day"
+      ? staff.map((w) => ({ key: w.id, label: w.name, count: bookings.filter((b) => b.staff_id === w.id).length, day: date, workers: [w] }))
+      : days.map((d) => ({ key: d, label: `${shortDay.format(asUtc(d))} ${dayNum.format(asUtc(d))}`, count: 0, day: d, workers: staff }));
+  const closedDay = view === "day" && !openOn(date) && bookings.length === 0;
+  const thisWeek = week.includes(today);
 
   return (
-    <div data-wide className="space-y-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Calendar</h1>
-          <p className="text-sm text-gray-600 tabular">{title}</p>
-        </div>
-        <Link href={link({ add: "1", date })} scroll={false} className={buttonClass("primary")}>
-          <CalendarPlus aria-hidden className="size-4" />
-          Add booking
-        </Link>
-      </div>
+    <div data-wide>
+      <OwnerHeader title="Calendar" eyebrow={month.format(asUtc(date))} />
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-1">
-          <Link href={link({ date: stepDate(view, date, -1) })} scroll={false} aria-label={view === "day" ? "Day before" : "Week before"} className="flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
-            <ChevronLeft aria-hidden className="size-4.5" />
-          </Link>
-          <Link href={link({ date: undefined })} scroll={false} className={buttonClass("secondary", { size: "sm" })}>
-            Today
-          </Link>
-          <Link href={link({ date: stepDate(view, date, 1) })} scroll={false} aria-label={view === "day" ? "Next day" : "Next week"} className="flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
-            <ChevronRight aria-hidden className="size-4.5" />
-          </Link>
-        </div>
-        <div role="group" aria-label="View" className="flex rounded-lg bg-gray-200/70 p-0.5">
-          {(["day", "week"] as const).map((v) => (
-            <Link
-              key={v}
-              href={`/dashboard/calendar?${new URLSearchParams({ ...(v === "week" ? { view: "week" } : {}), ...(date !== today ? { date } : {}) })}`}
-              scroll={false}
-              aria-current={view === v ? "true" : undefined}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-150 ${view === v ? "bg-white text-gray-900 shadow-sm" : "text-gray-700 hover:text-gray-900"}`}
-            >
-              {v === "day" ? "Day" : "Week"}
+      <div className="flex items-center justify-between gap-2 pb-2 pl-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[13px] text-neutral-400 tabular">
+            {dayMonth.format(asUtc(week[0]))} – {dayMonth.format(asUtc(week[6]))}
+          </span>
+          {!thisWeek || date !== today ? (
+            <Link href={link({ date: undefined })} scroll={false} className="rounded-md px-1.5 py-0.5 text-[13px] font-medium text-accent-400 hover:bg-accent/10">
+              Today
             </Link>
-          ))}
+          ) : null}
+        </div>
+        <div className="flex items-center gap-1">
+          <div role="group" aria-label="View" className="mr-1 hidden rounded-lg border border-line p-0.5 sm:flex">
+            {(["day", "week"] as const).map((v) => (
+              <Link
+                key={v}
+                href={`/dashboard/calendar?${new URLSearchParams({ ...(v === "week" ? { view: "week" } : {}), ...(date !== today ? { date } : {}) })}`}
+                scroll={false}
+                aria-current={view === v ? "true" : undefined}
+                className={`rounded-md px-3 py-1 text-[13px] font-medium transition-colors duration-150 ${
+                  view === v ? "bg-accent-900 text-accent-300 shadow-[inset_0_0_0_1px_var(--color-accent)]" : "text-neutral-300 hover:bg-ink/7"
+                }`}
+              >
+                {v === "day" ? "Day" : "Week"}
+              </Link>
+            ))}
+          </div>
+          <Link href={link({ date: addDays(date, -7) })} scroll={false} aria-label="Earlier week" className="flex size-9 items-center justify-center rounded-lg text-neutral-300 hover:bg-ink/7">
+            <CaretLeftIcon aria-hidden className="size-[18px]" />
+          </Link>
+          <Link href={link({ date: addDays(date, 7) })} scroll={false} aria-label="Later week" className="flex size-9 items-center justify-center rounded-lg text-neutral-300 hover:bg-ink/7">
+            <CaretRightIcon aria-hidden className="size-[18px]" />
+          </Link>
         </div>
       </div>
 
-      <div className={`grid gap-5 xl:items-start ${panel ? "xl:grid-cols-[minmax(0,1fr)_20rem]" : ""}`}>
-        {/* On smaller screens the panel sits above the calendar, so it is seen right away. */}
-        {panel ? <div className="xl:sticky xl:top-6 xl:order-2">{panel}</div> : null}
+      {/* The week: tap a day to see it. */}
+      <div className="grid grid-cols-7 gap-[5px]">
+        {week.map((d) => {
+          const on = view === "day" && d === date;
+          return (
+            <Link
+              key={d}
+              href={`/dashboard/calendar${d === today ? "" : `?date=${d}`}`}
+              scroll={false}
+              aria-current={on ? "date" : undefined}
+              aria-label={`${dayTitle.format(asUtc(d))}${openOn(d) ? "" : ", closed"}`}
+              className={`flex h-[60px] flex-col items-center justify-center gap-px rounded-lg border font-medium transition-colors duration-150 ${on ? "chip-on" : openOn(d) ? "chip-off" : "chip-shut"}`}
+            >
+              <span className="text-[11px]">{shortDay.format(asUtc(d))}</span>
+              <span className="text-[17px] leading-tight tabular">{dayNum.format(asUtc(d))}</span>
+              <span aria-hidden className={`size-1 rounded-full ${d === today ? "bg-accent" : "bg-transparent"}`} />
+            </Link>
+          );
+        })}
+      </div>
 
-        <Card className="overflow-hidden xl:order-1">
-          <div className="overflow-x-auto">
-            <div className="flex" style={{ minWidth: view === "day" ? `${3.5 + Math.max(1, columns.length) * 8.5}rem` : `${3.5 + 7 * Math.max(6, staff.length * 4)}rem` }}>
-              {/* Hour labels, kept in view while the columns scroll sideways. */}
-              <div className="sticky left-0 z-30 w-14 shrink-0 bg-white">
-                <div className="h-11 border-b border-gray-200" />
-                <div className="relative" style={{ height }}>
-                  {hourLabels.map((m) => (
-                    <span key={m} className="absolute right-2 -translate-y-1/2 text-xs text-gray-500 tabular first:translate-y-0" style={{ top: top(m) }}>
-                      {hhmm(m)}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              {columns.map((c) => (
-                <div key={c.key} className="min-w-0 flex-1">
-                  <div className={`flex h-11 items-center justify-center border-b border-l border-gray-200 px-2 text-sm font-semibold ${c.day === today && view === "week" ? "text-brand-700" : "text-gray-900"}`}>
+      {closedDay ? (
+        <div className="mt-5 flex flex-col items-center gap-1 rounded-lg bg-surface px-6 py-10 text-center shadow-card">
+          <span className="mb-2 flex size-11 items-center justify-center rounded-full bg-neutral-800 text-neutral-300">
+            <CalendarXIcon aria-hidden className="size-5" />
+          </span>
+          <p className="font-medium">Closed</p>
+          <p className="text-sm text-neutral-400">There are no opening hours on this day. Tap + to add a booking anyway.</p>
+        </div>
+      ) : (
+        <>
+          <div className="mt-5 overflow-x-auto pb-1">
+            <div style={{ minWidth: view === "day" ? `${2.75 + Math.max(1, columns.length) * 7}rem` : `${2.75 + 7 * Math.max(5.5, staff.length * 3.5)}rem` }}>
+              <div className="flex gap-1.5 pb-2 pl-11">
+                {columns.map((c) => (
+                  <div key={c.key} className="flex min-w-0 flex-1 items-baseline gap-1.5 pl-1">
                     {view === "week" ? (
-                      <Link href={`/dashboard/calendar?date=${c.day}`} className="truncate hover:underline">
+                      <Link href={`/dashboard/calendar?date=${c.day}`} className={`truncate text-sm font-medium hover:underline ${c.day === today ? "text-accent-400" : ""}`}>
                         {c.label}
                       </Link>
                     ) : (
-                      <span className="truncate">{c.label}</span>
+                      <span className="truncate text-sm font-medium">{c.label}</span>
                     )}
+                    {c.count ? <span className="text-xs text-neutral-400 tabular">{c.count}</span> : null}
                   </div>
-                  <div className="flex">
+                ))}
+              </div>
+              <div className="flex gap-1.5">
+                {/* Hour labels, kept in view while the columns scroll sideways. */}
+                <div className="sticky left-0 z-30 w-[38px] shrink-0 bg-ground">
+                  <div className="relative" style={{ height }}>
+                    {hourLabels.map((m) => (
+                      <span key={m} className="absolute right-1.5 -translate-y-1/2 text-[11px] text-neutral-600 tabular first:translate-y-0" style={{ top: top(m) }}>
+                        {hhmm(m)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                {columns.map((c) => (
+                  <div key={c.key} className="flex min-w-0 flex-1 gap-0.5">
                     {c.workers.map((w) => (
                       <Lane key={w.id} day={c.day} worker={w} showName={view === "week" && staff.length > 1} />
                     ))}
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </Card>
-      </div>
-      {view === "week" && staff.length > 1 ? (
-        <p className="text-sm text-gray-600">Each day shows one narrow column per person, in this order: {staff.map((w) => w.name).join(", ")}.</p>
+          <p className="mt-3 px-1 text-[13px] text-neutral-400">
+            Tap an empty time to add a booking there.
+            {view === "week" && staff.length > 1 ? ` Each day has one narrow column per person: ${staff.map((w) => w.name).join(", ")}.` : ""}
+          </p>
+        </>
+      )}
+
+      {isBookingId(query.b) ? (
+        <BookingSheet id={query.b} closeHref={closeHref} view={view} />
+      ) : query.add === "1" ? (
+        <NewBookingSheet
+          closeHref={closeHref}
+          date={isDate(query.date) ? query.date : undefined}
+          time={typeof query.at === "string" && /^\d{2}:\d{2}$/.test(query.at) ? query.at : undefined}
+          staffId={isBookingId(query.staff) ? query.staff : undefined}
+          view={view}
+        />
       ) : null}
     </div>
   );

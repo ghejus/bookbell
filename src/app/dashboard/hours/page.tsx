@@ -1,9 +1,10 @@
-import { CalendarOff, Trash2, X } from "lucide-react";
+import { CalendarSlashIcon, TrashIcon, XIcon } from "@/components/icons";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { ActionForm } from "@/components/action-form";
 import { ConfirmDelete, Field, IconSubmit, Select, SubmitButton } from "@/components/form";
-import { Badge, Card, CardSection, PageHeader, PageSkeleton } from "@/components/ui";
+import { Badge, Card, CardSection, PageSkeleton } from "@/components/ui";
+import { OwnerHeader } from "../account";
 import { WEEKDAYS } from "@/lib/format";
 import { requireShop } from "@/lib/shop";
 import { DateTimeField } from "./date-time-field";
@@ -51,7 +52,7 @@ async function HoursContent() {
 
   return (
     <>
-      <PageHeader
+      <OwnerHeader back
         title="Opening hours"
         description={<>Customers can only book inside these hours. Times are in {shop.timezone.replaceAll("_", " ")} time.</>}
       />
@@ -59,7 +60,7 @@ async function HoursContent() {
       <div className="space-y-6">
         <Card>
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 sm:px-6">
-            <h2 className="text-base font-semibold text-gray-900">Your week</h2>
+            <h2 className="text-base font-medium text-gray-900">Your week</h2>
             {hours.length === 0 ? (
               <form action={addStandardWeek}>
                 <SubmitButton variant="secondary" pendingText="Adding…">
@@ -92,7 +93,7 @@ async function HoursContent() {
                           </time>
                           <input type="hidden" name="id" value={h.id} />
                           <IconSubmit label={`Remove ${dayName} ${hm(h.opens)} to ${hm(h.closes)}`}>
-                            <X aria-hidden className="size-4" />
+                            <XIcon aria-hidden className="size-4" />
                           </IconSubmit>
                         </form>
                       ))}
@@ -138,7 +139,7 @@ async function HoursContent() {
               {timeOff.map((t) => (
                 <li key={t.id} className="flex items-start gap-3 py-2.5 pr-3 pl-5 sm:pr-4 sm:pl-6">
                   {/* Top-aligned, so the icon and button stay with the dates when a long reason wraps. */}
-                  <CalendarOff aria-hidden className="mt-0.5 size-4.5 shrink-0 text-gray-500" />
+                  <CalendarSlashIcon aria-hidden className="mt-0.5 size-4.5 shrink-0 text-gray-500" />
                   <div className="min-w-0 flex-1 text-sm">
                     <p className="text-gray-900 tabular">
                       <time dateTime={t.starts_at}>{when.format(new Date(t.starts_at))}</time> –{" "}
@@ -152,7 +153,7 @@ async function HoursContent() {
                   <form action={deleteTimeOff}>
                     <input type="hidden" name="id" value={t.id} />
                     <ConfirmDelete label="Remove this time off">
-                      <Trash2 aria-hidden className="size-4.5" />
+                      <TrashIcon aria-hidden className="size-4.5" />
                     </ConfirmDelete>
                   </form>
                 </li>

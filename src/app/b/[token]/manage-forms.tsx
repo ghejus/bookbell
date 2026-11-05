@@ -27,7 +27,7 @@ export function CancelForm({ token }: { token: string }) {
         <button
           type="submit"
           disabled={pending}
-          className="inline-flex h-11 items-center justify-center rounded-lg bg-red-600 px-4 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-60"
+          className="inline-flex h-11 items-center justify-center rounded-lg border border-danger bg-danger-soft px-4 text-sm font-medium text-danger-ink disabled:opacity-60"
         >
           {pending ? "Cancelling…" : "Yes, cancel it"}
         </button>
@@ -63,7 +63,7 @@ export function MoveForm({ token, slots, dayLabel }: { token: string; slots: Slo
                 onChange={() => setPicked(s.iso)}
                 className="peer sr-only"
               />
-              <span className="flex h-11 cursor-pointer items-center justify-center rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-900 tabular shadow-sm transition-colors duration-150 peer-checked:border-brand-700 peer-checked:bg-brand-700 peer-checked:text-white peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-brand-600 hover:border-gray-400">
+              <span className="flex h-11 cursor-pointer items-center justify-center rounded-lg border chip-off text-sm font-medium tabular transition-colors duration-150 peer-checked:chip-on peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
                 {s.label}
               </span>
             </label>

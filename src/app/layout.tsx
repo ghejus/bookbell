@@ -12,12 +12,16 @@ export const metadata: Metadata = {
   applicationName: "Bookbell",
   openGraph: { siteName: "Bookbell", type: "website" },
   twitter: { card: "summary_large_image" },
-  // Opened from the home screen, the iPhone status bar stays light like the app.
-  appleWebApp: { title: "Bookbell", statusBarStyle: "default" },
+  // Opened from the home screen, the app runs full screen and the iPhone status bar
+  // sits on top of the dark page (globals.css keeps content out from under it).
+  appleWebApp: { capable: true, title: "Bookbell", statusBarStyle: "black-translucent" },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#ffffff",
+  themeColor: "#161826",
+  colorScheme: "dark",
+  // Lets the page reach the edges around the iPhone notch and home bar.
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

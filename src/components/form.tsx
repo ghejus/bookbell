@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, CircleAlert, LoaderCircle } from "lucide-react";
+import { CheckIcon, CaretDownIcon, WarningCircleIcon, CircleNotchIcon } from "@/components/icons";
 import { useEffect, useId, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { buttonClass } from "@/components/ui";
@@ -33,7 +33,7 @@ export function SubmitButton({ children, pendingText, variant = "primary", size,
       aria-label={label}
       className={buttonClass(variant, { full, size })}
     >
-      {pending && size !== "sm" ? <LoaderCircle aria-hidden className="size-4 motion-safe:animate-spin" /> : null}
+      {pending && size !== "sm" ? <CircleNotchIcon aria-hidden className="size-4 motion-safe:animate-spin" /> : null}
       {pending ? busyText : children}
     </button>
   );
@@ -42,7 +42,7 @@ export function SubmitButton({ children, pendingText, variant = "primary", size,
 /** A small icon button inside a form, for quick actions like hide or remove. */
 export function IconSubmit({ label, children, tone = "neutral" }: { label: string; children: React.ReactNode; tone?: "neutral" | "danger" }) {
   const { pending } = useFormStatus();
-  const color = tone === "danger" ? "text-gray-500 hover:bg-red-50 hover:text-red-700" : "text-gray-500 hover:bg-gray-100 hover:text-gray-900";
+  const color = tone === "danger" ? "text-neutral-500 hover:bg-danger-text/10 hover:text-danger-text" : "text-neutral-500 hover:bg-ink/7 hover:text-ink";
   return (
     <button
       type="submit"
@@ -51,7 +51,7 @@ export function IconSubmit({ label, children, tone = "neutral" }: { label: strin
       title={label}
       className={`flex size-9 items-center justify-center rounded-lg transition-colors duration-150 disabled:opacity-50 ${color}`}
     >
-      {pending ? <LoaderCircle aria-hidden className="size-4 motion-safe:animate-spin" /> : children}
+      {pending ? <CircleNotchIcon aria-hidden className="size-4 motion-safe:animate-spin" /> : children}
     </button>
   );
 }
@@ -65,11 +65,17 @@ export function ConfirmDelete({
   children,
   confirmText = "Delete?",
   busyText = "Deleting…",
+  wide = false,
+  text = false,
 }: {
   label: string;
   children: React.ReactNode;
   confirmText?: string;
   busyText?: string;
+  /** A full-width button with a word (children) instead of a small icon. */
+  wide?: boolean;
+  /** A small button with a word (children), like "Cancel". */
+  text?: boolean;
 }) {
   const { pending } = useFormStatus();
   const [armed, setArmed] = useState(false);
@@ -86,9 +92,9 @@ export function ConfirmDelete({
         key="confirm"
         type="submit"
         disabled={pending}
-        className="flex h-9 items-center gap-1.5 rounded-lg bg-red-600 px-3 text-sm font-semibold text-white transition-colors duration-150 hover:bg-red-700 disabled:opacity-60"
+        className={`flex items-center justify-center gap-1.5 rounded-lg border border-danger bg-danger-soft px-3 text-sm font-medium text-danger-ink transition-colors duration-150 disabled:opacity-60 ${wide ? "h-11 w-full" : text ? "h-10" : "h-9"}`}
       >
-        {pending ? <LoaderCircle aria-hidden className="size-4 motion-safe:animate-spin" /> : null}
+        {pending ? <CircleNotchIcon aria-hidden className="size-4 motion-safe:animate-spin" /> : null}
         {pending ? busyText : confirmText}
       </button>
     );
@@ -103,9 +109,15 @@ export function ConfirmDelete({
         event.preventDefault();
         setArmed(true);
       }}
-      aria-label={label}
-      title={label}
-      className="flex size-9 items-center justify-center rounded-lg text-gray-500 transition-colors duration-150 hover:bg-red-50 hover:text-red-700"
+      aria-label={wide || text ? undefined : label}
+      title={wide || text ? undefined : label}
+      className={
+        text
+          ? "flex h-10 items-center rounded-lg px-3 text-sm font-medium text-neutral-300 transition-colors duration-150 hover:bg-danger-text/10 hover:text-danger-text"
+          : wide
+          ? "flex h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-line text-sm font-medium text-danger-text transition-colors duration-150 hover:bg-danger-text/8"
+          : "flex size-9 items-center justify-center rounded-lg text-neutral-500 transition-colors duration-150 hover:bg-danger-text/10 hover:text-danger-text"
+      }
     >
       {children}
     </button>
@@ -115,16 +127,16 @@ export function ConfirmDelete({
 export function FormMessage({ state }: { state: ActionState }) {
   if (state?.error) {
     return (
-      <p role="alert" className="flex items-start gap-2 rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-800 ring-1 ring-red-200 ring-inset">
-        <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+      <p role="alert" className="flex items-start gap-2 rounded-lg bg-danger-soft px-3 py-2.5 text-sm text-danger-ink ring-1 ring-danger-text/30 ring-inset">
+        <WarningCircleIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
         {state.error}
       </p>
     );
   }
   if (state?.message) {
     return (
-      <p role="status" className="flex items-start gap-2 rounded-lg bg-green-50 px-3 py-2.5 text-sm text-green-800 ring-1 ring-green-200 ring-inset">
-        <Check aria-hidden className="mt-0.5 size-4 shrink-0" />
+      <p role="status" className="flex items-start gap-2 rounded-lg bg-success-soft px-3 py-2.5 text-sm text-success-ink ring-1 ring-success-ink/30 ring-inset">
+        <CheckIcon aria-hidden className="mt-0.5 size-4 shrink-0" />
         {state.message}
       </p>
     );
@@ -133,7 +145,7 @@ export function FormMessage({ state }: { state: ActionState }) {
 }
 
 const controlClass =
-  "block w-full rounded-lg border border-gray-300 bg-white px-3 text-base text-gray-900 shadow-sm transition-colors duration-150 placeholder:text-gray-500 hover:border-gray-400 focus:border-brand-600 focus:outline-none focus:ring-3 focus:ring-brand-100 disabled:bg-gray-50 sm:text-sm";
+  "block w-full rounded-lg border border-line bg-ground px-3 text-base text-ink transition-[border-color,box-shadow] duration-150 hover:border-ink/45 focus:border-accent focus:outline-none focus:ring-3 focus:ring-accent/20 disabled:opacity-45 sm:text-sm";
 
 type FieldBase = { label: string; name: string; hint?: React.ReactNode; className?: string };
 
@@ -237,7 +249,7 @@ export function Select({
           {children}
         </select>
         {/* Our own arrow, so dropdowns match the text boxes instead of the browser's default. */}
-        <ChevronDown aria-hidden className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-gray-500" />
+        <CaretDownIcon aria-hidden className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-gray-500" />
       </div>
       <Hint id={hintId}>{hint}</Hint>
     </div>

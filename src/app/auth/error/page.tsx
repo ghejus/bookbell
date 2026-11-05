@@ -1,4 +1,4 @@
-import { LinkIcon } from "lucide-react";
+import { LinkIcon } from "@/components/icons";
 import Link from "next/link";
 import { buttonClass, Card, EmptyState, Logo } from "@/components/ui";
 
@@ -21,7 +21,7 @@ export default function AuthErrorPage() {
         </Card>
         <p className="mt-6 text-center text-sm text-gray-600">
           No luck?{" "}
-          <Link href="/signup" className="font-semibold text-brand-700 hover:text-brand-800 hover:underline">
+          <Link href="/signup" className="font-medium text-brand-700 hover:text-brand-800 hover:underline">
             Sign up again
           </Link>
         </p>

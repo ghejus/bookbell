@@ -1,4 +1,4 @@
-import { SearchX } from "lucide-react";
+import { MagnifyingGlassIcon } from "@/components/icons";
 import Link from "next/link";
 import { buttonClass, Card, EmptyState, Logo } from "@/components/ui";
 
@@ -11,7 +11,7 @@ export default function NotFound() {
       </Link>
       <main className="w-full max-w-sm">
         <Card>
-          <EmptyState icon={SearchX} title="We couldn’t find that page" as="h1">
+          <EmptyState icon={MagnifyingGlassIcon} title="We couldn’t find that page" as="h1">
             If you followed a shop’s booking link, check it for typos or ask the shop for the right one.
           </EmptyState>
           <div className="px-6 pb-6">
