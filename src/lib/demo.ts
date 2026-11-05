@@ -45,6 +45,18 @@ const PAST = [
   { name: "George Vasile", email: "george.v@example.com", phone: "+40 700 555 666", service: 1, time: "16:00", daysAgo: 1, staff: 0 },
 ];
 
+// Today's visits, so the Today screen has a "Next up" and a full day to show.
+// Depending on the time of the visit, some are already done.
+const TODAY = [
+  { name: "Sofia Ilie", email: "sofia.ilie@example.com", phone: "+40 700 222 333", service: 0, time: "09:30", staff: 0 },
+  { name: "Walk-in", email: "", phone: "", service: 3, time: "10:00", staff: 1 },
+  { name: "Matei Pavel", email: "matei.pavel@example.com", phone: "+40 700 444 555", service: 1, time: "11:00", staff: 0 },
+  { name: "Clara Neagu", email: "clara.neagu@example.com", phone: "", service: 2, time: "12:00", staff: 1 },
+  { name: "Paul Dragomir", email: "paul.d@example.com", phone: "+40 700 666 777", service: 0, time: "14:30", staff: 0 },
+  { name: "Irina Costea", email: "irina.costea@example.com", phone: "", service: 1, time: "16:00", staff: 1 },
+  { name: "Luca Barbu", email: "luca.barbu@example.com", phone: "", service: 0, time: "17:00", staff: 0 },
+];
+
 /** Makes the sample shop for this demo visitor, unless they already have a shop. */
 export async function createDemoShop(supabase: SupabaseClient, userId: string) {
   const { data: existing } = await supabase.from("shops").select("id").eq("owner_id", userId).maybeSingle();
@@ -122,7 +134,22 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
     p_staff_id: staffIds[0] ?? null,
   });
 
-  // Past visits, added the way the owner adds walk-ins (that door allows past times).
+  // Today's visits and past visits, added the way the owner adds walk-ins
+  // (that door allows any time, even one that already passed).
+  const today = utcToZoned(new Date(), TZ).date;
+  for (const t of TODAY) {
+    const staffId = staffIds[t.staff];
+    if (!staffId) continue;
+    await supabase.rpc("owner_add_booking", {
+      p_service_id: ids[t.service],
+      p_staff_id: staffId,
+      p_starts_at: zonedToUtc(today, t.time, TZ).toISOString(),
+      p_customer_name: t.name,
+      p_customer_email: t.email,
+      p_customer_phone: t.phone,
+    });
+  }
+
   const pastDays: string[] = [];
   for (let day = addDays(utcToZoned(new Date(), TZ).date, -1); pastDays.length < 2; day = addDays(day, -1)) {
     if (isoWeekday(day) <= 5) pastDays.push(day);
