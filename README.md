@@ -8,8 +8,8 @@ Online booking for small shops (barbers, salons, dentists, any appointment busin
 
 **Launch film (20 seconds):** the preview above is silent. [Watch it with sound](https://bookbell.vercel.app/bookbell-launch.mp4) or [download it](https://github.com/ghejus/bookbell/releases/tag/launch-film). Made with [Hyperframes](https://hyperframes.heygen.com).
 
-**Built:** shop owner accounts and a one-click demo shop; a dashboard to set up the shop, its services, opening hours, days off and notes for the AI helper; a public booking page for each shop at `/s/<shop-address>`; a Bookings list for owners; and a chat helper on every shop page that answers questions and finds free times.
-**Later ideas:** confirmation and reminder emails, several staff per shop, customer accounts, payments.
+**Built:** shop owner accounts and a one-click demo shop; a dark phone app that opens from the home screen; a Today screen and a day/week calendar where owners add walk-ins and move bookings; a team page, so each worker has their own bookings (customers pick a worker or "anyone"); a dashboard to set up the shop, its services, opening hours, days off and notes for the AI helper; a public booking page for each shop at `/s/<shop-address>`; customer accounts with My bookings, plus a private link to change or cancel each booking; and a chat helper on every shop page that answers questions and finds free times.
+**Later ideas:** switch on the confirmation and reminder emails (the code is ready; it only needs a mail account), a cleanup job for old demo accounts, the real AI helper (a Claude key), payments.
 
 ## The big pieces
 
