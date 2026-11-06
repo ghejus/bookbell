@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient as createPlainClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { Currency } from "@/lib/format";
+import { isLang, type Lang } from "@/lib/i18n/config";
 import { buildIcs } from "@/lib/ics";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "./email/send";
@@ -58,8 +59,9 @@ export async function bookingByToken(token: string, db: SupabaseClient = publicC
   return data ?? null;
 }
 
-export function toBookingInfo(row: TokenRow, manageUrl?: string): BookingInfo {
+export function toBookingInfo(row: TokenRow, manageUrl?: string, lang?: Lang): BookingInfo {
   return {
+    lang,
     bookingId: row.booking_id,
     customerName: row.customer_name,
     serviceName: row.service_name,
@@ -74,6 +76,14 @@ export function toBookingInfo(row: TokenRow, manageUrl?: string): BookingInfo {
     shopPhone: row.shop_phone,
     manageUrl,
   };
+}
+
+/** The language the customer booked in, for the emails about it. */
+async function bookingLang(bookingId: string): Promise<Lang> {
+  const admin = createAdminClient();
+  if (!admin) return "en";
+  const { data } = await admin.from("bookings").select("lang").eq("id", bookingId).maybeSingle<{ lang: string }>();
+  return isLang(data?.lang) ? data.lang : "en";
 }
 
 /** The shop owner's email, or null (no server key, or a demo shop with no email). */
@@ -110,7 +120,7 @@ export async function sendBookingEmails(token: string, site: string, { notifyOwn
   try {
     const row = await bookingByToken(token);
     if (!row) return;
-    const info = toBookingInfo(row, `${site}/b/${token}`);
+    const info = toBookingInfo(row, `${site}/b/${token}`, await bookingLang(row.booking_id));
     const owner = await ownerEmail(row.shop_id);
     const mail = confirmationEmail(info);
     await Promise.all([
@@ -129,7 +139,7 @@ export async function sendCustomerChangeEmails(token: string, what: "moved" | "c
   try {
     const row = await bookingByToken(token);
     if (!row) return;
-    const info = toBookingInfo(row, what === "moved" ? `${site}/b/${token}` : undefined);
+    const info = toBookingInfo(row, what === "moved" ? `${site}/b/${token}` : undefined, await bookingLang(row.booking_id));
     const owner = await ownerEmail(row.shop_id);
     const mail = what === "moved" ? movedEmail(info) : cancelledEmail(info, "customer", `${site}/s/${row.shop_slug}`);
     await Promise.all([
@@ -181,6 +191,7 @@ export async function sendShopChangeEmail(
       shopName: shop.name,
       shopAddress: shop.address,
       shopPhone: shop.phone,
+      lang: await bookingLang(b.id),
     };
     const owner = await ownerEmail(shop.id);
     const mail = what === "moved" ? movedEmail(info) : cancelledEmail(info, "shop", `${site}/s/${shop.slug}`);
@@ -199,7 +210,7 @@ export async function sendShopChangeEmail(
 export async function sendReminderEmail(token: string, site: string) {
   const row = await bookingByToken(token);
   if (!row || row.status !== "booked") return "skipped" as const;
-  const info = toBookingInfo(row, `${site}/b/${token}`);
+  const info = toBookingInfo(row, `${site}/b/${token}`, await bookingLang(row.booking_id));
   const owner = await ownerEmail(row.shop_id);
   return sendEmail({ to: row.customer_email, ...reminderEmail(info), replyTo: owner ?? undefined });
 }
@@ -208,7 +219,7 @@ export async function sendReminderEmail(token: string, site: string) {
 export async function sendReviewAskEmail(token: string, site: string) {
   const row = await bookingByToken(token);
   if (!row || row.status !== "booked") return "skipped" as const;
-  const info = toBookingInfo(row, `${site}/b/${token}#review`);
+  const info = toBookingInfo(row, `${site}/b/${token}#review`, await bookingLang(row.booking_id));
   const owner = await ownerEmail(row.shop_id);
   return sendEmail({ to: row.customer_email, ...reviewAskEmail(info), replyTo: owner ?? undefined });
 }

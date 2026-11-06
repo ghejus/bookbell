@@ -1,4 +1,8 @@
+"use client";
+
 import type { Ref } from "react";
+import type { Dict } from "@/lib/i18n/dict";
+import { useT } from "@/lib/i18n/client";
 
 // The free times on one day, as radio buttons grouped into morning, afternoon
 // and evening, like a paper appointment book. Used when booking and when
@@ -6,11 +10,11 @@ import type { Ref } from "react";
 
 export type Slot = { iso: string; label: string };
 
-function groupSlots(slots: Slot[]) {
+function groupSlots(slots: Slot[], t: Dict) {
   const groups = [
-    { name: "Morning", slots: slots.filter((s) => s.label < "12:00") },
-    { name: "Afternoon", slots: slots.filter((s) => s.label >= "12:00" && s.label < "17:00") },
-    { name: "Evening", slots: slots.filter((s) => s.label >= "17:00") },
+    { name: t.days.morning, slots: slots.filter((s) => s.label < "12:00") },
+    { name: t.days.afternoon, slots: slots.filter((s) => s.label >= "12:00" && s.label < "17:00") },
+    { name: t.days.evening, slots: slots.filter((s) => s.label >= "17:00") },
   ];
   return groups.filter((g) => g.slots.length > 0);
 }
@@ -24,11 +28,12 @@ type Props = {
 };
 
 export function TimeGrid({ slots, dayLabel, picked, onPick, ref }: Props) {
+  const t = useT();
   return (
     <fieldset ref={ref} className="scroll-mt-4">
-      <legend className="mb-3 text-sm font-medium text-ink">Free times on {dayLabel}</legend>
+      <legend className="mb-3 text-sm font-medium text-ink">{t.days.freeTimesOn(dayLabel)}</legend>
       <div className="space-y-4">
-        {groupSlots(slots).map((group) => (
+        {groupSlots(slots, t).map((group) => (
           <div key={group.name}>
             <p className="mb-2 text-xs font-medium text-neutral-400">{group.name}</p>
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">

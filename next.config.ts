@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   // Shop share pictures are drawn on request, so the server needs the font files with it.
   outputFileTracingIncludes: {
-    "/s/[slug]/opengraph-image": ["./assets/fonts/**/*"],
+    "/[lang]/s/[slug]/opengraph-image": ["./assets/fonts/**/*"],
   },
   partialPrefetching: true,
   turbopack: {

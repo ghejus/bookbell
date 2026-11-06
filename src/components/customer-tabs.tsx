@@ -3,17 +3,19 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CalendarCheckIcon, StorefrontIcon } from "@/components/icons";
+import { useT } from "@/lib/i18n/client";
 
 /** The customer's bar at the bottom of the phone screen: Book and My bookings. */
 export function CustomerTabs() {
   const path = usePathname();
+  const t = useT();
   const tabs = [
-    { href: "/my/shops", label: "Book", icon: StorefrontIcon, active: path.startsWith("/my/shops") || path.startsWith("/s/") },
-    { href: "/my", label: "My bookings", icon: CalendarCheckIcon, active: path === "/my" },
+    { href: "/my/shops", label: t.tabs.book, icon: StorefrontIcon, active: path.startsWith("/my/shops") || path.startsWith("/s/") },
+    { href: "/my", label: t.tabs.myBookings, icon: CalendarCheckIcon, active: path === "/my" },
   ];
   return (
     <nav
-      aria-label="Main"
+      aria-label={t.tabs.main}
       className="fixed inset-x-0 bottom-0 z-40 bg-ground/90 px-2.5 pt-[7px] pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur-lg"
     >
       <span aria-hidden className="rule-top absolute inset-x-0 top-0 h-px" />

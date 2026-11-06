@@ -1,7 +1,7 @@
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAvailability, getShopById, shopToday, type ShopData } from "@/lib/booking";
-import { asUtc, longDay } from "@/lib/dates";
+import { asUtc, datesFor } from "@/lib/dates";
 import { isTestAddress } from "@/lib/email/addresses";
 import { sendEmail } from "@/lib/email/send";
 import { spotOpenEmail } from "@/lib/email/templates";
@@ -27,6 +27,8 @@ export type WaitRow = {
   phone: string;
   created_at: string;
   notified_at: string | null;
+  /** The customer's language, for the email. */
+  lang: "en" | "ro";
 };
 
 export type WaitWithTimes = WaitRow & {
@@ -43,7 +45,7 @@ export type WaitWithTimes = WaitRow & {
   past: boolean;
 };
 
-export const WAIT_COLUMNS = "id, shop_id, service_id, staff_id, day, customer_id, name, email, phone, created_at, notified_at";
+export const WAIT_COLUMNS = "id, shop_id, service_id, staff_id, day, customer_id, name, email, phone, created_at, notified_at, lang";
 
 /** The booking page for a wish, on that day, ready to book. */
 export function bookHref(w: Pick<WaitWithTimes, "shopSlug" | "service_id" | "staff_id" | "day">) {
@@ -116,9 +118,10 @@ export async function notifyWaitlist(shopId: string, startsAt: string, site: str
           name: w.name.split(/\s+/)[0] ?? "",
           shopName: w.shopName,
           serviceName: w.serviceName,
-          dayLabel: longDay.format(asUtc(w.day)),
+          dayLabel: datesFor(w.lang).longDay.format(asUtc(w.day)),
           times: w.slots.map((s) => s.label),
           bookUrl: `${site}${bookHref(w)}`,
+          lang: w.lang,
         }),
       });
     }

@@ -30,7 +30,7 @@ export function makeToolbox(data: ShopData, facts: ShopFacts, now: Date): Toolbo
 
       const found = (await getAvailability(data, service, from, count, now)).filter((d) => d.slots.length > 0);
       const until = addDays(from, count - 1);
-      const chatService = toChatService(service, facts.currency);
+      const chatService = toChatService(service, facts.currency, facts.lang);
 
       if (found.length === 0) {
         const more = until < facts.lastDay ? ` Try again with from_date ${addDays(until, 1)}.` : "";
@@ -42,7 +42,7 @@ export function makeToolbox(data: ShopData, facts: ShopFacts, now: Date): Toolbo
         ok: true,
         value: {
           service: chatService,
-          days: found.slice(0, DAYS_SHOWN).map((d) => ({ date: d.date, label: dayLabel(d.date), slots: d.slots })),
+          days: found.slice(0, DAYS_SHOWN).map((d) => ({ date: d.date, label: dayLabel(d.date, facts.lang), slots: d.slots })),
         },
         text: `Free start times for ${service.name} (${cityOf(facts.timezone)} time), ${from} to ${until}:\n${lines.join("\n")}\nThe customer sees the first ${Math.min(DAYS_SHOWN, found.length)} of these days as buttons.`,
       };
@@ -63,7 +63,7 @@ export function makeToolbox(data: ShopData, facts: ShopFacts, now: Date): Toolbo
       }
       return {
         ok: true,
-        value: { service: toChatService(service, facts.currency), startsAt: slot.iso, whenLabel: whenLabel(slot.iso, facts.timezone) },
+        value: { service: toChatService(service, facts.currency, facts.lang), startsAt: slot.iso, whenLabel: whenLabel(slot.iso, facts.timezone, facts.lang) },
         text: `A booking form for ${service.name} on ${dayLabel(date)} at ${time} is now shown under your answer. Nothing is booked yet: the customer must type their name and email and tap Book. Tell them that briefly.`,
       };
     },

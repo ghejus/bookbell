@@ -1,7 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { CaretLeftIcon, CaretRightIcon } from "@/components/icons";
-import { asUtc, dayName, dayNum, longDay } from "@/lib/dates";
+import { asUtc, datesFor } from "@/lib/dates";
+import { getT, pageLang } from "@/lib/i18n/server";
 
 // The row of days to pick from, with "earlier" and "later" arrows. Used by
 // the shop page (book) and the private booking page (change time).
@@ -29,7 +30,9 @@ const arrowClass =
   "relative flex size-9 items-center justify-center rounded-lg text-neutral-300 transition-colors duration-150 hover:bg-raised";
 const dayClass = "relative flex h-16 w-14 flex-col items-center justify-center rounded-lg border sm:w-full";
 
-export function DayStrip({ title, titleId, months, prevHref, nextHref, days, chosen, hrefFor, fullHref, arrowPending, weekday }: Props) {
+export async function DayStrip({ title, titleId, months, prevHref, nextHref, days, chosen, hrefFor, fullHref, arrowPending, weekday }: Props) {
+  const [t, lang] = await Promise.all([getT(), pageLang()]);
+  const { dayName, dayNum, longDay } = datesFor(lang);
   return (
     <>
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -39,13 +42,13 @@ export function DayStrip({ title, titleId, months, prevHref, nextHref, days, cho
         <div className="flex items-center gap-1">
           {months ? <span className="mr-1 text-sm whitespace-nowrap text-neutral-400 tabular">{months}</span> : null}
           {prevHref ? (
-            <Link href={prevHref} scroll={false} aria-label="Earlier days" className={arrowClass}>
+            <Link href={prevHref} scroll={false} aria-label={t.days.earlier} className={arrowClass}>
               <CaretLeftIcon aria-hidden className="size-4.5" />
               {arrowPending}
             </Link>
           ) : null}
           {nextHref ? (
-            <Link href={nextHref} scroll={false} aria-label="Later days" className={arrowClass}>
+            <Link href={nextHref} scroll={false} aria-label={t.days.later} className={arrowClass}>
               <CaretRightIcon aria-hidden className="size-4.5" />
               {arrowPending}
             </Link>
@@ -64,7 +67,7 @@ export function DayStrip({ title, titleId, months, prevHref, nextHref, days, cho
                   href={hrefFor(d.date)}
                   scroll={false}
                   aria-current={d.date === chosen ? "date" : undefined}
-                  aria-label={`${label}, ${d.free} free times`}
+                  aria-label={t.days.free(label, d.free)}
                   className={`${dayClass} transition-colors duration-150 ${d.date === chosen ? "chip-on" : "chip-off"}`}
                 >
                   <span className="flex h-4 items-center text-xs font-medium">{weekday ? weekday(name) : name}</span>
@@ -75,17 +78,17 @@ export function DayStrip({ title, titleId, months, prevHref, nextHref, days, cho
                   href={fullHref(d.date)}
                   scroll={false}
                   aria-current={d.date === chosen ? "date" : undefined}
-                  aria-label={`${label}, fully booked: join the waitlist`}
+                  aria-label={t.days.full(label)}
                   className={`${dayClass} transition-colors duration-150 ${d.date === chosen ? "chip-on" : "chip-shut hover:bg-ink/5 hover:text-neutral-400"}`}
                 >
                   <span className="flex h-4 items-center text-xs font-medium">{weekday ? weekday(name) : name}</span>
                   {number}
                   <span aria-hidden className="absolute bottom-1.5 text-[9px] leading-none font-medium tracking-wide uppercase">
-                    Full
+                    {t.days.fullTag}
                   </span>
                 </Link>
               ) : (
-                <span aria-label={`${label}, no free times`} className={`${dayClass} chip-shut`}>
+                <span aria-label={t.days.none(label)} className={`${dayClass} chip-shut`}>
                   <span className="flex h-4 items-center text-xs font-medium">{name}</span>
                   {number}
                 </span>

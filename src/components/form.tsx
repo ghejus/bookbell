@@ -5,6 +5,7 @@ import { useEffect, useId, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { buttonClass } from "@/components/ui";
 import type { ActionState } from "@/lib/action-state";
+import { useT } from "@/lib/i18n/client";
 
 // Interactive form pieces shared by every screen.
 
@@ -22,9 +23,10 @@ type SubmitProps = {
 
 export function SubmitButton({ children, pendingText, variant = "primary", size, full, label, pending: pendingProp }: SubmitProps) {
   const status = useFormStatus();
+  const t = useT();
   const pending = pendingProp ?? status.pending;
   // Small buttons keep their word while busy, so the row doesn't jump.
-  const busyText = size === "sm" ? children : (pendingText ?? "Saving…");
+  const busyText = size === "sm" ? children : (pendingText ?? t.common.saving);
   return (
     <button
       type="submit"
@@ -63,8 +65,8 @@ export function IconSubmit({ label, children, tone = "neutral" }: { label: strin
 export function ConfirmDelete({
   label,
   children,
-  confirmText = "Delete?",
-  busyText = "Deleting…",
+  confirmText,
+  busyText,
   wide = false,
   text = false,
 }: {
@@ -78,6 +80,7 @@ export function ConfirmDelete({
   text?: boolean;
 }) {
   const { pending } = useFormStatus();
+  const t = useT();
   const [armed, setArmed] = useState(false);
 
   useEffect(() => {
@@ -95,7 +98,7 @@ export function ConfirmDelete({
         className={`flex items-center justify-center gap-1.5 rounded-lg border border-danger bg-danger-soft px-3 text-sm font-medium text-danger-ink transition-colors duration-150 disabled:opacity-60 ${wide ? "h-11 w-full" : text ? "h-10" : "h-9"}`}
       >
         {pending ? <CircleNotchIcon aria-hidden className="size-4 motion-safe:animate-spin" /> : null}
-        {pending ? busyText : confirmText}
+        {pending ? (busyText ?? t.common.deleting) : (confirmText ?? t.common.deleteAsk)}
       </button>
     );
   }
@@ -150,10 +153,11 @@ const controlClass =
 type FieldBase = { label: string; name: string; hint?: React.ReactNode; className?: string };
 
 function Label({ htmlFor, children, optional }: { htmlFor: string; children: React.ReactNode; optional?: boolean }) {
+  const t = useT();
   return (
     <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-medium text-gray-900">
       {children}
-      {optional ? <span className="ml-1 font-normal text-gray-600">(optional)</span> : null}
+      {optional ? <span className="ml-1 font-normal text-gray-600">{t.common.optional}</span> : null}
     </label>
   );
 }

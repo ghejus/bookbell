@@ -1,5 +1,7 @@
 // Small display helpers shared by server and browser code.
 
+import type { Lang } from "./i18n/config";
+
 export const CURRENCIES = ["EUR", "RON"] as const;
 export type Currency = (typeof CURRENCIES)[number];
 
@@ -13,12 +15,12 @@ const NBSP = String.fromCharCode(160);
 
 /**
  * 2550 cents -> "€25.50" or "25.50 lei". Whole amounts drop the decimals: "€25", "60 lei".
- * Null (no price set) -> "". Zero -> "Free".
+ * Null (no price set) -> "". Zero -> "Free". In Romanian: "25,50 lei", "Gratuit".
  */
-export function formatPrice(cents: number | null, currency: Currency): string {
+export function formatPrice(cents: number | null, currency: Currency, lang: Lang = "en"): string {
   if (cents === null) return "";
-  if (cents === 0) return "Free";
-  const amount = (cents / 100).toLocaleString("en-US", {
+  if (cents === 0) return lang === "ro" ? "Gratuit" : "Free";
+  const amount = (cents / 100).toLocaleString(lang === "ro" ? "ro-RO" : "en-US", {
     minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
     maximumFractionDigits: 2,
   });
@@ -26,8 +28,8 @@ export function formatPrice(cents: number | null, currency: Currency): string {
 }
 
 /** An amount of money (takings, totals): like formatPrice, but zero is "€0", not "Free". */
-export function formatMoney(cents: number, currency: Currency): string {
-  return cents === 0 ? (currency === "EUR" ? "€0" : `0${NBSP}lei`) : formatPrice(cents, currency);
+export function formatMoney(cents: number, currency: Currency, lang: Lang = "en"): string {
+  return cents === 0 ? (currency === "EUR" ? "€0" : `0${NBSP}lei`) : formatPrice(cents, currency, lang);
 }
 
 /** 90 -> "1 h 30 min", 45 -> "45 min", 60 -> "1 h". */

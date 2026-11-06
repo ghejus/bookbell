@@ -1,12 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { hasSupabaseEnv } from "@/lib/env";
+import { LANG_HEADER, type Lang } from "@/lib/i18n/config";
 import { safeNextPath } from "@/lib/validation";
 
 // Runs before every page. Keeps the login fresh and sends logged-out
-// visitors away from the dashboard.
-export async function updateSession(request: NextRequest) {
-  let response = NextResponse.next({ request });
+// visitors away from the dashboard. Pages live under a hidden language folder
+// (/en/..., /ro/...): `rewriteTo` serves that version without changing the
+// address the visitor sees.
+export async function updateSession(request: NextRequest, { lang, path, rewriteTo }: { lang: Lang; path: string; rewriteTo: string | null }) {
+  const pass = () => {
+    // Server code reads the language from this header (server actions can't read the folder).
+    const headers = new Headers(request.headers);
+    headers.set(LANG_HEADER, lang);
+    if (!rewriteTo) return NextResponse.next({ request: { headers } });
+    const url = request.nextUrl.clone();
+    url.pathname = rewriteTo;
+    return NextResponse.rewrite(url, { request: { headers } });
+  };
+  let response = pass();
 
   if (!hasSupabaseEnv) return response;
 
@@ -20,7 +32,7 @@ export async function updateSession(request: NextRequest) {
         },
         setAll(cookiesToSet, headers) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
+          response = pass();
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options),
           );
@@ -36,7 +48,6 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims();
   const signedIn = Boolean(data?.claims);
 
-  const path = request.nextUrl.pathname;
   if (!signedIn && path.startsWith("/dashboard")) return redirectKeepingCookies(request, response, "/login");
   // Customers come back to My bookings after logging in.
   if (!signedIn && (path === "/my" || path.startsWith("/my/"))) {

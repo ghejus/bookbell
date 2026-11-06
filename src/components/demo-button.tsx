@@ -1,8 +1,9 @@
 "use client";
 
+import { useT } from "@/lib/i18n/client";
 import { CircleNotchIcon } from "@/components/icons";
 import { useState, useTransition } from "react";
-import { startDemo } from "@/app/(auth)/actions";
+import { startDemo } from "@/app/[lang]/(auth)/actions";
 import { FormMessage } from "@/components/form";
 import { buttonClass } from "@/components/ui";
 import { createClient } from "@/lib/supabase/client";
@@ -14,6 +15,7 @@ import { createClient } from "@/lib/supabase/client";
 export function DemoButton({ variant = "secondary", full = true }: { variant?: "primary" | "secondary"; full?: boolean }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const t = useT();
 
   function start() {
     setError(null);
@@ -25,8 +27,8 @@ export function DemoButton({ variant = "secondary", full = true }: { variant?: "
         if (signInError) {
           setError(
             signInError.status === 429
-              ? "Too many demos from this network right now. Please try again in a while."
-              : "The demo isn’t available right now. Please try again later.",
+              ? t.demo.tooMany
+              : t.demo.unavailable,
           );
           return;
         }
@@ -40,7 +42,7 @@ export function DemoButton({ variant = "secondary", full = true }: { variant?: "
     <div className={full ? "w-full sm:w-auto" : undefined}>
       <button type="button" onClick={start} disabled={pending} aria-busy={pending} className={`${buttonClass(variant, { full })} ${full ? "w-full" : ""}`}>
         {pending ? <CircleNotchIcon aria-hidden className="size-4 motion-safe:animate-spin" /> : null}
-        {pending ? "Making your demo shop…" : "Try a demo shop"}
+        {pending ? t.demo.making : t.demo.button}
       </button>
       {error ? (
         <div className="mt-3">

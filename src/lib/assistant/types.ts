@@ -30,6 +30,8 @@ export type ShopFacts = {
   today: string;
   /** Last day that can be booked, "YYYY-MM-DD". */
   lastDay: string;
+  /** The visitor's language (English when not set). */
+  lang?: "en" | "ro";
   services: { id: string; name: string; duration_minutes: number; price_cents: number | null }[];
   hours: { weekday: number; opens: string; closes: string }[];
   notes: { question: string; answer: string }[];

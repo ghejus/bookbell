@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { logout } from "@/app/(auth)/actions";
+import { logout } from "@/app/[lang]/(auth)/actions";
 import { SignOutIcon, StorefrontIcon, UserIcon } from "@/components/icons";
 import { Sheet, SheetHeader } from "@/components/sheet";
+import { LanguageSwitch } from "@/components/language-switch";
+import { useT } from "@/lib/i18n/client";
 
 export type AccountInfo = {
   /** The letter in the round button. */
@@ -32,6 +34,7 @@ export function AccountButton({
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useT();
   const owner = mode === "owner";
 
   return (
@@ -40,7 +43,7 @@ export function AccountButton({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          aria-label="Account and view"
+          aria-label={t.account.open}
           className={`flex size-9 shrink-0 items-center justify-center rounded-full border border-accent-800 bg-accent-900 text-sm font-medium text-accent-300 transition-colors duration-150 hover:bg-accent-800 ${className}`}
         >
           {account.initial}
@@ -56,13 +59,13 @@ export function AccountButton({
           </span>
           <span className="min-w-0">
             <span className="block truncate text-sm font-medium">{account.name}</span>
-            <span className="block text-xs text-neutral-400">{owner ? "Shop owner" : "Customer"}</span>
+            <span className="block text-xs text-neutral-400">{owner ? t.account.owner : t.account.customer}</span>
           </span>
         </button>
       )}
 
       {open ? (
-        <Sheet label="Account" onClose={() => setOpen(false)}>
+        <Sheet label={t.account.title} onClose={() => setOpen(false)}>
           <SheetHeader
             onClose={() => setOpen(false)}
             title={
@@ -79,12 +82,12 @@ export function AccountButton({
           />
           <div className="space-y-5">
             <div>
-              <p className="mb-2 text-sm font-medium">Use Bookbell as</p>
+              <p className="mb-2 text-sm font-medium">{t.account.useAs}</p>
               <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-line">
                 {(
                   [
-                    { key: "owner", label: "Shop owner", href: "/dashboard", icon: StorefrontIcon },
-                    { key: "customer", label: "Customer", href: "/my", icon: UserIcon },
+                    { key: "owner", label: t.account.owner, href: "/dashboard", icon: StorefrontIcon },
+                    { key: "customer", label: t.account.customer, href: "/my", icon: UserIcon },
                   ] as const
                 ).map((o) => {
                   const on = o.key === mode;
@@ -105,8 +108,12 @@ export function AccountButton({
                 })}
               </div>
               <p className="mt-2 text-[13px] text-neutral-400">
-                {owner ? "Run your shop: bookings, calendar and setup." : "Book at a shop and manage your own bookings."}
+                {owner ? t.account.ownerHint : t.account.customerHint}
               </p>
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-sm font-medium">{t.common.language}</p>
+              <LanguageSwitch />
             </div>
             <form action={logout}>
               <button
@@ -114,7 +121,7 @@ export function AccountButton({
                 className="-ml-3 flex h-10 items-center gap-1.5 rounded-lg px-3 text-sm font-medium text-neutral-300 transition-colors duration-150 hover:bg-ink/7"
               >
                 <SignOutIcon aria-hidden className="size-[17px]" />
-                {account.isDemo ? "Leave the demo" : "Log out"}
+                {account.isDemo ? t.account.leaveDemo : t.account.logOut}
               </button>
             </form>
           </div>

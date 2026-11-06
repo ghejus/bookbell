@@ -166,3 +166,21 @@ describe("shop facts in plain words", () => {
     expect(p).toContain("must not ask for their name");
   });
 });
+
+describe("in Romanian", () => {
+  const ro = { ...facts, lang: "ro" as const };
+  const ask = (text: string) => practiceReply(ro, [{ role: "user", text }], fakeTools());
+
+  it("answers prices, opening hours and where, in Romanian", async () => {
+    expect((await ask("Care sunt prețurile?")).reply).toMatch(/^Iată ce oferim/);
+    expect((await ask("Care e programul?")).reply).toMatch(/^Programul nostru/);
+    expect((await ask("Unde sunteți?")).reply).not.toMatch(/durează/);
+    expect((await ask("Cât costă Beard trim?")).reply).toMatch(/^Beard trim durează/);
+  });
+
+  it("understands Romanian day words", () => {
+    expect(findDay("mâine", "2026-11-02")).toBe("2026-11-03");
+    expect(findDay("vineri", "2026-11-02")).toBe("2026-11-06");
+    expect(findDay("azi", "2026-11-02")).toBe("2026-11-02");
+  });
+});

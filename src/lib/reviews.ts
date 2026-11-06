@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { en } from "./i18n/en";
+import type { Dict } from "./i18n/dict";
 
 // Reviews: only people who really came can write one (the database checks).
 // See supabase/migrations/20261116090000_reviews.sql.
@@ -57,15 +59,14 @@ export const averageText = (average: number) => average.toFixed(1);
 /** "23 reviews", "1 review". */
 export const reviewCount = (n: number) => `${n} review${n === 1 ? "" : "s"}`;
 
-export const reviewSchema = z.object({
-  stars: z.coerce.number({ error: "Tap a star first." }).int().min(1, "Tap a star first.").max(5, "Tap a star first."),
-  body: z
-    .string()
-    .trim()
-    .max(REVIEW_MAX, `Please keep it under ${REVIEW_MAX} characters.`)
-    .optional()
-    .default(""),
-});
+/** Stars and words, with messages in the visitor's language. */
+export const reviewSchemaFor = (t: Dict) =>
+  z.object({
+    stars: z.coerce.number({ error: t.reviews.errors.tapStar }).int().min(1, t.reviews.errors.tapStar).max(5, t.reviews.errors.tapStar),
+    body: z.string().trim().max(REVIEW_MAX, t.reviews.errors.tooLong).optional().default(""),
+  });
+
+export const reviewSchema = reviewSchemaFor(en);
 
 export const replySchema = z.object({
   id: z.uuid(),

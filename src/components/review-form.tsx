@@ -5,7 +5,8 @@ import { FormMessage, SubmitButton, TextArea } from "@/components/form";
 import { StarIcon } from "@/components/icons";
 import { useActionForm } from "@/components/use-action-form";
 import type { ActionState } from "@/lib/action-state";
-import { REVIEW_MAX, STAR_WORDS, starsLabel } from "@/lib/reviews";
+import { useT } from "@/lib/i18n/client";
+import { REVIEW_MAX } from "@/lib/reviews";
 
 type Action = (prev: ActionState, formData: FormData) => Promise<ActionState>;
 
@@ -18,7 +19,7 @@ export function ReviewForm({
   action,
   hidden,
   initial,
-  submitLabel = "Post review",
+  submitLabel,
 }: {
   action: Action;
   /** Which booking: the secret link token, or the booking id. */
@@ -27,6 +28,7 @@ export function ReviewForm({
   submitLabel?: string;
 }) {
   const { state, pending, formProps } = useActionForm(action);
+  const t = useT();
   const [stars, setStars] = useState(initial?.stars ?? 0);
   // While a finger or mouse hovers a star, show what tapping it would give.
   const [hover, setHover] = useState(0);
@@ -38,7 +40,7 @@ export function ReviewForm({
         <input key={name} type="hidden" name={name} value={value} />
       ))}
       <fieldset>
-        <legend className="mb-1.5 text-sm font-medium">Your rating</legend>
+        <legend className="mb-1.5 text-sm font-medium">{t.reviews.yourRating}</legend>
         <div className="flex items-center gap-3">
           <div className="-ml-1.5 flex" onMouseLeave={() => setHover(0)}>
             {[1, 2, 3, 4, 5].map((n) => (
@@ -52,7 +54,7 @@ export function ReviewForm({
                   required
                   className="sr-only"
                 />
-                <span className="sr-only">{starsLabel(n)}</span>
+                <span className="sr-only">{t.reviews.starsLabel(n)}</span>
                 <StarIcon
                   aria-hidden
                   weight="fill"
@@ -62,22 +64,22 @@ export function ReviewForm({
             ))}
           </div>
           <span aria-hidden className="min-w-0 text-sm text-neutral-400">
-            {shown ? STAR_WORDS[shown - 1] : ""}
+            {shown ? t.reviews.starWords[shown - 1] : ""}
           </span>
         </div>
       </fieldset>
       <TextArea
-        label="A few words"
+        label={t.reviews.aFewWords}
         name="body"
         maxLength={REVIEW_MAX}
         defaultValue={state?.values?.body ?? initial?.body ?? ""}
-        placeholder="What did you like? What could be better?"
-        hint="Shown on the shop’s page with your first name and the first letter of your last name."
+        placeholder={t.reviews.placeholder}
+        hint={t.reviews.shownHint}
       />
       <FormMessage state={state} />
       <div className="[&>button]:w-full">
-        <SubmitButton pending={pending} pendingText="Saving…">
-          {submitLabel}
+        <SubmitButton pending={pending} pendingText={t.common.saving}>
+          {submitLabel ?? t.reviews.post}
         </SubmitButton>
       </div>
     </form>

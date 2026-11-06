@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { XIcon } from "@/components/icons";
+import { useT } from "@/lib/i18n/client";
 
 /**
  * A panel that slides up from the bottom on phones (a "bottom sheet") and in
@@ -74,6 +75,7 @@ export function SheetHeader({
   children?: React.ReactNode;
 }) {
   const router = useRouter();
+  const t = useT();
   return (
     <div className="mb-5 flex items-start justify-between gap-3">
       <div className="flex min-w-0 flex-col items-start gap-1.5">
@@ -83,7 +85,7 @@ export function SheetHeader({
       </div>
       <button
         type="button"
-        aria-label="Close"
+        aria-label={t.common.close}
         onClick={() => (onClose ? onClose() : closeHref ? router.replace(closeHref, { scroll: false }) : undefined)}
         className="-mt-1 -mr-2 flex size-9 shrink-0 items-center justify-center rounded-lg text-neutral-300 transition-colors duration-150 hover:bg-ink/7"
       >

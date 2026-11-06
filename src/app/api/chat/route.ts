@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { AssistantError, claudeReply } from "@/lib/assistant/claude";
 import { practiceReply } from "@/lib/assistant/practice";
+import { isLang, LANG_HEADER, type Lang } from "@/lib/i18n/config";
+import { dictFor } from "@/lib/i18n/dict";
 import { aiProvider } from "@/lib/assistant/provider";
 import { makeToolbox } from "@/lib/assistant/tools";
 import { CHAT_LIMITS, type ChatReply, type ShopFacts } from "@/lib/assistant/types";
@@ -30,16 +32,19 @@ const chatRequest = z.object({
 const fail = (status: number, error: string) => Response.json({ error }, { status });
 
 export async function POST(request: Request) {
-  if (Number(request.headers.get("content-length") ?? 0) > 64_000) return fail(413, "That message is too long.");
+  // The proxy picked the visitor's language (their EN · RO choice, or their phone's).
+  const lang = isLang(request.headers.get(LANG_HEADER)) ? (request.headers.get(LANG_HEADER) as Lang) : "en";
+  const t = dictFor(lang);
+  if (Number(request.headers.get("content-length") ?? 0) > 64_000) return fail(413, t.chat.errors.tooLong);
   const parsed = chatRequest.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     const tooLong = parsed.error.issues.some((i) => i.code === "too_big" && i.path.at(-1) === "text");
-    return fail(400, tooLong ? "Please type a shorter message and try again." : "That message couldn’t be sent. Please try again.");
+    return fail(400, tooLong ? t.chat.errors.shorter : t.chat.errors.cantSend);
   }
   const { slug, messages } = parsed.data;
 
   const data = await getPublicShop(slug);
-  if (!data) return fail(404, "This shop doesn’t exist any more.");
+  if (!data) return fail(404, t.chat.errors.shopGone);
   const { supabase, shop, services, hours } = data;
 
   const { data: verdict, error: limitError } = await supabase.rpc("take_chat_turn", {
@@ -49,11 +54,11 @@ export async function POST(request: Request) {
   });
   if (limitError) {
     console.error("take_chat_turn failed:", limitError.message);
-    return fail(500, "The helper isn’t working right now. You can still book with the steps on this page.");
+    return fail(500, t.chat.errors.notWorking);
   }
-  if (verdict === "visitor_limit") return fail(429, "You’ve sent a lot of messages. Please wait a little, or book with the steps on this page.");
-  if (verdict === "shop_limit") return fail(429, "The helper is resting for today. You can still book with the steps on this page.");
-  if (verdict !== "ok") return fail(404, "This shop doesn’t exist any more.");
+  if (verdict === "visitor_limit") return fail(429, t.chat.errors.tooMany);
+  if (verdict === "shop_limit") return fail(429, t.chat.errors.resting);
+  if (verdict !== "ok") return fail(404, t.chat.errors.shopGone);
 
   const { data: notes } = await supabase.from("shop_info").select("question, answer").eq("shop_id", shop.id).order("created_at");
 
@@ -71,6 +76,7 @@ export async function POST(request: Request) {
     services,
     hours,
     notes: notes ?? [],
+    lang,
   };
   // A customer's old messages may come first; the conversation must start with them.
   const history = messages.slice(messages.findIndex((m) => m.role === "user"));
@@ -83,6 +89,6 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof AssistantError) return fail(503, error.message);
     console.error("Chat helper failed:", error);
-    return fail(500, "The helper had a problem answering. Please try again.");
+    return fail(500, t.chat.problem);
   }
 }
