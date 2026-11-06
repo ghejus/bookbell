@@ -75,7 +75,7 @@ async function StatsContent({ searchParams }: PageProps<"/dashboard/stats">) {
   const delta = (nowValue: number, beforeValue: number, upIsGood: boolean): Pick<Tile, "delta" | "good"> => {
     const c = p ? change(nowValue, beforeValue) : null;
     if (!c) return {};
-    return { delta: `${c} ${vs}`, good: c === "same" ? null : c.startsWith("+") === upIsGood };
+    return { delta: `${c === "same" ? "no change" : c} ${vs}`, good: c === "same" ? null : c.startsWith("+") === upIsGood };
   };
 
   let body: React.ReactNode;
@@ -108,7 +108,7 @@ async function StatsContent({ searchParams }: PageProps<"/dashboard/stats">) {
       {
         label: "Didn’t come",
         value: `${missedRate}%`,
-        ...(p && s.kept + s.no_shows ? { delta: missedRate === missedBefore ? `same ${vs}` : `${missedRate > missedBefore ? "up" : "down"} from ${missedBefore}%`, good: missedRate === missedBefore ? null : missedRate < missedBefore } : {}),
+        ...(p && s.kept + s.no_shows ? { delta: missedRate === missedBefore ? `no change ${vs}` : `${missedRate > missedBefore ? "up" : "down"} from ${missedBefore}%`, good: missedRate === missedBefore ? null : missedRate < missedBefore } : {}),
         note: `${s.no_shows} of ${s.kept + s.no_shows} visits`,
       },
       {
