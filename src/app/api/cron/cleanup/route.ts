@@ -7,6 +7,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // Deleting the account deletes the shop, and the shop takes its services,
 // hours, workers, bookings and links with it. Vercel calls this once a day
 // (see vercel.json).
+//
+// It also removes waitlist wishes for days that have passed. (A day counts as
+// passed once it is over everywhere: older than yesterday in UTC.)
 
 const DAYS = 3;
 const PER_RUN = 200;
@@ -37,5 +40,7 @@ export async function GET(request: Request) {
       deleted += 1;
     }
   }
-  return NextResponse.json({ found: old?.length ?? 0, deleted, failed });
+  const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+  const { count: oldWishes } = await admin.from("waitlist").delete({ count: "exact" }).lt("day", yesterday);
+  return NextResponse.json({ found: old?.length ?? 0, deleted, failed, oldWishes: oldWishes ?? 0 });
 }

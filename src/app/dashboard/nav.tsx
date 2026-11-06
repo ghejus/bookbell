@@ -7,6 +7,7 @@ import {
   ChartBarIcon,
   ChatCircleTextIcon,
   ClockIcon,
+  HourglassIcon,
   ListChecksIcon,
   PlusIcon,
   ScissorsIcon,
@@ -21,7 +22,7 @@ import {
 
 type Item = { href: string; label: string; icon: Icon; match: (path: string) => boolean };
 
-const shopPages = ["/dashboard/shop", "/dashboard/services", "/dashboard/hours", "/dashboard/rules", "/dashboard/info", "/dashboard/team", "/dashboard/customers", "/dashboard/stats", "/dashboard/reviews", "/dashboard/shop/poster"];
+const shopPages = ["/dashboard/shop", "/dashboard/services", "/dashboard/hours", "/dashboard/rules", "/dashboard/info", "/dashboard/team", "/dashboard/customers", "/dashboard/stats", "/dashboard/reviews", "/dashboard/waitlist", "/dashboard/shop/poster"];
 
 const main: Item[] = [
   { href: "/dashboard", label: "Today", icon: SunIcon, match: (p) => p === "/dashboard" },
@@ -34,6 +35,7 @@ const business: Item[] = [
   { href: "/dashboard/customers", label: "Customers", icon: UsersThreeIcon, match: (p) => p === "/dashboard/customers" },
   { href: "/dashboard/stats", label: "Stats", icon: ChartBarIcon, match: (p) => p === "/dashboard/stats" },
   { href: "/dashboard/reviews", label: "Reviews", icon: StarIcon, match: (p) => p === "/dashboard/reviews" },
+  { href: "/dashboard/waitlist", label: "Waitlist", icon: HourglassIcon, match: (p) => p === "/dashboard/waitlist" },
 ];
 
 const setup: Item[] = [

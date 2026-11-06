@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AccountButton } from "@/components/account-sheet";
 import { ConfirmDelete, SubmitButton } from "@/components/form";
-import { CalendarBlankIcon, CalendarPlusIcon, ClockClockwiseIcon, StarIcon } from "@/components/icons";
+import { BellRingingIcon, CalendarBlankIcon, CalendarPlusIcon, ClockClockwiseIcon, HourglassIcon, StarIcon } from "@/components/icons";
 import { buttonClass, Card, EmptyState, PageHeader, PageSkeleton } from "@/components/ui";
 import { accountInfo } from "@/lib/account";
 import { formatDuration, formatPrice } from "@/lib/format";
@@ -12,7 +12,9 @@ import { ReviewForm } from "@/components/review-form";
 import { Sheet, SheetHeader } from "@/components/sheet";
 import { Stars } from "@/components/stars";
 import type { OwnReview } from "@/lib/reviews";
-import { cancelFromMyBookings, changeMyBooking, leaveMyReview } from "./actions";
+import { asUtc, longDay } from "@/lib/dates";
+import { bookHref, WAIT_COLUMNS, withFreeTimes, type WaitRow } from "@/lib/waitlist";
+import { cancelFromMyBookings, changeMyBooking, leaveMyReview, leaveMyWait } from "./actions";
 import { myBookings, type MyBooking } from "./data";
 
 export const metadata: Metadata = { title: "My bookings" };
@@ -21,9 +23,13 @@ const minutesOf = (b: MyBooking) => Math.round((Date.parse(b.ends_at) - Date.par
 const fmt = (tz: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-GB", { timeZone: tz, ...o });
 
 async function MyBookingsContent({ searchParams }: { searchParams: PageProps<"/my">["searchParams"] }) {
-  const [{ bookings, supabase }, account, query] = await Promise.all([myBookings(), accountInfo(), searchParams]);
-  // Which past visits can get (or already have) a review.
-  const { data: reviewRows } = await supabase.rpc("my_reviews");
+  const [{ bookings, supabase, userId }, account, query] = await Promise.all([myBookings(), accountInfo(), searchParams]);
+  // Which past visits can get (or already have) a review, and the days they're waiting for.
+  const [{ data: reviewRows }, { data: waitRows }] = await Promise.all([
+    supabase.rpc("my_reviews"),
+    supabase.from("waitlist").select(WAIT_COLUMNS).eq("customer_id", userId).order("day").order("created_at").limit(20).returns<WaitRow[]>(),
+  ]);
+  const waits = (await withFreeTimes(supabase, waitRows ?? [])).filter((w) => !w.past);
   const reviews = new Map(((reviewRows ?? []) as (OwnReview & { booking_id: string })[]).map((r) => [r.booking_id, r]));
   const reviewing = typeof query.review === "string" ? bookings.find((b) => b.booking_id === query.review) : undefined;
   const reviewingState = reviewing ? reviews.get(reviewing.booking_id) : undefined;
@@ -124,6 +130,62 @@ async function MyBookingsContent({ searchParams }: { searchParams: PageProps<"/m
             );
           })
         )}
+
+        {waits.length ? (
+          <section aria-labelledby="waiting" className="space-y-2 pt-2.5">
+            <h2 id="waiting" className="px-1 text-[13px] font-medium">
+              Waiting for a time
+            </h2>
+            <Card className="overflow-hidden">
+              <ul>
+                {waits.map((w) => {
+                  const open = w.slots.length > 0;
+                  return (
+                    <li key={w.id} className="rule-top space-y-2.5 px-4 py-3.5">
+                      <div className="flex items-start gap-3">
+                        {open ? (
+                          <BellRingingIcon aria-hidden weight="fill" className="mt-0.5 size-5 shrink-0 text-accent-400" />
+                        ) : (
+                          <HourglassIcon aria-hidden className="mt-0.5 size-5 shrink-0 text-neutral-500" />
+                        )}
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <p className="text-[15px] font-medium">{longDay.format(asUtc(w.day))}</p>
+                          <p className="text-sm text-neutral-400 wrap-anywhere">
+                            {w.serviceName || "A service"}
+                            {w.staffName ? ` with ${w.staffName}` : ""} ·{" "}
+                            <Link href={`/s/${w.shopSlug}`} className="hover:text-ink hover:underline">
+                              {w.shopName}
+                            </Link>
+                          </p>
+                          <p className={`pt-1 text-sm ${open ? "font-medium text-success-ink" : "text-neutral-400"}`}>
+                            {open
+                              ? `A time opened: ${w.slots.slice(0, 4).map((s) => s.label).join(", ")}${w.slots.length > 4 ? " …" : ""}`
+                              : w.gone
+                                ? "The shop doesn’t take online bookings for this any more."
+                                : "Still full. If a time opens, it shows up here."}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-2 pl-8">
+                        {open ? (
+                          <Link href={bookHref(w)} className={`${buttonClass("primary", { size: "sm" })} h-10`}>
+                            Book it
+                          </Link>
+                        ) : null}
+                        <form action={leaveMyWait}>
+                          <input type="hidden" name="id" value={w.id} />
+                          <SubmitButton variant="ghost" size="sm">
+                            Leave waitlist
+                          </SubmitButton>
+                        </form>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </Card>
+          </section>
+        ) : null}
 
         {past.length ? (
           <section aria-labelledby="past" className="space-y-2 pt-2.5">

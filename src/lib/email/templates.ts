@@ -173,3 +173,22 @@ export function reviewAskEmail(b: BookingInfo): Email {
     }),
   };
 }
+
+/** A time opened on a day someone is waiting for. */
+export function spotOpenEmail(w: { name: string; shopName: string; serviceName: string; dayLabel: string; times: string[]; bookUrl: string }): Email {
+  const times = w.times.slice(0, 6).join(", ") + (w.times.length > 6 ? " …" : "");
+  const intro = `${w.name ? `Hi ${w.name}, good news` : "Good news"}: a time opened at ${w.shopName} on ${w.dayLabel}.`;
+  const what = `${w.serviceName}: ${times}`;
+  const note = "First come, first served: someone else may book it before you.";
+  return {
+    subject: `A time opened at ${w.shopName}, ${w.dayLabel}`,
+    text: `${intro}\n\n${what}\n\nBook it: ${w.bookUrl}\n\n${note}\n`,
+    html: layout({
+      heading: "A time opened",
+      intro,
+      body: `<p style="margin:16px 0 0;font-weight:600">${esc(what)}</p><p style="margin:8px 0 0;color:#4b5563">${esc(note)}</p>`,
+      button: { label: "Book it", url: w.bookUrl },
+      footer: `You asked Bookbell to tell you about free times at ${w.shopName}.`,
+    }),
+  };
+}

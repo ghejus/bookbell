@@ -26,6 +26,7 @@ import { AboutText } from "./about-text";
 import { BookingFlow, HideWhenBooked, LinkPending, PendingSwap } from "./booking-flow";
 import { BookingForm } from "./booking-form";
 import { ShopChat } from "./chat";
+import { WaitlistCard } from "./waitlist-card";
 
 /** "Europe/Bucharest" -> "Bucharest", for customers. */
 const cityOf = (tz: string) => (tz.split("/").pop() ?? tz).replaceAll("_", " ");
@@ -67,12 +68,21 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
   // The two weeks shown, kept inside today … last bookable day.
   const { from, prevFrom, nextFrom } = dayWindow(today, lastDay, query.from);
 
-  const days = service ? await getAvailability(data, service, from, DAYS_SHOWN, now, worker?.id) : [];
+  const days = service ? await getAvailability(data, service, from, DAYS_SHOWN, now, worker?.id, undefined, true) : [];
   const chosenDate =
     service && isDate(query.date) && days.some((d) => d.date === query.date)
       ? query.date
       : days.find((d) => d.slots.length > 0)?.date;
   const chosenDay = days.find((d) => d.date === chosenDate);
+  // A full day picked: offer the waitlist (and say if they're on it already).
+  const fullDay = chosenDay && chosenDay.slots.length === 0 && chosenDay.full ? chosenDay : undefined;
+  let waitingId: string | null = null;
+  if (fullDay && service && user && !user.isDemo) {
+    let q = data.supabase.from("waitlist").select("id").eq("service_id", service.id).eq("day", fullDay.date).eq("customer_id", user.userId);
+    q = worker ? q.eq("staff_id", worker.id) : q.is("staff_id", null);
+    waitingId = (await q.maybeSingle<{ id: string }>()).data?.id ?? null;
+  }
+  const hasFullDays = days.some((d) => d.full);
 
   const takingBookings = services.length > 0 && hours.length > 0;
 
@@ -233,12 +243,15 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
                   prevHref={prevFrom ? href({ service: service.id, from: prevFrom }) : null}
                   nextHref={nextFrom ? href({ service: service.id, from: nextFrom }) : null}
                   arrowPending={<LinkPending className="absolute text-neutral-500" />}
-                  days={days.map((d) => ({ date: d.date, free: d.slots.length }))}
+                  days={days.map((d) => ({ date: d.date, free: d.slots.length, full: d.full }))}
                   chosen={chosenDate}
                   hrefFor={(date) => href({ service: service.id, from: from === today ? undefined : from, date })}
+                  fullHref={(date) => href({ service: service.id, from: from === today ? undefined : from, date })}
                   weekday={(name) => <PendingSwap>{name}</PendingSwap>}
                 />
-                <p className="mt-2 text-sm text-gray-600">Times are {cityOf(shop.timezone)} time.</p>
+                <p className="mt-2 text-sm text-gray-600">
+                  Times are {cityOf(shop.timezone)} time.{hasFullDays ? " Tap a full day to join its waitlist." : ""}
+                </p>
               </section>
             ) : null}
             </HideWhenBooked>
@@ -275,10 +288,37 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
                       ticket={ticket}
                     />
                   </Card>
+                ) : fullDay ? (
+                  <Card>
+                    <WaitlistCard
+                      key={`${service.id}-${worker?.id ?? "anyone"}-${fullDay.date}`}
+                      serviceId={service.id}
+                      staffId={worker?.id}
+                      day={fullDay.date}
+                      dayLabel={longDay.format(asUtc(fullDay.date))}
+                      who={
+                        !user
+                          ? {
+                              kind: "guest",
+                              loginHref: `/login?as=customer&next=${encodeURIComponent(href({ service: service.id, date: fullDay.date }))}`,
+                              signupHref: `/signup?as=customer&next=${encodeURIComponent(href({ service: service.id, date: fullDay.date }))}`,
+                            }
+                          : user.isDemo
+                            ? { kind: "demo", signupHref: "/signup?as=customer" }
+                            : waitingId
+                              ? { kind: "waiting", id: waitingId }
+                              : { kind: "customer" }
+                      }
+                    />
+                  </Card>
                 ) : (
                   <Card>
                     <EmptyState icon={CalendarXIcon} title="No free times in these two weeks">
-                      {nextFrom ? "Try the later days with the arrow above." : "Please check again soon, or call the shop."}
+                      {hasFullDays
+                        ? "Tap a full day above to join its waitlist."
+                        : nextFrom
+                          ? "Try the later days with the arrow above."
+                          : "Please check again soon, or call the shop."}
                     </EmptyState>
                   </Card>
                 )}

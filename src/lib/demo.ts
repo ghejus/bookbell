@@ -170,6 +170,13 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
     p_customer_id: userId,
   });
 
+  // Two people waiting for a time on the first coming weekday, so the
+  // Waitlist page has something to show. Only the server may add these.
+  await admin?.from("waitlist").insert([
+    { shop_id: shopId, service_id: ids[0], staff_id: null, day: weekdays[0], name: "Elena Marin", email: "elena.marin@example.com", phone: "+40 700 321 654" },
+    { shop_id: shopId, service_id: ids[1], staff_id: staffIds[0] ?? null, day: weekdays[0], name: "Radu Toma", email: "radu.toma@example.com", phone: "" },
+  ]);
+
   // Today's visits and past visits, added the way the owner adds walk-ins
   // (that door allows any time, even one that already passed).
   const today = utcToZoned(new Date(), TZ).date;

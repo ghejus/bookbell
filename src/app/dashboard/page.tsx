@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { CalendarBlankIcon, CaretRightIcon, EnvelopeSimpleIcon, PhoneIcon } from "@/components/icons";
+import { CalendarBlankIcon, CaretRightIcon, EnvelopeSimpleIcon, HourglassIcon, PhoneIcon } from "@/components/icons";
 import { Card, CardSection, EmptyState, PageSkeleton, buttonClass } from "@/components/ui";
 import { shopToday } from "@/lib/booking";
 import { formatDuration } from "@/lib/format";
@@ -56,7 +56,7 @@ async function TodayContent({ searchParams }: PageProps<"/dashboard">) {
   const from = zonedToUtc(today, "00:00", tz);
   const to = zonedToUtc(addDays(today, 1), "00:00", tz);
 
-  const [{ data }, { count: teamSize }, steps] = await Promise.all([
+  const [{ data }, { count: teamSize }, steps, { count: waiting }] = await Promise.all([
     supabase
       .from("bookings")
       .select("id, status, starts_at, ends_at, customer_name, customer_email, customer_phone, staff_id, services(name, duration_minutes), staff(name)")
@@ -68,6 +68,7 @@ async function TodayContent({ searchParams }: PageProps<"/dashboard">) {
       .returns<Booking[]>(),
     supabase.from("staff").select("id", { count: "exact", head: true }).eq("shop_id", shop.id).eq("active", true),
     setupSteps({ supabase, shop }),
+    supabase.from("waitlist").select("id", { count: "exact", head: true }).eq("shop_id", shop.id).eq("day", today),
   ]);
   const bookings = data ?? [];
   const showWho = (teamSize ?? 0) >= 2;
@@ -155,6 +156,18 @@ async function TodayContent({ searchParams }: PageProps<"/dashboard">) {
               </span>
             ) : null}
           </div>
+          {waiting ? (
+            <Link
+              href="/dashboard/waitlist"
+              className="flex items-center gap-2.5 rounded-lg bg-surface px-4 py-3 text-sm shadow-card transition-colors duration-150 hover:bg-raised"
+            >
+              <HourglassIcon aria-hidden className="size-[18px] shrink-0 text-accent-400" />
+              <span className="flex-1">
+                {waiting} {waiting === 1 ? "person is" : "people are"} waiting for a time today
+              </span>
+              <CaretRightIcon aria-hidden className="size-4 text-neutral-600" />
+            </Link>
+          ) : null}
           {bookings.length === 0 ? (
             <Card>
               <EmptyState icon={CalendarBlankIcon} title="Nothing booked today">

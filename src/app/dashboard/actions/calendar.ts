@@ -13,6 +13,7 @@ import { requireShop, type Shop } from "@/lib/shop";
 import { isoWeekday } from "@/lib/slots";
 import { utcToZoned, zonedToUtc } from "@/lib/time";
 import { firstError } from "@/lib/validation";
+import { notifyWaitlist } from "@/lib/waitlist";
 
 // The owner's calendar: adding and moving bookings.
 // Every action checks who is logged in and which shop they own. The database
@@ -140,6 +141,8 @@ export async function ownerMoveBooking(_prev: ActionState, formData: FormData): 
     if (warning) return { error: `${warning} Press “Move” again to move it anyway.`, values: { ...values, force: forceKey(d) } };
   }
 
+  // The old time frees up, so people waiting for that day may get it.
+  const { data: before } = await supabase.from("bookings").select("starts_at").eq("id", d.id).maybeSingle<{ starts_at: string }>();
   const { error } = await supabase.rpc("owner_move_booking", {
     p_booking_id: d.id,
     p_starts_at: start.toISOString(),
@@ -165,6 +168,7 @@ export async function ownerMoveBooking(_prev: ActionState, formData: FormData): 
     siteUrl(),
   ]);
   if (booking?.customer_email) after(() => sendShopChangeEmail("moved", booking, shop, teamSize ?? 1, site));
+  if (before) after(() => notifyWaitlist(shop.id, before.starts_at, site));
   await flash("moved", "Booking moved", `${booking?.customer_name ?? "The booking"}: now ${shortWhen(d.date, d.time)}.`);
   redirect(`/dashboard/calendar?${d.view === "week" ? "view=week&" : ""}date=${d.date}`);
 }

@@ -25,8 +25,12 @@ export const bookingErrors: Record<string, string> = {
   not_yet: "You can leave a review once your visit is over.",
   cant_review: "This visit can’t be reviewed. Only visits booked online that went ahead, in the last 60 days, can.",
   locked: "Reviews can only be changed in the first 14 days.",
-  own_shop: "You can’t review your own shop.",
+  own_shop: "That’s your own shop, so you can’t do this here.",
   bad_review: "Please tap a star and keep the words under 1000 characters.",
+  // Waitlist
+  demo_account: "Demo accounts can’t join a waitlist. Make a free account first.",
+  bad_day: "That day can’t be booked online, so there’s no waitlist for it.",
+  too_many_waits: "You’re already waiting for 5 days. Leave one in My bookings first.",
 };
 
 export function bookingError(code: string | undefined, fallback = "Something went wrong. Please try again."): string {

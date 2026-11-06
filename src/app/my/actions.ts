@@ -3,7 +3,7 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
-import { sendCustomerChangeEmails } from "@/lib/booking-emails";
+import { bookingByToken, sendCustomerChangeEmails } from "@/lib/booking-emails";
 import type { ActionState } from "@/lib/action-state";
 import { bookingError } from "@/lib/booking-errors";
 import { flash } from "@/lib/flash";
@@ -12,6 +12,7 @@ import { reviewSchema } from "@/lib/reviews";
 import { requireUser } from "@/lib/shop";
 import { siteUrl } from "@/lib/site";
 import { idSchema } from "@/lib/validation";
+import { notifyWaitlist } from "@/lib/waitlist";
 
 // My bookings: "Change time" and "Cancel". Both get a fresh secret link for
 // the customer's own booking (the database checks it is theirs), then use the
@@ -33,6 +34,7 @@ export async function changeMyBooking(formData: FormData) {
 
 export async function cancelFromMyBookings(formData: FormData) {
   const { supabase, token } = await linkFor(formData);
+  const before = await bookingByToken(token);
   const { error } = await supabase.rpc("cancel_booking_by_token", { p_token: token });
   if (error) {
     await flash("cancelled", "Could not cancel", bookingError(error.message));
@@ -41,6 +43,7 @@ export async function cancelFromMyBookings(formData: FormData) {
   }
   const site = await siteUrl();
   after(() => sendCustomerChangeEmails(token, "cancelled", site));
+  if (before) after(() => notifyWaitlist(before.shop_id, before.starts_at, site));
   await flash("cancelled", "Booking cancelled", "The time is free for others now.");
   refresh();
 }
@@ -62,4 +65,13 @@ export async function leaveMyReview(_prev: ActionState, formData: FormData): Pro
   if (error) return { error: bookingError(error.message), values: { body: parsed.data.body } };
   await flash("saved", "Thank you!", "Your review is on the shop’s page now.");
   redirect("/my");
+}
+
+/** Leaves one waitlist (the database only lets people remove their own). */
+export async function leaveMyWait(formData: FormData) {
+  const id = idSchema.parse(formData.get("id"));
+  const { supabase } = await requireUser();
+  await supabase.from("waitlist").delete().eq("id", id);
+  await flash("cancelled", "Left the waitlist");
+  refresh();
 }

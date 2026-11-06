@@ -11,6 +11,7 @@ import { fields } from "@/lib/form-data";
 import { getCurrentUser } from "@/lib/shop";
 import { siteUrl } from "@/lib/site";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { firstError } from "@/lib/validation";
 import { checkBookingTicket, clientIp, visitorKey } from "@/lib/visitor";
 
@@ -86,7 +87,9 @@ export async function bookAppointment(_prev: ActionState, formData: FormData): P
   const site = await siteUrl();
   after(() => sendBookingEmails(data.manage_token, site));
 
-  refresh();
+  // No refresh here: the receipt lives in the booking form, and a fresh page
+  // could drop that form (when this was the day's last free time). "Book
+  // another time" loads fresh times anyway.
   return {
     message: "booked",
     values: {
@@ -96,4 +99,39 @@ export async function bookAppointment(_prev: ActionState, formData: FormData): P
       manage_path: `/b/${data.manage_token}`,
     },
   };
+}
+
+const waitSchema = z.object({
+  service_id: z.uuid(),
+  staff_id: z.union([z.uuid(), z.literal("")]).optional(),
+  day: z.iso.date(),
+  phone: z.string().trim().max(40, "That phone number is too long.").optional().default(""),
+});
+
+/** "Tell me if a time opens": puts the signed-in customer on the waitlist for that day. */
+export async function joinWaitlist(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const values = fields(formData);
+  const parsed = waitSchema.safeParse(values);
+  if (!parsed.success) return { error: firstError(parsed.error), values };
+  const user = await getCurrentUser();
+  if (!user) return { error: bookingError("not_signed_in"), values };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("join_waitlist", {
+    p_service_id: parsed.data.service_id,
+    p_staff_id: parsed.data.staff_id || null,
+    p_day: parsed.data.day,
+    p_phone: parsed.data.phone,
+  });
+  if (error) return { error: bookingError(error.message), values };
+  refresh();
+  return { message: "You’re on the waitlist." };
+}
+
+/** Leaves the waitlist (the database only lets people remove their own wishes). */
+export async function leaveWaitlist(formData: FormData) {
+  const id = z.uuid().safeParse(formData.get("id"));
+  if (!id.success) return;
+  const supabase = await createClient();
+  await supabase.from("waitlist").delete().eq("id", id.data);
+  refresh();
 }

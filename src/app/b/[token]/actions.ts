@@ -4,12 +4,13 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
 import type { ActionState } from "@/lib/action-state";
-import { sendCustomerChangeEmails } from "@/lib/booking-emails";
+import { bookingByToken, sendCustomerChangeEmails } from "@/lib/booking-emails";
 import { bookingError } from "@/lib/booking-errors";
 import { fields } from "@/lib/form-data";
 import { reviewSchema } from "@/lib/reviews";
 import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
+import { notifyWaitlist } from "@/lib/waitlist";
 
 // The customer's private booking page: cancel, or move to a new time.
 // The secret token in the link is the only "login"; the database checks it.
@@ -22,11 +23,13 @@ export async function cancelMyBooking(_prev: ActionState, formData: FormData): P
   const parsed = cancelSchema.safeParse(fields(formData));
   if (!parsed.success) return { error: bookingError("not_found") };
   const supabase = await createClient();
+  const before = await bookingByToken(parsed.data.token);
   const { error } = await supabase.rpc("cancel_booking_by_token", { p_token: parsed.data.token });
   if (error) return { error: bookingError(error.message) };
 
   const site = await siteUrl();
   after(() => sendCustomerChangeEmails(parsed.data.token, "cancelled", site));
+  if (before) after(() => notifyWaitlist(before.shop_id, before.starts_at, site));
   redirect(`/b/${parsed.data.token}?done=cancelled`);
 }
 
@@ -34,6 +37,7 @@ export async function moveMyBooking(_prev: ActionState, formData: FormData): Pro
   const parsed = moveSchema.safeParse(fields(formData));
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Pick a new time first." };
   const supabase = await createClient();
+  const before = await bookingByToken(parsed.data.token);
   const { error } = await supabase.rpc("reschedule_booking_by_token", {
     p_token: parsed.data.token,
     p_starts_at: parsed.data.starts_at,
@@ -42,6 +46,7 @@ export async function moveMyBooking(_prev: ActionState, formData: FormData): Pro
 
   const site = await siteUrl();
   after(() => sendCustomerChangeEmails(parsed.data.token, "moved", site));
+  if (before) after(() => notifyWaitlist(before.shop_id, before.starts_at, site));
   redirect(`/b/${parsed.data.token}?done=moved`);
 }
 

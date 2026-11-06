@@ -10,6 +10,7 @@ import {
   PrinterIcon,
   ChatCircleTextIcon,
   ClockIcon,
+  HourglassIcon,
   MapPinIcon,
   PhoneIcon,
   ScissorsIcon,
@@ -21,6 +22,7 @@ import {
 } from "@/components/icons";
 import { buttonClass, Card, CardSection, PageSkeleton } from "@/components/ui";
 import { type BookingRules, rulesSummary } from "@/lib/booking-rules";
+import { shopToday } from "@/lib/booking";
 import { mediaUrl } from "@/lib/media";
 import { qrSvg } from "@/lib/qr";
 import { averageText, getShopRating, reviewCount } from "@/lib/reviews";
@@ -72,7 +74,7 @@ function RowList({ id, title, rows }: { id: string; title: string; rows: Row[] }
 
 async function ShopContent() {
   const { supabase, shop } = await requireShop();
-  const [bookingUrl, { data: services }, { data: hours }, { count: notes }, { data: staff }, { data: rules }, { data: media }, { data: photos }, rating] = await Promise.all([
+  const [bookingUrl, { data: services }, { data: hours }, { count: notes }, { data: staff }, { data: rules }, { data: media }, { data: photos }, rating, { count: waiting }] = await Promise.all([
     siteUrl().then((site) => `${site}/s/${shop.slug}`),
     supabase.from("services").select("id").eq("shop_id", shop.id).eq("active", true),
     supabase.from("opening_hours").select("weekday").eq("shop_id", shop.id).returns<{ weekday: number }[]>(),
@@ -86,6 +88,7 @@ async function ShopContent() {
     supabase.from("shops").select("logo_path").eq("id", shop.id).single<{ logo_path: string | null }>(),
     supabase.from("shop_photos").select("id, path").eq("shop_id", shop.id).order("position").order("created_at").returns<{ id: string; path: string }[]>(),
     getShopRating(supabase, shop.id),
+    supabase.from("waitlist").select("id", { count: "exact", head: true }).eq("shop_id", shop.id).gte("day", shopToday(shop.timezone, new Date())),
   ]);
 
   const team = (staff ?? []).map((w) => w.name);
@@ -93,6 +96,7 @@ async function ShopContent() {
     { href: "/dashboard/customers", icon: UsersThreeIcon, label: "Customers", value: "Visits and notes" },
     { href: "/dashboard/stats", icon: ChartBarIcon, label: "Stats", value: "Takings and busy times" },
     { href: "/dashboard/reviews", icon: StarIcon, label: "Reviews", value: rating.total ? `${averageText(rating.average)} from ${reviewCount(rating.total)}` : "No reviews yet" },
+    { href: "/dashboard/waitlist", icon: HourglassIcon, label: "Waitlist", value: waiting ? `${waiting} waiting` : "Nobody waiting" },
   ];
   const rows: Row[] = [
     { href: "/dashboard/services", icon: ScissorsIcon, label: "Services", value: `${services?.length ?? 0} shown` },

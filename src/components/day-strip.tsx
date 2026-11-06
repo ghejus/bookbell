@@ -14,9 +14,11 @@ type Props = {
   months?: string;
   prevHref?: string | null;
   nextHref?: string | null;
-  days: { date: string; free: number }[];
+  days: { date: string; free: number; full?: boolean }[];
   chosen?: string;
   hrefFor: (date: string) => string;
+  /** When set, full days (open but every time taken) can be picked too, to join the waitlist. */
+  fullHref?: (date: string) => string;
   /** Optional loading spinner inside each arrow while the next days load. */
   arrowPending?: ReactNode;
   /** Optional wrapper for the weekday name (the shop page swaps in a spinner while a day loads). */
@@ -27,7 +29,7 @@ const arrowClass =
   "relative flex size-9 items-center justify-center rounded-lg text-neutral-300 transition-colors duration-150 hover:bg-raised";
 const dayClass = "relative flex h-16 w-14 flex-col items-center justify-center rounded-lg border sm:w-full";
 
-export function DayStrip({ title, titleId, months, prevHref, nextHref, days, chosen, hrefFor, arrowPending, weekday }: Props) {
+export function DayStrip({ title, titleId, months, prevHref, nextHref, days, chosen, hrefFor, fullHref, arrowPending, weekday }: Props) {
   return (
     <>
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -67,6 +69,20 @@ export function DayStrip({ title, titleId, months, prevHref, nextHref, days, cho
                 >
                   <span className="flex h-4 items-center text-xs font-medium">{weekday ? weekday(name) : name}</span>
                   {number}
+                </Link>
+              ) : d.full && fullHref ? (
+                <Link
+                  href={fullHref(d.date)}
+                  scroll={false}
+                  aria-current={d.date === chosen ? "date" : undefined}
+                  aria-label={`${label}, fully booked: join the waitlist`}
+                  className={`${dayClass} transition-colors duration-150 ${d.date === chosen ? "chip-on" : "chip-shut hover:bg-ink/5 hover:text-neutral-400"}`}
+                >
+                  <span className="flex h-4 items-center text-xs font-medium">{weekday ? weekday(name) : name}</span>
+                  {number}
+                  <span aria-hidden className="absolute bottom-1.5 text-[9px] leading-none font-medium tracking-wide uppercase">
+                    Full
+                  </span>
                 </Link>
               ) : (
                 <span aria-label={`${label}, no free times`} className={`${dayClass} chip-shut`}>

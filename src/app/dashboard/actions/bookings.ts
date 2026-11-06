@@ -9,6 +9,7 @@ import { flash } from "@/lib/flash";
 import { siteUrl } from "@/lib/site";
 import { requireShop } from "@/lib/shop";
 import { idSchema } from "@/lib/validation";
+import { notifyWaitlist } from "@/lib/waitlist";
 
 // Cancelling a booking, and marking a visit as "didn't come".
 // Every action checks who is logged in and which shop they own. The database
@@ -41,6 +42,7 @@ export async function cancelBooking(formData: FormData) {
       siteUrl(),
     ]);
     after(() => sendShopChangeEmail("cancelled", booking, shop, teamSize ?? 1, site));
+    after(() => notifyWaitlist(shop.id, booking.starts_at, site));
   }
   if (back) redirect(back);
   refresh();
