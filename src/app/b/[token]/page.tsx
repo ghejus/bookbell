@@ -52,7 +52,9 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
   const now = new Date();
   const live = row.status === "booked" && Date.parse(row.starts_at) > now.getTime();
   const done = ["moved", "cancelled", "saved", "not-saved"].includes(String(query.done)) ? String(query.done) : null;
-  const moving = live && query.move === "1";
+  // The shop may close online changes some hours before the visit.
+  const changeable = live && Date.parse(row.change_until) > now.getTime();
+  const moving = changeable && query.move === "1";
   const base = `/b/${token}`;
 
   // The "pick a new time" part: same worker, same service, the shop's normal rules.
@@ -183,7 +185,13 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
           </ul>
         ) : null}
 
-        {live && !moving ? (
+        {live && !changeable ? (
+          <p className="mt-6 rounded-lg bg-raised px-4 py-3 text-sm text-neutral-300">
+            It’s too close to your visit to change or cancel online.{" "}
+            {row.shop_phone ? "If plans change, please call the shop." : "If plans change, please let the shop know."}
+          </p>
+        ) : null}
+        {changeable && !moving ? (
           <div className="mt-6 flex flex-col gap-2.5 sm:flex-row sm:items-start">
             <Link href={`${base}?move=1`} className={buttonClass("primary", { full: true })}>
               <CalendarCheckIcon aria-hidden className="size-4" />

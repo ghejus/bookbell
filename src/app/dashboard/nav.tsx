@@ -9,6 +9,7 @@ import {
   ListChecksIcon,
   PlusIcon,
   ScissorsIcon,
+  SlidersHorizontalIcon,
   StorefrontIcon,
   SunIcon,
   UsersIcon,
@@ -17,7 +18,7 @@ import {
 
 type Item = { href: string; label: string; icon: Icon; match: (path: string) => boolean };
 
-const shopPages = ["/dashboard/shop", "/dashboard/services", "/dashboard/hours", "/dashboard/info", "/dashboard/team"];
+const shopPages = ["/dashboard/shop", "/dashboard/services", "/dashboard/hours", "/dashboard/rules", "/dashboard/info", "/dashboard/team"];
 
 const main: Item[] = [
   { href: "/dashboard", label: "Today", icon: SunIcon, match: (p) => p === "/dashboard" },
@@ -29,6 +30,7 @@ const main: Item[] = [
 const setup: Item[] = [
   { href: "/dashboard/services", label: "Services", icon: ScissorsIcon, match: (p) => p === "/dashboard/services" },
   { href: "/dashboard/hours", label: "Hours and days off", icon: ClockIcon, match: (p) => p === "/dashboard/hours" },
+  { href: "/dashboard/rules", label: "Booking rules", icon: SlidersHorizontalIcon, match: (p) => p === "/dashboard/rules" },
   { href: "/dashboard/info", label: "AI notes", icon: ChatCircleTextIcon, match: (p) => p === "/dashboard/info" },
   { href: "/dashboard/team", label: "Team", icon: UsersIcon, match: (p) => p === "/dashboard/team" },
 ];

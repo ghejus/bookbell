@@ -23,6 +23,10 @@ export type PublicShop = {
   booking_window_days: number;
   min_notice_minutes: number;
   slot_step_minutes: number;
+  /** A gap kept free after each booking. */
+  buffer_minutes: number;
+  /** Customers can't cancel or move online this many hours before. */
+  cancel_deadline_hours: number;
 };
 
 export type PublicService = { id: string; name: string; duration_minutes: number; price_cents: number | null };
@@ -49,7 +53,7 @@ export const getPublicShop = cache(async (slug: string) => {
   const supabase = await createClient();
   const { data: shop } = await supabase
     .from("shops")
-    .select("id, name, slug, timezone, currency, about, address, phone, booking_window_days, min_notice_minutes, slot_step_minutes")
+    .select("id, name, slug, timezone, currency, about, address, phone, booking_window_days, min_notice_minutes, slot_step_minutes, buffer_minutes, cancel_deadline_hours")
     .eq("slug", slug)
     .maybeSingle<PublicShop>();
   if (!shop) return null;
@@ -103,7 +107,9 @@ export async function getAvailability(
     p_to: rangeEnd.toISOString(),
   });
   if (error) throw new Error(`Could not load free times: ${error.message}`);
-  const ignoreAt = ignore ? Date.parse(ignore.startsAt) : NaN;
+  // Taken times include the shop's gap before each booking, so the booking
+  // being moved shows up starting that much earlier.
+  const ignoreAt = ignore ? Date.parse(ignore.startsAt) - shop.buffer_minutes * 60_000 : NaN;
   const busy: StaffBusy[] = (busyRows as { starts_at: string; ends_at: string; staff_id: string | null }[])
     .filter((b) => !(ignore && b.staff_id === ignore.staffId && Date.parse(b.starts_at) === ignoreAt))
     .map((b) => ({

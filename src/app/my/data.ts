@@ -16,6 +16,8 @@ export type MyBooking = {
   shop_address: string;
   shop_timezone: string;
   shop_currency: Currency;
+  /** After this, the customer can't cancel or move it online (the shop's deadline). */
+  change_until: string;
 };
 
 /** The signed-in person's bookings at every shop, oldest first. */

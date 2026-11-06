@@ -49,6 +49,8 @@ async function MyBookingsContent() {
             const time = fmt(tz, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
             const price = formatPrice(b.price_cents, b.shop_currency);
             const started = Date.parse(b.starts_at) <= now;
+            // The shop may close online changes some hours before the visit.
+            const changeable = Date.parse(b.change_until) > now;
             return (
               <Card key={b.booking_id} className="space-y-3.5 p-[18px]">
                 <div className="space-y-0.5">
@@ -71,6 +73,7 @@ async function MyBookingsContent() {
                   <p className="text-sm text-neutral-400">Happening now.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
+                    {changeable ? (
                     <form action={changeMyBooking}>
                       <input type="hidden" name="id" value={b.booking_id} />
                       <div className="[&>button]:h-10 [&>button]:shadow-none">
@@ -80,6 +83,7 @@ async function MyBookingsContent() {
                         </SubmitButton>
                       </div>
                     </form>
+                    ) : null}
                     <a
                       href={calendarHref({
                         start: b.starts_at,
@@ -95,12 +99,16 @@ async function MyBookingsContent() {
                       <CalendarPlusIcon aria-hidden className="size-4" />
                       Add to calendar
                     </a>
-                    <form action={cancelFromMyBookings}>
-                      <input type="hidden" name="id" value={b.booking_id} />
-                      <ConfirmDelete text label={`Cancel your ${b.service_name} booking`} confirmText="Cancel?" busyText="Cancelling…">
-                        Cancel
-                      </ConfirmDelete>
-                    </form>
+                    {changeable ? (
+                      <form action={cancelFromMyBookings}>
+                        <input type="hidden" name="id" value={b.booking_id} />
+                        <ConfirmDelete text label={`Cancel your ${b.service_name} booking`} confirmText="Cancel?" busyText="Cancelling…">
+                          Cancel
+                        </ConfirmDelete>
+                      </form>
+                    ) : (
+                      <p className="basis-full text-sm text-neutral-400">Too close to the visit to change online. Please call the shop.</p>
+                    )}
                   </div>
                 )}
               </Card>

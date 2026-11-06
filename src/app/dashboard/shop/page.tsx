@@ -10,10 +10,12 @@ import {
   MapPinIcon,
   PhoneIcon,
   ScissorsIcon,
+  SlidersHorizontalIcon,
   UsersIcon,
   type Icon,
 } from "@/components/icons";
 import { Card, CardSection, PageSkeleton } from "@/components/ui";
+import { type BookingRules, rulesSummary } from "@/lib/booking-rules";
 import { requireShop } from "@/lib/shop";
 import { siteUrl } from "@/lib/site";
 import { OwnerHeader } from "../account";
@@ -34,18 +36,24 @@ function daysSummary(weekdays: number[]) {
 
 async function ShopContent() {
   const { supabase, shop } = await requireShop();
-  const [bookingUrl, { data: services }, { data: hours }, { count: notes }, { data: staff }] = await Promise.all([
+  const [bookingUrl, { data: services }, { data: hours }, { count: notes }, { data: staff }, { data: rules }] = await Promise.all([
     siteUrl().then((site) => `${site}/s/${shop.slug}`),
     supabase.from("services").select("id").eq("shop_id", shop.id).eq("active", true),
     supabase.from("opening_hours").select("weekday").eq("shop_id", shop.id).returns<{ weekday: number }[]>(),
     supabase.from("shop_info").select("id", { count: "exact", head: true }).eq("shop_id", shop.id),
     supabase.from("staff").select("name").eq("shop_id", shop.id).eq("active", true).order("created_at").returns<{ name: string }[]>(),
+    supabase
+      .from("shops")
+      .select("booking_window_days, min_notice_minutes, slot_step_minutes, buffer_minutes, cancel_deadline_hours")
+      .eq("id", shop.id)
+      .single<BookingRules>(),
   ]);
 
   const team = (staff ?? []).map((w) => w.name);
   const rows: { href: string; icon: Icon; label: string; value: string }[] = [
     { href: "/dashboard/services", icon: ScissorsIcon, label: "Services", value: `${services?.length ?? 0} shown` },
     { href: "/dashboard/hours", icon: ClockIcon, label: "Hours and days off", value: daysSummary((hours ?? []).map((h) => h.weekday)) },
+    { href: "/dashboard/rules", icon: SlidersHorizontalIcon, label: "Booking rules", value: rules ? rulesSummary(rules) : "" },
     { href: "/dashboard/info", icon: ChatCircleTextIcon, label: "AI notes", value: `${notes ?? 0} ${notes === 1 ? "answer" : "answers"}` },
     { href: "/dashboard/team", icon: UsersIcon, label: "Team", value: team.length > 2 ? `${team.length} people` : team.join(", ") || "Nobody yet" },
   ];

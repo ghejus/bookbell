@@ -16,6 +16,7 @@ export const bookingErrors: Record<string, string> = {
   not_found: "This booking link doesn’t work any more.",
   not_booked: "This booking is already cancelled.",
   too_late: "This booking has already started, so it can’t be changed online. Please call the shop.",
+  too_close: "It’s too close to the time to change this booking online. Please call the shop.",
   not_signed_in: "Please log in first.",
   visitor_limit: "You’ve tried to book a lot of times. Please wait a while, or call the shop.",
   shop_limit: "Lots of people are booking here right now. Please try again in a few minutes.",

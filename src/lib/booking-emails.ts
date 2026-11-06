@@ -40,6 +40,8 @@ export type TokenRow = {
   shop_phone: string;
   shop_timezone: string;
   shop_currency: Currency;
+  /** After this, the customer can't cancel or move it online (the shop's deadline). */
+  change_until: string;
 };
 
 /** A database client with no login, for the public token functions. */
