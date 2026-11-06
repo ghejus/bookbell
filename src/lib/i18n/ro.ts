@@ -55,6 +55,9 @@ export const ro: Dict = {
     notSure:
       "Nu ești sigur încă? „Încearcă un salon demo” îți deschide propriul salon de probă, cu servicii, program și programări gata completate. Nimeni altcineva nu vede ce schimbi și nu ai nevoie de email.",
     metaDescription: "Programări online cu un asistent AI prietenos, pentru afaceri mici.",
+    shareTitle: "Programări online pentru afaceri mici",
+    shareText: "Clienții își aleg singuri o oră liberă, iar un asistent prietenos le răspunde la întrebări.",
+    shareFooter: "Încearcă un salon demo",
   },
 
   demo: {
@@ -126,6 +129,9 @@ export const ro: Dict = {
     title: "Nu am găsit pagina",
     text: "Dacă ai deschis linkul de programare al unui salon, verifică să nu aibă greșeli sau cere salonului linkul corect.",
     home: "Mergi la prima pagină",
+    brokeTitle: "Ceva n-a mers",
+    brokeText: "Pagina asta a avut o problemă din partea noastră. Te rugăm să încerci din nou peste puțin timp.",
+    tryAgain: "Încearcă din nou",
   },
 
   days: {

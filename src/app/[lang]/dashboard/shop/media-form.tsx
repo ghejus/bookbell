@@ -120,7 +120,7 @@ export function MediaForm({ shopId, logoUrl, photos }: Props) {
         <ul className="grid grid-cols-3 gap-2">
           {photos.map((p, i) => (
             <li key={p.id} className="relative aspect-[4/3] overflow-hidden rounded-lg bg-raised">
-              <Image src={p.url} alt={`Photo ${i + 1}`} fill sizes="(min-width: 640px) 200px, 33vw" unoptimized className="object-cover" />
+              <Image src={p.url} alt={o("Photo {n}", { n: i + 1 })} fill sizes="(min-width: 640px) 200px, 33vw" unoptimized className="object-cover" />
               <button
                 type="button"
                 onClick={() => run(() => removePhoto(p.id))}

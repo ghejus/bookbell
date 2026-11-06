@@ -1,12 +1,19 @@
 import type { MetadataRoute } from "next";
+import { cookies, headers } from "next/headers";
 import { brand } from "@/lib/brand";
+import { isLang, LANG_COOKIE, pickLang } from "@/lib/i18n/config";
+import { dictFor } from "@/lib/i18n/dict";
 
 // Lets people add Bookbell to their phone's home screen, so it opens like an app.
-export default function manifest(): MetadataRoute.Manifest {
+// The description follows the visitor's language, like the pages do.
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const chosen = (await cookies()).get(LANG_COOKIE)?.value;
+  const lang = isLang(chosen) ? chosen : pickLang((await headers()).get("accept-language"));
   return {
     name: "Bookbell",
     short_name: "Bookbell",
-    description: "Online booking with a friendly AI helper, for small shops.",
+    description: dictFor(lang).home.metaDescription,
+    lang,
     start_url: "/start",
     display: "standalone",
     background_color: brand.ground,

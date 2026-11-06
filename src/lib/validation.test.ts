@@ -85,3 +85,20 @@ describe("safeNextPath", () => {
     expect(safeNextPath(null)).toBe("/dashboard");
   });
 });
+
+describe("form error sentences", () => {
+  it("never shows zod's own English, and names the field", async () => {
+    const { firstError, serviceSchema, shopSchema } = await import("./validation");
+    const { ownerT } = await import("./i18n/owner");
+    const empty = serviceSchema.safeParse({ name: "", duration_minutes: "30", price_cents: "" });
+    expect(empty.success).toBe(false);
+    if (empty.success) return;
+    expect(firstError(empty.error)).toBe("Please fill in “Name”.");
+    expect(firstError(empty.error, ownerT("ro"))).toBe("Te rugăm să completezi „Nume”.");
+
+    const long = shopSchema.safeParse({ name: "Ana", slug: "ana", timezone: "Europe/Bucharest", currency: "RON", about: "", address: "x".repeat(201), phone: "" });
+    expect(long.success).toBe(false);
+    if (long.success) return;
+    expect(firstError(long.error, ownerT("ro"))).toBe("„Adresă” poate avea cel mult 200 de caractere.");
+  });
+});

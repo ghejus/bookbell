@@ -13,6 +13,7 @@ import { getCurrentUser } from "@/lib/shop";
 import { siteUrl } from "@/lib/site";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { ownerT } from "@/lib/i18n/owner";
 import { firstError } from "@/lib/validation";
 import { checkBookingTicket, clientIp, visitorKey } from "@/lib/visitor";
 
@@ -40,7 +41,7 @@ export async function bookAppointment(_prev: ActionState, formData: FormData): P
   if (!parsed.success) {
     // Bots get the same calm answer as people, so they learn nothing.
     if (parsed.error.issues.some((i) => i.path[0] === "website" || i.path[0] === "ticket")) return { error: TRY_AGAIN };
-    return { error: firstError(parsed.error) };
+    return { error: firstError(parsed.error, ownerT(lang)) };
   }
   const d = parsed.data;
 
@@ -121,7 +122,7 @@ export async function joinWaitlist(_prev: ActionState, formData: FormData): Prom
   const lang = await actionLang();
   const t = dictFor(lang);
   const parsed = waitSchema(t).safeParse(values);
-  if (!parsed.success) return { error: firstError(parsed.error), values };
+  if (!parsed.success) return { error: firstError(parsed.error, ownerT(lang)), values };
   const user = await getCurrentUser();
   if (!user) return { error: errorText(lang, "not_signed_in"), values };
   const supabase = await createClient();

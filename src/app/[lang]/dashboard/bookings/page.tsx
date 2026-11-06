@@ -160,8 +160,8 @@ async function BookingsContent({ searchParams }: PageProps<"/[lang]/dashboard/bo
                         <p className="text-[13px] wrap-anywhere text-neutral-400">
                           {b.services?.name ?? o("Service")}
                           {b.services ? <span className="tabular">, {formatDuration(b.services.duration_minutes)}</span> : null}
-                          <span className="tabular"> · until&nbsp;{time.format(new Date(b.ends_at))}</span>
-                          {showWho && b.staff ? <> · with {b.staff.name}</> : null}
+                          <span className="tabular"> · {o("until {time}", { time: time.format(new Date(b.ends_at)) })}</span>
+                          {showWho && b.staff ? <> · {o("with {name}", { name: b.staff.name })}</> : null}
                         </p>
                         <p className="flex flex-wrap gap-x-3.5 gap-y-1 text-[13px]">
                           {/* The owner needs the whole email to reach the customer, so it wraps instead of being cut off. */}

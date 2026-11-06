@@ -7,7 +7,7 @@ import { interFonts } from "@/lib/og-fonts";
 
 // The picture shown when someone shares a shop's booking link,
 // for example in WhatsApp or on Facebook.
-export const alt = "Book online with Bookbell";
+export const alt = "Bookbell";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 

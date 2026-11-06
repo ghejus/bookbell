@@ -7,7 +7,7 @@ import { createDemoShop } from "@/lib/demo";
 import { hasSupabaseEnv } from "@/lib/env";
 import { requireUser } from "@/lib/shop";
 import { createClient } from "@/lib/supabase/server";
-import { getActionT } from "@/lib/i18n/server";
+import { actionLang, getActionT } from "@/lib/i18n/server";
 import type { Dict } from "@/lib/i18n/dict";
 import { safeNextPath } from "@/lib/validation";
 import { z } from "zod";
@@ -107,7 +107,7 @@ export async function startDemo(): Promise<ActionState> {
   const { supabase, userId, isDemo } = await requireUser();
   if (!isDemo) redirect("/dashboard"); // A real owner pressed it: just go to their shop.
   try {
-    await createDemoShop(supabase, userId);
+    await createDemoShop(supabase, userId, await actionLang());
   } catch (error) {
     console.error(error);
     return { error: t.demo.failed };

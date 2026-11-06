@@ -2,6 +2,8 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addDays, isoWeekday } from "@/lib/slots";
+import type { Currency } from "@/lib/format";
+import type { Lang } from "@/lib/i18n/config";
 import { reviewAuthor } from "@/lib/reviews";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { utcToZoned, zonedToUtc } from "@/lib/time";
@@ -14,19 +16,82 @@ import { utcToZoned, zonedToUtc } from "@/lib/time";
 
 const TZ = "Europe/Bucharest";
 
-const SERVICES = [
-  { name: "Haircut", duration_minutes: 30, price_cents: 2500 },
-  { name: "Haircut and beard", duration_minutes: 45, price_cents: 3500 },
-  { name: "Kids haircut (under 12)", duration_minutes: 20, price_cents: 1500 },
-  { name: "Beard trim", duration_minutes: 15, price_cents: 1200 },
-];
+// Everything the demo shop says, in the visitor's language. Romanian demo
+// shops charge in lei. Lists line up by position (service 0 is the haircut).
+type DemoWords = {
+  name: string;
+  about: string;
+  currency: Currency;
+  services: { name: string; duration_minutes: number; price_cents: number }[];
+  notes: { question: string; answer: string }[];
+  customerNotes: [string, string];
+  reviews: { stars: number; body: string; reply?: string }[];
+  walkIn: string;
+  you: string;
+};
 
-const NOTES = [
-  { question: "Is there parking?", answer: "Yes, free parking behind the shop for 30 minutes." },
-  { question: "Can I pay by card?", answer: "Yes, cash and card are both fine." },
-  { question: "Do you cut kids' hair?", answer: "Yes, for children of any age. Under 12s book the Kids haircut." },
-  { question: "Can I walk in without booking?", answer: "If a chair is free, yes. Booking online is the surest way to get a time." },
-];
+const WORDS: Record<Lang, DemoWords> = {
+  en: {
+    name: "Demo Barber Shop",
+    about: "This is your own demo shop. Change anything you like, try booking a time, or ask the chat helper a question. Nobody else sees your changes.",
+    currency: "EUR",
+    services: [
+      { name: "Haircut", duration_minutes: 30, price_cents: 2500 },
+      { name: "Haircut and beard", duration_minutes: 45, price_cents: 3500 },
+      { name: "Kids haircut (under 12)", duration_minutes: 20, price_cents: 1500 },
+      { name: "Beard trim", duration_minutes: 15, price_cents: 1200 },
+    ],
+    notes: [
+      { question: "Is there parking?", answer: "Yes, free parking behind the shop for 30 minutes." },
+      { question: "Can I pay by card?", answer: "Yes, cash and card are both fine." },
+      { question: "Do you cut kids' hair?", answer: "Yes, for children of any age. Under 12s book the Kids haircut." },
+      { question: "Can I walk in without booking?", answer: "If a chair is free, yes. Booking online is the surest way to get a time." },
+    ],
+    customerNotes: ["Likes it short on the sides, longer on top.", "Prefers Andrei. Pays by card."],
+    reviews: [
+      { stars: 5, body: "Quick, friendly and exactly what I asked for. Booking took ten seconds." },
+      { stars: 5, body: "Really know what they’re doing. Will be back.", reply: "Thank you, see you next time!" },
+      { stars: 4, body: "Good work. I waited about five minutes, but the coffee helped." },
+      { stars: 5, body: "" },
+      { stars: 3, body: "The cut was fine, but it felt a bit rushed at the end.", reply: "Sorry about that. Next time tell us and we’ll take our time." },
+      { stars: 5, body: "Best barber in the area. Easy to book a time online." },
+      { stars: 4, body: "Nice place, good music, fair price." },
+      { stars: 5, body: "Always on time. Love that I can move my booking myself." },
+    ],
+    walkIn: "Walk-in",
+    you: "Alex Pop (you)",
+  },
+  ro: {
+    name: "Frizeria Demo",
+    about: "Acesta e salonul tău demo. Schimbă orice vrei, încearcă o programare sau pune o întrebare asistentului din chat. Nimeni altcineva nu vede ce schimbi.",
+    currency: "RON",
+    services: [
+      { name: "Tuns", duration_minutes: 30, price_cents: 6000 },
+      { name: "Tuns și barbă", duration_minutes: 45, price_cents: 8500 },
+      { name: "Tuns copii (sub 12 ani)", duration_minutes: 20, price_cents: 4000 },
+      { name: "Aranjat barba", duration_minutes: 15, price_cents: 3000 },
+    ],
+    notes: [
+      { question: "Există parcare?", answer: "Da, parcare gratuită în spatele salonului, timp de 30 de minute." },
+      { question: "Pot plăti cu cardul?", answer: "Da, se poate plăti și cash, și cu cardul." },
+      { question: "Tundeți și copii?", answer: "Da, copii de orice vârstă. Pentru cei sub 12 ani, alege „Tuns copii”." },
+      { question: "Pot veni fără programare?", answer: "Dacă e un scaun liber, da. Programarea online e cea mai sigură cale să prinzi o oră." },
+    ],
+    customerNotes: ["Îi place scurt pe părți, mai lung sus.", "Preferă să vină la Andrei. Plătește cu cardul."],
+    reviews: [
+      { stars: 5, body: "Rapid, prietenos și exact ce am cerut. Programarea a durat zece secunde." },
+      { stars: 5, body: "Chiar se pricep. Mai vin.", reply: "Mulțumim, pe data viitoare!" },
+      { stars: 4, body: "Treabă bună. Am așteptat vreo cinci minute, dar cafeaua a ajutat." },
+      { stars: 5, body: "" },
+      { stars: 3, body: "Tunsoarea a fost în regulă, dar spre final s-a simțit puțin grăbită.", reply: "Ne pare rău. Data viitoare spune-ne și ne luăm tot timpul necesar." },
+      { stars: 5, body: "Cel mai bun frizer din zonă. Te programezi ușor online." },
+      { stars: 4, body: "Loc frumos, muzică bună, preț corect." },
+      { stars: 5, body: "Mereu la timp. Îmi place că îmi pot muta singur programarea." },
+    ],
+    walkIn: "Fără programare",
+    you: "Alex Pop (tu)",
+  },
+};
 
 // Two barbers. The shop's first worker ("Me") becomes Andrei, then Maria is added.
 const TEAM = ["Andrei", "Maria"];
@@ -60,30 +125,14 @@ const MISSED_ON_DAY = [4, 13];
 const DEMO_LOGO = "demo/logo.webp";
 const DEMO_PHOTOS = ["demo/storefront.webp", "demo/interior.webp", "demo/haircut.webp", "demo/tools.webp"];
 
-// The owner's private notes about two regulars.
-const CUSTOMER_NOTES = [
-  { email: "ioana.stan@example.com", note: "Likes it short on the sides, longer on top." },
-  { email: "george.v@example.com", note: "Prefers Andrei. Pays by card." },
-];
-
-// Reviews of past visits (newest visit first), so the shop page, the Reviews
-// page and the Shop screen have something to show. One gets a reply.
-const DEMO_REVIEWS = [
-  { stars: 5, body: "Quick, friendly and exactly what I asked for. Booking took ten seconds." },
-  { stars: 5, body: "Really know what they’re doing. Will be back.", reply: "Thank you, see you next time!" },
-  { stars: 4, body: "Good work. I waited about five minutes, but the coffee helped." },
-  { stars: 5, body: "" },
-  { stars: 3, body: "The cut was fine, but it felt a bit rushed at the end.", reply: "Sorry about that. Next time tell us and we’ll take our time." },
-  { stars: 5, body: "Best barber in the area. Easy to book a time online." },
-  { stars: 4, body: "Nice place, good music, fair price." },
-  { stars: 5, body: "Always on time. Love that I can move my booking myself." },
-];
+// The owner's private notes (WORDS.customerNotes) are about these two regulars.
+const NOTED_EMAILS = ["ioana.stan@example.com", "george.v@example.com"];
 
 // Today's visits, so the Today screen has a "Next up" and a full day to show.
 // Depending on the time of the visit, some are already done.
 const TODAY = [
   { name: "Sofia Ilie", email: "sofia.ilie@example.com", phone: "+40 700 222 333", service: 0, time: "09:30", staff: 0 },
-  { name: "Walk-in", email: "", phone: "", service: 3, time: "10:00", staff: 1 },
+  { name: "", email: "", phone: "", service: 3, time: "10:00", staff: 1 }, // a walk-in
   { name: "Matei Pavel", email: "matei.pavel@example.com", phone: "+40 700 444 555", service: 1, time: "11:00", staff: 0 },
   { name: "Clara Neagu", email: "clara.neagu@example.com", phone: "", service: 2, time: "12:00", staff: 1 },
   { name: "Paul Dragomir", email: "paul.d@example.com", phone: "+40 700 666 777", service: 0, time: "14:30", staff: 0 },
@@ -92,18 +141,20 @@ const TODAY = [
 ];
 
 /** Makes the sample shop for this demo visitor, unless they already have a shop. */
-export async function createDemoShop(supabase: SupabaseClient, userId: string) {
+export async function createDemoShop(supabase: SupabaseClient, userId: string, lang: Lang = "en") {
+  const w = WORDS[lang];
   const { data: existing } = await supabase.from("shops").select("id").eq("owner_id", userId).maybeSingle();
   if (existing) return;
 
   const { data: shop, error } = await supabase
     .from("shops")
     .insert({
-      name: "Demo Barber Shop",
+      name: w.name,
       slug: `demo-${randomBytes(4).toString("hex")}`,
       timezone: TZ,
-      currency: "EUR",
-      about: "This is your own demo shop. Change anything you like, try booking a time, or ask the chat helper a question. Nobody else sees your changes.",
+      currency: w.currency,
+      about: w.about,
+      lang,
       address: "Strada Exemplu 1, București",
       phone: "+40 700 000 000",
     })
@@ -114,7 +165,7 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
   const shopId = shop.id as string;
   const { data: services } = await supabase
     .from("services")
-    .insert(SERVICES.map((s) => ({ ...s, shop_id: shopId })))
+    .insert(w.services.map((s) => ({ ...s, shop_id: shopId })))
     .select("id, name");
 
   // Monday to Friday with a lunch break, and Saturday mornings.
@@ -125,7 +176,7 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
   hours.push({ shop_id: shopId, weekday: 6, opens: "10:00", closes: "14:00" });
   await Promise.all([
     supabase.from("opening_hours").insert(hours),
-    supabase.from("shop_info").insert(NOTES.map((n) => ({ ...n, shop_id: shopId }))),
+    supabase.from("shop_info").insert(w.notes.map((n) => ({ ...n, shop_id: shopId }))),
   ]);
 
   // The team: the database already added a first worker, which gets a real name.
@@ -163,7 +214,7 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
     p_shop_id: shopId,
     p_service_id: ids[0],
     p_starts_at: zonedToUtc(weekdays[2], "16:30", TZ).toISOString(),
-    p_customer_name: "Alex Pop (you)",
+    p_customer_name: w.you,
     p_customer_email: "alex.pop@example.com",
     p_customer_phone: "",
     p_staff_id: staffIds[0] ?? null,
@@ -187,7 +238,7 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
       p_service_id: ids[t.service],
       p_staff_id: staffId,
       p_starts_at: zonedToUtc(today, t.time, TZ).toISOString(),
-      p_customer_name: t.name,
+      p_customer_name: t.name || w.walkIn,
       p_customer_email: t.email,
       p_customer_phone: t.phone,
     });
@@ -204,7 +255,7 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
     const second = { who: REGULARS[(i * 5 + 2) % REGULARS.length], day, time: "17:30", staff: (i + 1) % 2, service: (i + 1) % 4, missed: false };
     return i % 3 === 0 ? [first, second] : [first];
   });
-  const walkIn = { who: { name: "Walk-in", email: "", phone: "" }, day: pastDays[0], time: "12:00", staff: 1, service: 3, missed: false };
+  const walkIn = { who: { name: w.walkIn, email: "", phone: "" }, day: pastDays[0], time: "12:00", staff: 1, service: 3, missed: false };
   const made = await Promise.all(
     [...history, walkIn].map(async (v) => {
       const staffId = staffIds[v.staff];
@@ -227,14 +278,14 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
   const reviewed = made
     .filter((m): m is NonNullable<typeof m> => Boolean(m && !m.v.missed && m.v.who.email))
     .sort((x, y) => (x.v.day === y.v.day ? x.v.time.localeCompare(y.v.time) : y.v.day.localeCompare(x.v.day)))
-    .slice(0, DEMO_REVIEWS.length);
+    .slice(0, w.reviews.length);
   await Promise.all([
     missed.length ? supabase.from("bookings").update({ status: "no_show" }).in("id", missed) : null,
-    supabase.from("customer_notes").insert(CUSTOMER_NOTES.map((n) => ({ shop_id: shopId, customer_key: `e:${n.email}`, note: n.note }))),
+    supabase.from("customer_notes").insert(NOTED_EMAILS.map((email, i) => ({ shop_id: shopId, customer_key: `e:${email}`, note: w.customerNotes[i] }))),
     // Pictures shared by every demo shop (uploaded once by scripts/upload-demo-media.mjs).
     supabase.from("shops").update({ logo_path: DEMO_LOGO }).eq("id", shopId),
     supabase.from("shop_photos").insert(DEMO_PHOTOS.map((path, position) => ({ shop_id: shopId, path, position }))),
-    admin ? addDemoReviews(admin, shopId, reviewed) : null,
+    admin ? addDemoReviews(admin, shopId, reviewed, w.reviews) : null,
   ]);
 }
 
@@ -246,12 +297,13 @@ async function addDemoReviews(
   admin: SupabaseClient,
   shopId: string,
   visits: { id: string; v: { who: { name: string }; day: string; time: string } }[],
+  reviews: DemoWords["reviews"],
 ) {
   if (!visits.length) return;
   await admin.from("bookings").update({ source: "online" }).in("id", visits.map((m) => m.id));
   await admin.from("reviews").insert(
     visits.map((m, i) => {
-      const r = DEMO_REVIEWS[i];
+      const r = reviews[i];
       const at = zonedToUtc(addDays(m.v.day, 1), "10:00", TZ).toISOString();
       return {
         booking_id: m.id,

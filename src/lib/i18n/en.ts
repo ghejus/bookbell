@@ -46,6 +46,9 @@ export const en = {
     notSure:
       "Not sure yet? “Try a demo shop” opens your own sample shop with services, hours and bookings filled in. Nobody else sees your changes, and no email is needed.",
     metaDescription: "Online booking with a friendly AI helper, for small shops.",
+    shareTitle: "Online booking for small shops",
+    shareText: "Customers pick a free time, and a friendly helper answers their questions.",
+    shareFooter: "Try a demo shop",
   },
 
   demo: {
@@ -117,6 +120,9 @@ export const en = {
     title: "We couldn’t find that page",
     text: "If you followed a shop’s booking link, check it for typos or ask the shop for the right one.",
     home: "Go to the home page",
+    brokeTitle: "Something went wrong",
+    brokeText: "This page hit a problem on our side. Please try again in a moment.",
+    tryAgain: "Try again",
   },
 
   days: {

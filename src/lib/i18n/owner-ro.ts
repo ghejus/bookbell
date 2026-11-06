@@ -62,6 +62,7 @@ export const OWNER_RO: Record<string, string> = {
   "Could not save the reply. Please try again.": "Nu am putut salva răspunsul. Te rugăm să încerci din nou.",
   "Reply posted. Everyone can see it under the review.": "Răspuns publicat. Toată lumea îl vede sub recenzie.",
   "Reply removed.": "Răspuns șters.",
+  "Please keep it under 1000 characters.": "Te rugăm să nu depășești 1000 de caractere.",
 
   // actions/rules.ts
   "Could not save. Please try again.": "Nu am putut salva. Te rugăm să încerci din nou.",
@@ -375,6 +376,7 @@ export const OWNER_RO: Record<string, string> = {
   Photos: "Poze",
   "{count} of {max}": "{count} din {max}",
   "Remove photo {n}": "Șterge poza {n}",
+  "Photo {n}": "Poza {n}",
   "Uploading…": "Se încarcă…",
   "Add photo": "Adaugă poză",
   "Pictures are made smaller before they upload, so phone photos are fine.": "Pozele se micșorează înainte de încărcare, așa că merg și cele de pe telefon.",
@@ -538,6 +540,12 @@ export const OWNER_RO: Record<string, string> = {
   "Type a name.": "Scrie un nume.",
   "Use at most 60 characters.": "Folosește cel mult 60 de caractere.",
   "Please check the form.": "Te rugăm să verifici formularul.",
+  "Please fill in “{field}”.": "Te rugăm să completezi „{field}”.",
+  "Please fill in every field.": "Te rugăm să completezi toate câmpurile.",
+  "“{field}” needs at least {min} characters.": "„{field}” trebuie să aibă cel puțin {min} caractere.",
+  "Some text is too short.": "Un text e prea scurt.",
+  "“{field}” can have at most {max} characters.": "„{field}” poate avea cel mult {max} de caractere.",
+  "Some text is too long.": "Un text e prea lung.",
 
   // components/copy-link.tsx
   "Your booking link": "Linkul tău de programare",

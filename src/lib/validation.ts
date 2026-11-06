@@ -110,8 +110,42 @@ export function safeNextPath(next: string | null | undefined, fallback = "/dashb
   return next;
 }
 
-/** Turns a zod error into one short sentence for the form (in the owner's language when `o` is given). */
-export function firstError(error: z.ZodError, o?: (text: string) => string): string {
-  const message = error.issues[0]?.message ?? mark("Please check the form.");
-  return o ? o(message) : message;
+/** Field names, for the checks that have no sentence of their own (see firstError). */
+const FIELD_NAMES: Record<string, string> = {
+  name: mark("Name"),
+  customer_name: mark("Name"),
+  phone: mark("Phone"),
+  customer_phone: mark("Phone"),
+  about: mark("About your shop"),
+  address: mark("Address"),
+  question: mark("Question"),
+  answer: mark("Answer"),
+  reason: mark("Reason"),
+  slug: mark("Web address"),
+};
+
+type Translate = (text: string, vars?: Record<string, string | number>) => string;
+const english: Translate = (text, vars) => text.replace(/\{(\w+)\}/g, (all, k: string) => (vars && k in vars ? String(vars[k]) : all));
+
+/**
+ * Turns a zod error into one short sentence for the form, in the visitor's
+ * language when `o` is given (ownerT works on both sides). Checks without a
+ * sentence of their own would show zod's English ("Too small: expected
+ * string…"), so those get a plain sentence naming the field instead.
+ */
+export function firstError(error: z.ZodError, o: Translate = english): string {
+  const issue = error.issues[0];
+  if (!issue) return o("Please check the form.");
+  if (!/^(Too (small|big)|Invalid|Expected)\b/.test(issue.message)) return o(issue.message);
+  const name = FIELD_NAMES[String(issue.path[0])];
+  const field = name ? o(name) : "";
+  if (issue.code === "too_small" && issue.origin === "string") {
+    const min = Number(issue.minimum);
+    if (min <= 1) return field ? o("Please fill in “{field}”.", { field }) : o("Please fill in every field.");
+    return field ? o("“{field}” needs at least {min} characters.", { field, min }) : o("Some text is too short.");
+  }
+  if (issue.code === "too_big" && issue.origin === "string") {
+    return field ? o("“{field}” can have at most {max} characters.", { field, max: Number(issue.maximum) }) : o("Some text is too long.");
+  }
+  return o("Please check the form.");
 }

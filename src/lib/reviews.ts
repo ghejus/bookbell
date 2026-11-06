@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { en } from "./i18n/en";
 import type { Lang } from "./i18n/config";
+import { mark } from "./i18n/owner";
 import type { Dict } from "./i18n/dict";
 
 // Reviews: only people who really came can write one (the database checks).
@@ -74,7 +75,8 @@ export const reviewSchema = reviewSchemaFor(en);
 
 export const replySchema = z.object({
   id: z.uuid(),
-  reply: z.string().trim().max(REVIEW_MAX, `Please keep it under ${REVIEW_MAX} characters.`).default(""),
+  // The owner sees this in their language (owner-ro.ts); 1000 is REVIEW_MAX.
+  reply: z.string().trim().max(REVIEW_MAX, mark("Please keep it under 1000 characters.")).default(""),
 });
 
 /** Average and counts; zero reviews gives { average: 0, total: 0 }. */
