@@ -5,6 +5,7 @@ import { CopyLink } from "@/components/copy-link";
 import {
   ArrowSquareOutIcon,
   CaretRightIcon,
+  ChartBarIcon,
   ChatCircleTextIcon,
   ClockIcon,
   MapPinIcon,
@@ -80,6 +81,7 @@ async function ShopContent() {
   const team = (staff ?? []).map((w) => w.name);
   const businessRows: Row[] = [
     { href: "/dashboard/customers", icon: UsersThreeIcon, label: "Customers", value: "Visits and notes" },
+    { href: "/dashboard/stats", icon: ChartBarIcon, label: "Stats", value: "Takings and busy times" },
   ];
   const rows: Row[] = [
     { href: "/dashboard/services", icon: ScissorsIcon, label: "Services", value: `${services?.length ?? 0} shown` },

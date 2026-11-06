@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDuration, formatPrice } from "./format";
+import { formatDuration, formatMoney, formatPrice } from "./format";
 
 // nb is a no-break space, so a number never wraps away from its unit.
 const nb = String.fromCharCode(160);
@@ -25,5 +25,13 @@ describe("formatDuration", () => {
     expect(formatDuration(45)).toBe(`45${nb}min`);
     expect(formatDuration(60)).toBe(`1${nb}h`);
     expect(formatDuration(90)).toBe(`1${nb}h 30${nb}min`);
+  });
+});
+
+describe("formatMoney", () => {
+  it("shows zero as an amount, not as free", () => {
+    expect(formatMoney(0, "EUR")).toBe("€0");
+    expect(formatMoney(0, "RON")).toBe("0 lei");
+    expect(formatMoney(4250, "EUR")).toBe("€42.50");
   });
 });

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   CalendarBlankIcon,
+  ChartBarIcon,
   ChatCircleTextIcon,
   ClockIcon,
   ListChecksIcon,
@@ -19,7 +20,7 @@ import {
 
 type Item = { href: string; label: string; icon: Icon; match: (path: string) => boolean };
 
-const shopPages = ["/dashboard/shop", "/dashboard/services", "/dashboard/hours", "/dashboard/rules", "/dashboard/info", "/dashboard/team", "/dashboard/customers"];
+const shopPages = ["/dashboard/shop", "/dashboard/services", "/dashboard/hours", "/dashboard/rules", "/dashboard/info", "/dashboard/team", "/dashboard/customers", "/dashboard/stats"];
 
 const main: Item[] = [
   { href: "/dashboard", label: "Today", icon: SunIcon, match: (p) => p === "/dashboard" },
@@ -30,6 +31,7 @@ const main: Item[] = [
 
 const business: Item[] = [
   { href: "/dashboard/customers", label: "Customers", icon: UsersThreeIcon, match: (p) => p === "/dashboard/customers" },
+  { href: "/dashboard/stats", label: "Stats", icon: ChartBarIcon, match: (p) => p === "/dashboard/stats" },
 ];
 
 const setup: Item[] = [

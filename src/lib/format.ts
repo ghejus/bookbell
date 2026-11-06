@@ -25,6 +25,11 @@ export function formatPrice(cents: number | null, currency: Currency): string {
   return currency === "EUR" ? `€${amount}` : `${amount}${NBSP}lei`;
 }
 
+/** An amount of money (takings, totals): like formatPrice, but zero is "€0", not "Free". */
+export function formatMoney(cents: number, currency: Currency): string {
+  return cents === 0 ? (currency === "EUR" ? "€0" : `0${NBSP}lei`) : formatPrice(cents, currency);
+}
+
 /** 90 -> "1 h 30 min", 45 -> "45 min", 60 -> "1 h". */
 export function formatDuration(minutes: number): string {
   const h = Math.floor(minutes / 60);
