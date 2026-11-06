@@ -1,5 +1,6 @@
 import { CalendarXIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
@@ -13,6 +14,7 @@ import { aiProvider } from "@/lib/assistant/provider";
 import { getAvailability, getPublicShop, getShopMeta, shopToday } from "@/lib/booking";
 import { emailMode } from "@/lib/email/send";
 import { formatDuration, formatPrice } from "@/lib/format";
+import { mediaUrl } from "@/lib/media";
 import { getCurrentUser } from "@/lib/shop";
 import { asUtc, DAYS_SHOWN, dayWindow, isDate, longDay, shownMonths } from "@/lib/dates";
 import { addDays } from "@/lib/slots";
@@ -37,7 +39,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
   await connection();
   const [data, user] = await Promise.all([getPublicShop(slug), getCurrentUser()]);
   if (!data) notFound();
-  const { shop, services, hours, staff } = data;
+  const { shop, services, hours, staff, photos } = data;
   const ticket = bookingTicket(shop.id);
 
   const now = new Date();
@@ -72,7 +74,12 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
       <div className="space-y-6">
         <header>
           <div className="flex items-start justify-between gap-3">
-            <h1 className="text-[28px] leading-tight font-medium tracking-tight text-balance wrap-anywhere">{shop.name}</h1>
+            <div className="flex min-w-0 items-center gap-3.5">
+              {shop.logo_path ? (
+                <Image src={mediaUrl(shop.logo_path)} alt="" width={56} height={56} unoptimized className="size-14 shrink-0 rounded-xl shadow-card" />
+              ) : null}
+              <h1 className="min-w-0 text-[28px] leading-tight font-medium tracking-tight text-balance wrap-anywhere">{shop.name}</h1>
+            </div>
             {user ? (
               <AccountButton account={accountFor(user)} mode="customer" />
             ) : (
@@ -101,6 +108,28 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
                   </a>
                 </li>
               ) : null}
+            </ul>
+          ) : null}
+          {photos.length ? (
+            // A row of photos to swipe through; on a computer it scrolls with the keyboard too.
+            <ul
+              tabIndex={0}
+              aria-label={`Photos of ${shop.name}`}
+              className="-mx-4 mt-5 flex snap-x snap-mandatory gap-2 overflow-x-auto [scrollbar-width:thin] scroll-px-4 px-4 pb-1 outline-none focus-visible:ring-2 focus-visible:ring-accent sm:mx-0 sm:scroll-px-0 sm:px-0"
+            >
+              {photos.map((path, i) => (
+                <li key={path} className="relative aspect-[4/3] w-[72%] max-w-[300px] shrink-0 snap-start overflow-hidden rounded-xl bg-raised sm:w-[46%]">
+                  <Image
+                    src={mediaUrl(path)}
+                    alt={`${shop.name}, photo ${i + 1}`}
+                    fill
+                    sizes="300px"
+                    unoptimized
+                    className="object-cover"
+                    loading={i < 2 ? "eager" : "lazy"}
+                  />
+                </li>
+              ))}
             </ul>
           ) : null}
         </header>

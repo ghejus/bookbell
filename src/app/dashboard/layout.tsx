@@ -17,7 +17,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </a>
 
       {/* Computer sidebar */}
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-hairline px-3 py-5 lg:flex">
+      <aside className="sticky top-0 hidden h-dvh print:hidden w-60 shrink-0 flex-col border-r border-hairline px-3 py-5 lg:flex">
         <Link href="/dashboard" className="mb-6 px-3">
           <Logo />
         </Link>
@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <main
         id="content"
-        className="mx-auto w-full max-w-3xl flex-1 px-4 pt-5 pb-[calc(132px+env(safe-area-inset-bottom))] sm:px-6 lg:py-10 has-[[data-wide]]:max-w-7xl"
+        className="mx-auto w-full max-w-3xl flex-1 px-4 pt-5 pb-[calc(132px+env(safe-area-inset-bottom))] sm:px-6 lg:py-10 has-[[data-wide]]:max-w-7xl print:max-w-none print:p-0"
       >
         {/* Pages here read the login cookie, so they render fresh on each visit. */}
         <Suspense fallback={<PageSkeleton />}>{children}</Suspense>

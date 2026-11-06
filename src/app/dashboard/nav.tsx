@@ -20,7 +20,7 @@ import {
 
 type Item = { href: string; label: string; icon: Icon; match: (path: string) => boolean };
 
-const shopPages = ["/dashboard/shop", "/dashboard/services", "/dashboard/hours", "/dashboard/rules", "/dashboard/info", "/dashboard/team", "/dashboard/customers", "/dashboard/stats"];
+const shopPages = ["/dashboard/shop", "/dashboard/services", "/dashboard/hours", "/dashboard/rules", "/dashboard/info", "/dashboard/team", "/dashboard/customers", "/dashboard/stats", "/dashboard/shop/poster"];
 
 const main: Item[] = [
   { href: "/dashboard", label: "Today", icon: SunIcon, match: (p) => p === "/dashboard" },
@@ -65,7 +65,7 @@ export function TabBar() {
   return (
     <nav
       aria-label="Main"
-      className="fixed inset-x-0 bottom-0 z-40 bg-ground/90 px-2.5 pt-[7px] pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur-lg lg:hidden"
+      className="fixed inset-x-0 bottom-0 z-40 bg-ground/90 print:hidden px-2.5 pt-[7px] pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur-lg lg:hidden"
     >
       <span aria-hidden className="rule-top absolute inset-x-0 top-0 h-px" />
       <div className="relative mx-auto flex max-w-lg items-start">

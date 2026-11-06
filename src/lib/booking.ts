@@ -27,6 +27,8 @@ export type PublicShop = {
   buffer_minutes: number;
   /** Customers can't cancel or move online this many hours before. */
   cancel_deadline_hours: number;
+  /** The logo in Storage (see lib/media.ts), if any. */
+  logo_path: string | null;
 };
 
 export type PublicService = { id: string; name: string; duration_minutes: number; price_cents: number | null };
@@ -53,12 +55,12 @@ export const getPublicShop = cache(async (slug: string) => {
   const supabase = await createClient();
   const { data: shop } = await supabase
     .from("shops")
-    .select("id, name, slug, timezone, currency, about, address, phone, booking_window_days, min_notice_minutes, slot_step_minutes, buffer_minutes, cancel_deadline_hours")
+    .select("id, name, slug, timezone, currency, about, address, phone, booking_window_days, min_notice_minutes, slot_step_minutes, buffer_minutes, cancel_deadline_hours, logo_path")
     .eq("slug", slug)
     .maybeSingle<PublicShop>();
   if (!shop) return null;
 
-  const [{ data: services }, { data: hours }, { data: staff }] = await Promise.all([
+  const [{ data: services }, { data: hours }, { data: staff }, { data: photos }] = await Promise.all([
     // Owners viewing their own page could also see hidden services, so filter explicitly.
     supabase
       .from("services")
@@ -76,9 +78,10 @@ export const getPublicShop = cache(async (slug: string) => {
       .eq("active", true)
       .order("created_at")
       .returns<PublicStaff[]>(),
+    supabase.from("shop_photos").select("path").eq("shop_id", shop.id).order("position").order("created_at").returns<{ path: string }[]>(),
   ]);
 
-  return { supabase, shop, services: services ?? [], hours: hours ?? [], staff: staff ?? [] };
+  return { supabase, shop, services: services ?? [], hours: hours ?? [], staff: staff ?? [], photos: (photos ?? []).map((p) => p.path) };
 });
 
 export type DayAvailability = { date: string; slots: { iso: string; label: string }[] };

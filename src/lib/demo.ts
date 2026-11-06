@@ -55,6 +55,10 @@ const HISTORY_TIMES = ["09:30", "11:00", "13:30", "15:00", "16:30"];
 // Which visits in the history the customer missed (by day).
 const MISSED_ON_DAY = [4, 13];
 
+// The demo pictures, in the shared "demo/" folder of the shop-media bucket.
+const DEMO_LOGO = "demo/logo.webp";
+const DEMO_PHOTOS = ["demo/storefront.webp", "demo/interior.webp", "demo/haircut.webp", "demo/tools.webp"];
+
 // The owner's private notes about two regulars.
 const CUSTOMER_NOTES = [
   { email: "ioana.stan@example.com", note: "Likes it short on the sides, longer on top." },
@@ -201,5 +205,8 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
   await Promise.all([
     missed.length ? supabase.from("bookings").update({ status: "no_show" }).in("id", missed) : null,
     supabase.from("customer_notes").insert(CUSTOMER_NOTES.map((n) => ({ shop_id: shopId, customer_key: `e:${n.email}`, note: n.note }))),
+    // Pictures shared by every demo shop (uploaded once by scripts/upload-demo-media.mjs).
+    supabase.from("shops").update({ logo_path: DEMO_LOGO }).eq("id", shopId),
+    supabase.from("shop_photos").insert(DEMO_PHOTOS.map((path, position) => ({ shop_id: shopId, path, position }))),
   ]);
 }

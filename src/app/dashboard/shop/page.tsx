@@ -6,6 +6,8 @@ import {
   ArrowSquareOutIcon,
   CaretRightIcon,
   ChartBarIcon,
+  DownloadSimpleIcon,
+  PrinterIcon,
   ChatCircleTextIcon,
   ClockIcon,
   MapPinIcon,
@@ -16,12 +18,15 @@ import {
   UsersThreeIcon,
   type Icon,
 } from "@/components/icons";
-import { Card, CardSection, PageSkeleton } from "@/components/ui";
+import { buttonClass, Card, CardSection, PageSkeleton } from "@/components/ui";
 import { type BookingRules, rulesSummary } from "@/lib/booking-rules";
+import { mediaUrl } from "@/lib/media";
+import { qrSvg } from "@/lib/qr";
 import { requireShop } from "@/lib/shop";
 import { siteUrl } from "@/lib/site";
 import { OwnerHeader } from "../account";
 import { ShopForm } from "../shop-form";
+import { MediaForm } from "./media-form";
 
 export const metadata: Metadata = { title: "Your shop" };
 
@@ -65,7 +70,7 @@ function RowList({ id, title, rows }: { id: string; title: string; rows: Row[] }
 
 async function ShopContent() {
   const { supabase, shop } = await requireShop();
-  const [bookingUrl, { data: services }, { data: hours }, { count: notes }, { data: staff }, { data: rules }] = await Promise.all([
+  const [bookingUrl, { data: services }, { data: hours }, { count: notes }, { data: staff }, { data: rules }, { data: media }, { data: photos }] = await Promise.all([
     siteUrl().then((site) => `${site}/s/${shop.slug}`),
     supabase.from("services").select("id").eq("shop_id", shop.id).eq("active", true),
     supabase.from("opening_hours").select("weekday").eq("shop_id", shop.id).returns<{ weekday: number }[]>(),
@@ -76,6 +81,8 @@ async function ShopContent() {
       .select("booking_window_days, min_notice_minutes, slot_step_minutes, buffer_minutes, cancel_deadline_hours")
       .eq("id", shop.id)
       .single<BookingRules>(),
+    supabase.from("shops").select("logo_path").eq("id", shop.id).single<{ logo_path: string | null }>(),
+    supabase.from("shop_photos").select("id, path").eq("shop_id", shop.id).order("position").order("created_at").returns<{ id: string; path: string }[]>(),
   ]);
 
   const team = (staff ?? []).map((w) => w.name);
@@ -129,6 +136,35 @@ async function ShopContent() {
             ) : null}
           </div>
         ) : null}
+
+        <CardSection title="Pictures" description="Your logo and up to 6 photos, shown at the top of your booking page.">
+          <MediaForm
+            shopId={shop.id}
+            logoUrl={media?.logo_path ? mediaUrl(media.logo_path) : null}
+            photos={(photos ?? []).map((p) => ({ id: p.id, url: mediaUrl(p.path) }))}
+          />
+        </CardSection>
+
+        <CardSection title="QR code" description="Print it for your door or counter. Customers point their phone camera at it to book.">
+          <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+            <div
+              role="img"
+              aria-label="QR code for your booking page"
+              className="w-36 shrink-0 overflow-hidden rounded-lg [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
+              dangerouslySetInnerHTML={{ __html: qrSvg(bookingUrl) }}
+            />
+            <div className="flex flex-wrap gap-2">
+              <Link href="/dashboard/shop/poster" className={buttonClass("secondary", { size: "sm" })}>
+                <PrinterIcon aria-hidden className="size-4" />
+                Print a poster
+              </Link>
+              <a href="/dashboard/shop/qr" download className={buttonClass("secondary", { size: "sm" })}>
+                <DownloadSimpleIcon aria-hidden className="size-4" />
+                Download
+              </a>
+            </div>
+          </div>
+        </CardSection>
 
         <CardSection title="Shop details" description="Customers see these on your booking page.">
           <ShopForm shop={shop} timezones={Intl.supportedValuesOf("timeZone")} />
