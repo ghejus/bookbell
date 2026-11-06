@@ -6,12 +6,15 @@ import { ReviewItem, StarSpread } from "@/components/review-list";
 import { Sheet, SheetHeader } from "@/components/sheet";
 import { Stars } from "@/components/stars";
 import { Card, EmptyState, PageSkeleton } from "@/components/ui";
-import { averageText, getShopRating, reviewCount, type PublicReview } from "@/lib/reviews";
+import { averageText, getShopRating, type PublicReview } from "@/lib/reviews";
 import { requireShop } from "@/lib/shop";
 import { OwnerHeader } from "../account";
 import { ReplyForm } from "./reply-form";
+import { getOwnerT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Reviews" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getOwnerT())("Reviews") };
+}
 
 type OwnerReview = {
   id: string;
@@ -28,7 +31,7 @@ const isId = (v: unknown): v is string => typeof v === "string" && /^[0-9a-f-]{3
 
 async function ReviewsContent({ searchParams }: PageProps<"/[lang]/dashboard/reviews">) {
   const query = await searchParams;
-  const { supabase, shop } = await requireShop();
+  const [{ supabase, shop }, o] = await Promise.all([requireShop(), getOwnerT()]);
   const [rating, { data }] = await Promise.all([
     getShopRating(supabase, shop.id),
     supabase
@@ -46,13 +49,12 @@ async function ReviewsContent({ searchParams }: PageProps<"/[lang]/dashboard/rev
 
   return (
     <>
-      <OwnerHeader back title="Reviews" description="What customers say after a visit. You can reply to each one; everyone sees your reply." />
+      <OwnerHeader back title={o("Reviews")} description={o("What customers say after a visit. You can reply to each one; everyone sees your reply.")} />
 
       {all.length === 0 ? (
         <Card>
-          <EmptyState icon={ChatCircleTextIcon} title="No reviews yet">
-            The day after a visit, customers can rate it from their booking link or My bookings. Only people who booked online and came can
-            review.
+          <EmptyState icon={ChatCircleTextIcon} title={o("No reviews yet")}>
+            {o("The day after a visit, customers can rate it from their booking link or My bookings. Only people who booked online and came can review.")}
           </EmptyState>
         </Card>
       ) : (
@@ -61,15 +63,15 @@ async function ReviewsContent({ searchParams }: PageProps<"/[lang]/dashboard/rev
             <div className="space-y-1">
               <p className="text-[40px] leading-none font-medium tracking-tight tabular">{averageText(rating.average)}</p>
               <Stars stars={rating.average} />
-              <p className="text-sm text-neutral-400">{reviewCount(rating.total)} on your page</p>
+              <p className="text-sm text-neutral-400">{o.n(rating.total, "{n} review on your page", "{n} reviews on your page")}</p>
             </div>
             <StarSpread counts={rating.counts} total={rating.total} />
           </Card>
 
           <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[13px] text-neutral-400">
-            <p>{waiting ? `${waiting} without a reply` : "You replied to every review."}</p>
+            <p>{waiting ? o("{n} without a reply", { n: waiting }) : o("You replied to every review.")}</p>
             <Link href={`/s/${shop.slug}#reviews`} className="inline-flex items-center gap-1 font-medium text-accent-400 hover:underline">
-              See them on your page
+              {o("See them on your page")}
               <ArrowSquareOutIcon aria-hidden className="size-3.5" />
             </Link>
           </div>
@@ -82,7 +84,7 @@ async function ReviewsContent({ searchParams }: PageProps<"/[lang]/dashboard/rev
                   <ReviewItem review={toPublic(r)} shopName={shop.name}>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 pt-1">
                       {hidden ? (
-                        <span className="rounded-md bg-neutral-800 px-2 py-0.5 text-[11px] text-neutral-300">Not shown: marked as didn’t come</span>
+                        <span className="rounded-md bg-neutral-800 px-2 py-0.5 text-[11px] text-neutral-300">{o("Not shown: marked as didn’t come")}</span>
                       ) : (
                         <Link
                           href={`/dashboard/reviews?r=${r.id}`}
@@ -90,11 +92,11 @@ async function ReviewsContent({ searchParams }: PageProps<"/[lang]/dashboard/rev
                           className="-ml-2 inline-flex h-9 items-center gap-1.5 rounded-lg px-2 text-sm font-medium text-accent-400 transition-colors duration-150 hover:bg-accent/10"
                         >
                           <ArrowBendUpLeftIcon aria-hidden className="size-4" />
-                          {r.reply ? "Edit reply" : "Reply"}
+                          {r.reply ? o("Edit reply") : o("Reply")}
                         </Link>
                       )}
                       {r.bookings?.customer_name && r.bookings.customer_name !== r.author ? (
-                        <span className="text-[13px] text-neutral-500 wrap-anywhere">From {r.bookings.customer_name}</span>
+                        <span className="text-[13px] text-neutral-500 wrap-anywhere">{o("From {name}", { name: r.bookings.customer_name })}</span>
                       ) : null}
                     </div>
                   </ReviewItem>
@@ -106,8 +108,8 @@ async function ReviewsContent({ searchParams }: PageProps<"/[lang]/dashboard/rev
       )}
 
       {replying ? (
-        <Sheet label="Reply to a review" closeHref="/dashboard/reviews">
-          <SheetHeader title="Reply" closeHref="/dashboard/reviews" description={replying.author || "A customer"} />
+        <Sheet label={o("Reply to a review")} closeHref="/dashboard/reviews">
+          <SheetHeader title={o("Reply")} closeHref="/dashboard/reviews" description={replying.author || o("A customer")} />
           <div className="space-y-5">
             <div className="space-y-1.5 rounded-lg bg-raised px-4 py-3">
               <Stars stars={replying.stars} />

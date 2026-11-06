@@ -68,6 +68,13 @@ describe("booking emails", () => {
     expect(note.subject).toBe("New booking: Ana Popescu, Tuesday 10 November, 10:00");
     expect(note.text).toContain("Customer: ana@gmail.com, +40 711");
   });
+
+  it("write to the owner in the owner's language, even when the customer booked in another", () => {
+    const note = ownerNoteEmail(booking, "cancelled", { email: "ana@gmail.com", phone: "" }, "https://x/dashboard/bookings", "ro");
+    expect(note.subject).toBe("Programare anulată: Ana Popescu, Marți, 10 noiembrie, 10:00");
+    expect(note.text).toContain("Client: ana@gmail.com");
+    expect(note.html).toContain("Deschide programările");
+  });
 });
 
 describe("calendar file", () => {

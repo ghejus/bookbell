@@ -86,6 +86,14 @@ async function bookingLang(bookingId: string): Promise<Lang> {
   return isLang(data?.lang) ? data.lang : "en";
 }
 
+/** The language the owner uses Bookbell in (saved on the shop), for the notes they get. */
+async function shopLang(shopId: string): Promise<Lang> {
+  const admin = createAdminClient();
+  if (!admin) return "en";
+  const { data } = await admin.from("shops").select("lang").eq("id", shopId).maybeSingle<{ lang: string }>();
+  return isLang(data?.lang) ? data.lang : "en";
+}
+
 /** The shop owner's email, or null (no server key, or a demo shop with no email). */
 export async function ownerEmail(shopId: string): Promise<string | null> {
   const admin = createAdminClient();
@@ -126,7 +134,7 @@ export async function sendBookingEmails(token: string, site: string, { notifyOwn
     await Promise.all([
       sendEmail({ to: row.customer_email, ...mail, replyTo: owner ?? undefined, attachments: [calendarFile(info)] }),
       owner && notifyOwner
-        ? sendEmail({ to: owner, ...ownerNoteEmail(info, "new", { email: row.customer_email, phone: row.customer_phone }, `${site}/dashboard/bookings`) })
+        ? sendEmail({ to: owner, ...ownerNoteEmail(info, "new", { email: row.customer_email, phone: row.customer_phone }, `${site}/dashboard/bookings`, await shopLang(row.shop_id)) })
         : null,
     ]);
   } catch (error) {
@@ -150,7 +158,7 @@ export async function sendCustomerChangeEmails(token: string, what: "moved" | "c
         attachments: what === "moved" ? [calendarFile(info)] : undefined,
       }),
       owner
-        ? sendEmail({ to: owner, ...ownerNoteEmail(info, what, { email: row.customer_email, phone: row.customer_phone }, `${site}/dashboard/bookings`) })
+        ? sendEmail({ to: owner, ...ownerNoteEmail(info, what, { email: row.customer_email, phone: row.customer_phone }, `${site}/dashboard/bookings`, await shopLang(row.shop_id)) })
         : null,
     ]);
   } catch (error) {

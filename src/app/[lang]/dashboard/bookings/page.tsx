@@ -10,8 +10,12 @@ import { requireShop } from "@/lib/shop";
 import { OwnerHeader } from "../account";
 import { cancelBooking, markNoShow } from "../actions/bookings";
 import { BookingSheet, isBookingId } from "../booking-sheet";
+import { capital, dateLocale } from "@/lib/dates";
+import { getOwnerT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Bookings" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getOwnerT())("Bookings") };
+}
 
 /** An email that may wrap before "@" and dots ("wang.xiuying / @example.com"), not in the middle of a word. */
 function BreakableEmail({ email }: { email: string }) {
@@ -41,7 +45,7 @@ async function BookingsContent({ searchParams }: PageProps<"/[lang]/dashboard/bo
   const query = await searchParams;
   const past = query.show === "past";
   const page = Math.max(1, Math.min(1000, Number.parseInt(String(query.page ?? "1"), 10) || 1));
-  const { supabase, shop } = await requireShop();
+  const [{ supabase, shop }, o] = await Promise.all([requireShop(), getOwnerT()]);
   const now = new Date().toISOString();
   const list = supabase
     .from("bookings")
@@ -62,8 +66,8 @@ async function BookingsContent({ searchParams }: PageProps<"/[lang]/dashboard/bo
   const showWho = (teamSize ?? 0) >= 2;
 
   const dayKey = new Intl.DateTimeFormat("en-CA", { timeZone: shop.timezone, year: "numeric", month: "2-digit", day: "2-digit" });
-  const dayTitle = new Intl.DateTimeFormat("en-GB", { timeZone: shop.timezone, weekday: "long", day: "numeric", month: "long", year: past ? "numeric" : undefined });
-  const time = new Intl.DateTimeFormat("en-GB", { timeZone: shop.timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const dayTitle = new Intl.DateTimeFormat(dateLocale(o.lang), { timeZone: shop.timezone, weekday: "long", day: "numeric", month: "long", year: past ? "numeric" : undefined });
+  const time = new Intl.DateTimeFormat(dateLocale(o.lang), { timeZone: shop.timezone, hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
 
   const todayKey = dayKey.format(new Date(now));
   const tomorrowKey = dayKey.format(new Date(Date.parse(now) + 86_400_000));
@@ -76,12 +80,12 @@ async function BookingsContent({ searchParams }: PageProps<"/[lang]/dashboard/bo
 
   return (
     <>
-      <OwnerHeader title="Bookings" eyebrow={past ? "Already happened, newest first" : "Upcoming, soonest first"} />
+      <OwnerHeader title={o("Bookings")} eyebrow={past ? o("Already happened, newest first") : o("Upcoming, soonest first")} />
 
-      <div role="group" aria-label="Which bookings" className="mb-5 inline-flex overflow-hidden rounded-lg border border-line">
+      <div role="group" aria-label={o("Which bookings")} className="mb-5 inline-flex overflow-hidden rounded-lg border border-line">
         {[
-          { label: "Upcoming", href: "/dashboard/bookings", active: !past },
-          { label: "Past", href: "/dashboard/bookings?show=past", active: past },
+          { label: o("Upcoming"), href: "/dashboard/bookings", active: !past },
+          { label: o("Past"), href: "/dashboard/bookings?show=past", active: past },
         ].map((t) => (
           <Link
             key={t.label}
@@ -96,18 +100,18 @@ async function BookingsContent({ searchParams }: PageProps<"/[lang]/dashboard/bo
 
       {bookings.length === 0 && past ? (
         <Card>
-          <EmptyState icon={CalendarBlankIcon} title={page > 1 ? "No older bookings" : "No past bookings yet"}>
-            Bookings move here once they are over.
+          <EmptyState icon={CalendarBlankIcon} title={page > 1 ? o("No older bookings") : o("No past bookings yet")}>
+            {o("Bookings move here once they are over.")}
           </EmptyState>
         </Card>
       ) : bookings.length === 0 ? (
         <Card>
-          <EmptyState icon={CalendarBlankIcon} title="No bookings yet">
-            Share your booking page with customers. New bookings show up here right away.
+          <EmptyState icon={CalendarBlankIcon} title={o("No bookings yet")}>
+            {o("Share your booking page with customers. New bookings show up here right away.")}
           </EmptyState>
           <div className="flex justify-center px-6 pb-8">
             <Link href={`/s/${shop.slug}`} className={buttonClass("secondary")}>
-              Open my booking page
+              {o("Open my booking page")}
             </Link>
           </div>
         </Card>
@@ -116,8 +120,8 @@ async function BookingsContent({ searchParams }: PageProps<"/[lang]/dashboard/bo
           {[...groups.entries()].map(([day, list]) => (
             <section key={day} aria-labelledby={`day-${day}`}>
               <h2 id={`day-${day}`} className="mb-2 px-1 text-[13px] font-medium">
-                {day === todayKey ? "Today, " : day === tomorrowKey ? "Tomorrow, " : ""}
-                {dayTitle.format(new Date(list[0].starts_at))}
+                {day === todayKey ? o("Today, ") : day === tomorrowKey ? o("Tomorrow, ") : ""}
+                {day === todayKey || day === tomorrowKey ? dayTitle.format(new Date(list[0].starts_at)) : capital(dayTitle.format(new Date(list[0].starts_at)))}
               </h2>
               <Card className="overflow-hidden">
                 <ul>
@@ -133,12 +137,12 @@ async function BookingsContent({ searchParams }: PageProps<"/[lang]/dashboard/bo
                       </p>
                       {past ? (
                         b.status === "no_show" ? (
-                          <span className="mt-1 rounded-md bg-danger-soft px-2 py-0.5 text-[11px] whitespace-nowrap text-danger-ink">Didn’t come</span>
+                          <span className="mt-1 rounded-md bg-danger-soft px-2 py-0.5 text-[11px] whitespace-nowrap text-danger-ink">{o("Didn’t come")}</span>
                         ) : (
                           <form action={markNoShow} className="flex min-w-9 justify-end">
                             <input type="hidden" name="id" value={b.id} />
                             <input type="hidden" name="back" value={here} />
-                            <IconSubmit label={`${b.customer_name} didn’t come`}>
+                            <IconSubmit label={o("{name} didn’t come", { name: b.customer_name })}>
                               <UserMinusIcon aria-hidden className="size-4.5" />
                             </IconSubmit>
                           </form>
@@ -146,7 +150,7 @@ async function BookingsContent({ searchParams }: PageProps<"/[lang]/dashboard/bo
                       ) : (
                         <form action={cancelBooking} className="row-span-1 flex min-w-9 justify-end">
                           <input type="hidden" name="id" value={b.id} />
-                          <ConfirmDelete label={`Cancel ${b.customer_name}’s booking at ${time.format(new Date(b.starts_at))}`} confirmText="Cancel?" busyText="Cancelling…">
+                          <ConfirmDelete label={o("Cancel {name}’s booking at {time}", { name: b.customer_name, time: time.format(new Date(b.starts_at)) })} confirmText={o("Cancel?")} busyText={o("Cancelling…")}>
                             <XIcon aria-hidden className="size-4.5" />
                           </ConfirmDelete>
                         </form>
@@ -154,7 +158,7 @@ async function BookingsContent({ searchParams }: PageProps<"/[lang]/dashboard/bo
                       {/* Details use the full width under the name, so the Cancel? button never squeezes them. */}
                       <div className="col-span-2 col-start-2 min-w-0 space-y-1 pr-2">
                         <p className="text-[13px] wrap-anywhere text-neutral-400">
-                          {b.services?.name ?? "Service"}
+                          {b.services?.name ?? o("Service")}
                           {b.services ? <span className="tabular">, {formatDuration(b.services.duration_minutes)}</span> : null}
                           <span className="tabular"> · until&nbsp;{time.format(new Date(b.ends_at))}</span>
                           {showWho && b.staff ? <> · with {b.staff.name}</> : null}
@@ -184,17 +188,17 @@ async function BookingsContent({ searchParams }: PageProps<"/[lang]/dashboard/bo
             </section>
           ))}
           {past && (page > 1 || more) ? (
-            <nav aria-label="Pages" className="flex justify-between gap-3">
+            <nav aria-label={o("Pages")} className="flex justify-between gap-3">
               {page > 1 ? (
                 <Link href={`/dashboard/bookings?show=past${page > 2 ? `&page=${page - 1}` : ""}`} className={buttonClass("secondary", { size: "sm" })}>
-                  Newer
+                  {o("Newer")}
                 </Link>
               ) : (
                 <span />
               )}
               {more ? (
                 <Link href={`/dashboard/bookings?show=past&page=${page + 1}`} className={buttonClass("secondary", { size: "sm" })}>
-                  Older
+                  {o("Older")}
                 </Link>
               ) : null}
             </nav>
@@ -202,8 +206,8 @@ async function BookingsContent({ searchParams }: PageProps<"/[lang]/dashboard/bo
           {past ? null : (
             <p className="px-1 text-[13px] text-neutral-400">
               {emailMode() === "gmail"
-                ? "Cancelling frees the time for others and emails the customer to say so."
-                : "Cancelling frees the time for others. Emails aren’t switched on yet, so please let the customer know."}
+                ? o("Cancelling frees the time for others and emails the customer to say so.")
+                : o("Cancelling frees the time for others. Emails aren’t switched on yet, so please let the customer know.")}
             </p>
           )}
         </div>

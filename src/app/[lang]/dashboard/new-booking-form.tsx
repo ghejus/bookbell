@@ -7,6 +7,7 @@ import { OWNER_TIMES } from "@/lib/calendar";
 import { formatDuration } from "@/lib/format";
 import { getTeamFreeSlots, type OpeningBlock, type StaffBusy } from "@/lib/slots";
 import { ownerAddBooking } from "./actions/calendar";
+import { useOwnerT } from "@/lib/i18n/client";
 
 export type NewBookingData = {
   services: { id: string; name: string; duration: number }[];
@@ -29,6 +30,7 @@ const chip = "flex items-center justify-center rounded-lg border text-sm font-me
  */
 export function NewBookingForm({ data }: { data: NewBookingData }) {
   const { state, pending, formProps } = useActionForm(ownerAddBooking);
+  const o = useOwnerT();
   const [serviceId, setServiceId] = useState(data.initial.serviceId ?? data.services[0]?.id ?? "");
   const [staffId, setStaffId] = useState(data.initial.staffId ?? data.staff[0]?.id ?? "");
   const [date, setDate] = useState(data.initial.date);
@@ -89,7 +91,7 @@ export function NewBookingForm({ data }: { data: NewBookingData }) {
       {state?.values?.force ? <input type="hidden" name="force" value={state.values.force} /> : null}
 
       <fieldset>
-        <legend className="mb-2 text-sm font-medium">Service</legend>
+        <legend className="mb-2 text-sm font-medium">{o("Service")}</legend>
         <div className="space-y-2">
           {data.services.map((s) => {
             const on = s.id === serviceId;
@@ -113,7 +115,7 @@ export function NewBookingForm({ data }: { data: NewBookingData }) {
 
       {data.staff.length > 1 ? (
         <fieldset>
-          <legend className="mb-2 text-sm font-medium">With</legend>
+          <legend className="mb-2 text-sm font-medium">{o("With")}</legend>
           <div className="flex flex-wrap gap-2">
             {data.staff.map((w) => (
               <button
@@ -131,7 +133,7 @@ export function NewBookingForm({ data }: { data: NewBookingData }) {
       ) : null}
 
       <fieldset>
-        <legend className="mb-2 text-sm font-medium">Day</legend>
+        <legend className="mb-2 text-sm font-medium">{o("Day")}</legend>
         <div className="grid grid-cols-7 gap-[5px]">
           {data.days.map((d) => {
             const open = d.hours.length > 0;
@@ -141,7 +143,7 @@ export function NewBookingForm({ data }: { data: NewBookingData }) {
                 key={d.date}
                 type="button"
                 aria-pressed={on}
-                aria-label={`${d.weekday} ${d.num}${open ? "" : ", closed"}`}
+                aria-label={`${d.weekday} ${d.num}${open ? "" : o(", closed")}`}
                 onClick={() => pick({ date: d.date })}
                 className={`${chip} h-[54px] flex-col ${on ? "chip-on" : open ? "chip-off" : "chip-shut"}`}
               >
@@ -154,12 +156,14 @@ export function NewBookingForm({ data }: { data: NewBookingData }) {
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-sm font-medium">Time</legend>
+        <legend className="mb-2 text-sm font-medium">{o("Time")}</legend>
         {slots.length === 0 ? (
           <p className="mb-2 text-sm text-neutral-400">
             {day && day.hours.length === 0
-              ? "The shop is closed this day. Pick another time below if you need to."
-              : `${worker && data.staff.length > 1 ? worker.name : "Nobody"} has no free time left on this day.`}
+              ? o("The shop is closed this day. Pick another time below if you need to.")
+              : worker && data.staff.length > 1
+                ? o("{name} has no free time left on this day.", { name: worker.name })
+                : o("Nobody has free time left on this day.")}
           </p>
         ) : (
           <div className="grid grid-cols-4 gap-1.5">
@@ -180,10 +184,10 @@ export function NewBookingForm({ data }: { data: NewBookingData }) {
           </div>
         )}
         <details className="mt-3 group" open={offGrid || undefined}>
-          <summary className="cursor-pointer text-[13px] font-medium text-accent-400 hover:text-accent-300">Another time</summary>
+          <summary className="cursor-pointer text-[13px] font-medium text-accent-400 hover:text-accent-300">{o("Another time")}</summary>
           <div className="mt-2 flex items-center gap-2">
             <label htmlFor="other-time" className="text-[13px] text-neutral-400">
-              Start at
+              {o("Start at")}
             </label>
             <select
               id="other-time"
@@ -194,7 +198,7 @@ export function NewBookingForm({ data }: { data: NewBookingData }) {
               }}
               className="h-10 rounded-lg border border-line bg-ground px-2 text-sm text-ink tabular focus:border-accent focus:outline-none"
             >
-              <option value="">Choose…</option>
+              <option value="">{o("Choose…")}</option>
               {OWNER_TIMES.map((t) => (
                 <option key={t} value={t}>
                   {t}
@@ -202,26 +206,26 @@ export function NewBookingForm({ data }: { data: NewBookingData }) {
               ))}
             </select>
           </div>
-          <p className="mt-1.5 text-[13px] text-neutral-400">Opening hours don’t apply to you, but nobody can be booked twice.</p>
+          <p className="mt-1.5 text-[13px] text-neutral-400">{o("Opening hours don’t apply to you, but nobody can be booked twice.")}</p>
         </details>
       </fieldset>
 
-      <Field label="Customer name" name="customer_name" autoComplete="off" required maxLength={80} />
-      <Field label="Phone" name="customer_phone" type="tel" autoComplete="off" maxLength={40} />
+      <Field label={o("Customer name")} name="customer_name" autoComplete="off" required maxLength={80} />
+      <Field label={o("Phone")} name="customer_phone" type="tel" autoComplete="off" maxLength={40} />
       <Field
-        label="Email"
+        label={o("Email")}
         name="customer_email"
         type="email"
         inputMode="email"
         autoComplete="off"
         spellCheck={false}
         maxLength={200}
-        hint="With an email, the customer gets a confirmation and a reminder."
+        hint={o("With an email, the customer gets a confirmation and a reminder.")}
       />
-      {needTime ? <FormMessage state={{ error: "Please choose a time." }} /> : <FormMessage state={state} />}
+      {needTime ? <FormMessage state={{ error: o("Please choose a time.") }} /> : <FormMessage state={state} />}
       <div className="[&>button]:h-12 [&>button]:w-full [&>button]:text-[15px]">
-        <SubmitButton pending={pending} pendingText="Adding…">
-          {time ? `Add ${time}` : "Choose a time"}
+        <SubmitButton pending={pending} pendingText={o("Adding…")}>
+          {time ? o("Add {time}", { time }) : o("Choose a time")}
         </SubmitButton>
       </div>
     </form>

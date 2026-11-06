@@ -16,8 +16,12 @@ import { requireShop, type Shop } from "@/lib/shop";
 import { utcToZoned } from "@/lib/time";
 import { OwnerHeader } from "../account";
 import { NoteForm } from "./note-form";
+import { dateLocale } from "@/lib/dates";
+import { getOwnerT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Customers" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getOwnerT())("Customers") };
+}
 
 type Customer = {
   customer_key: string;
@@ -43,12 +47,11 @@ type Visit = {
   staff: { name: string } | null;
 };
 
-const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const isKey = (v: unknown): v is string => typeof v === "string" && /^[enp]:.{1,218}$/.test(v);
 
 /** One customer's card: contact, counts, the owner's note and every visit. */
 async function CustomerSheet({ shop, customer, closeHref }: { shop: Shop; customer: Customer; closeHref: string }) {
-  const { supabase } = await requireShop();
+  const [{ supabase }, o] = await Promise.all([requireShop(), getOwnerT()]);
   const { data } = await supabase
     .from("bookings")
     .select("id, status, starts_at, ends_at, price_cents, services(name), staff(name)")
@@ -59,31 +62,31 @@ async function CustomerSheet({ shop, customer, closeHref }: { shop: Shop; custom
     .returns<Visit[]>();
   const visits = data ?? [];
   const now = new Date().getTime();
-  const when = new Intl.DateTimeFormat("en-GB", { timeZone: shop.timezone, day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const when = new Intl.DateTimeFormat(dateLocale(o.lang), { timeZone: shop.timezone, day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
   const contact =
     "flex h-11 flex-1 items-center justify-center gap-1.5 rounded-lg border border-line text-sm font-medium transition-colors duration-150 hover:bg-ink/7";
   const tiles = [
-    { label: "Visits", value: String(customer.visits) },
-    { label: "Didn’t come", value: String(customer.no_shows), warn: customer.no_shows > 0 },
-    { label: "Spent", value: customer.spent_cents ? formatPrice(customer.spent_cents, shop.currency) : "–" },
+    { label: o("Visits"), value: String(customer.visits) },
+    { label: o("Didn’t come"), value: String(customer.no_shows), warn: customer.no_shows > 0 },
+    { label: o("Spent"), value: customer.spent_cents ? formatPrice(customer.spent_cents, shop.currency, o.lang) : "–" },
   ];
 
   return (
-    <Sheet label={`Customer: ${customer.name}`} closeHref={closeHref}>
-      <SheetHeader title={customer.name} closeHref={closeHref} description={[customer.email, customer.phone].filter(Boolean).join(" · ") || "No contact details"} />
+    <Sheet label={o("Customer: {name}", { name: customer.name })} closeHref={closeHref}>
+      <SheetHeader title={customer.name} closeHref={closeHref} description={[customer.email, customer.phone].filter(Boolean).join(" · ") || o("No contact details")} />
       <div className="space-y-5">
         {customer.phone || customer.email ? (
           <div className="flex gap-2">
             {customer.phone ? (
               <a href={`tel:${customer.phone.replace(/[^\d+]/g, "")}`} className={contact}>
                 <PhoneIcon aria-hidden className="size-[17px]" />
-                Call
+                {o("Call")}
               </a>
             ) : null}
             {customer.email ? (
               <a href={`mailto:${customer.email}`} className={contact}>
                 <EnvelopeSimpleIcon aria-hidden className="size-[17px]" />
-                Email
+                {o("Email")}
               </a>
             ) : null}
           </div>
@@ -104,19 +107,19 @@ async function CustomerSheet({ shop, customer, closeHref }: { shop: Shop; custom
 
         <section aria-labelledby="visits" className="rule-top pt-4">
           <h3 id="visits" className="mb-2 text-sm font-medium">
-            All bookings
+            {o("All bookings")}
           </h3>
           <ul>
             {visits.map((v) => {
               const upcoming = v.status === "booked" && Date.parse(v.ends_at) > now;
               const label =
-                v.status === "cancelled" ? "Cancelled" : v.status === "no_show" ? "Didn’t come" : upcoming ? "Upcoming" : null;
+                v.status === "cancelled" ? o("Cancelled") : v.status === "no_show" ? o("Didn’t come") : upcoming ? o("Upcoming") : null;
               return (
                 <li key={v.id} className="rule-top flex items-start justify-between gap-3 py-2.5 text-sm">
                   <Link href={`/dashboard/calendar?date=${utcToZoned(new Date(v.starts_at), shop.timezone).date}&b=${v.id}`} className="min-w-0 hover:underline">
                     <span className="block tabular">{when.format(new Date(v.starts_at))}</span>
                     <span className="block text-[13px] text-neutral-400 wrap-anywhere">
-                      {v.services?.name ?? "Booking"}
+                      {v.services?.name ?? o("Booking")}
                       {v.staff ? ` · ${v.staff.name}` : ""}
                     </span>
                   </Link>
@@ -129,7 +132,7 @@ async function CustomerSheet({ shop, customer, closeHref }: { shop: Shop; custom
                       {label}
                     </span>
                   ) : v.price_cents !== null ? (
-                    <span className="shrink-0 text-neutral-400 tabular">{formatPrice(v.price_cents, shop.currency)}</span>
+                    <span className="shrink-0 text-neutral-400 tabular">{formatPrice(v.price_cents, shop.currency, o.lang)}</span>
                   ) : null}
                 </li>
               );
@@ -143,7 +146,7 @@ async function CustomerSheet({ shop, customer, closeHref }: { shop: Shop; custom
 
 async function CustomersContent({ searchParams }: PageProps<"/[lang]/dashboard/customers">) {
   const query = await searchParams;
-  const { supabase, shop } = await requireShop();
+  const [{ supabase, shop }, o] = await Promise.all([requireShop(), getOwnerT()]);
   const { data, error } = await supabase.rpc("owner_customers");
   // People coming soon first (soonest at the top), then the most recent visitors.
   const all = [...((error ? [] : (data as Customer[])) ?? [])].sort(
@@ -163,17 +166,17 @@ async function CustomersContent({ searchParams }: PageProps<"/[lang]/dashboard/c
           (digits.length >= 3 && c.phone.replace(/\D/g, "").includes(digits)),
       )
     : all;
-  const day = new Intl.DateTimeFormat("en-GB", { timeZone: shop.timezone, day: "numeric", month: "short" });
+  const day = new Intl.DateTimeFormat(dateLocale(o.lang), { timeZone: shop.timezone, day: "numeric", month: "short" });
   const here = q ? `/dashboard/customers?q=${encodeURIComponent(q)}` : "/dashboard/customers";
   const open = isKey(query.c) ? all.find((c) => c.customer_key === query.c) : undefined;
 
   return (
     <>
-      <OwnerHeader back title="Customers" description="Everyone who has booked, with their visits and your private notes." />
+      <OwnerHeader back title={o("Customers")} description={o("Everyone who has booked, with their visits and your private notes.")} />
 
       <form role="search" action="/dashboard/customers" className="relative mb-4">
         <label htmlFor="customer-search" className="sr-only">
-          Search customers
+          {o("Search customers")}
         </label>
         <MagnifyingGlassIcon aria-hidden className="pointer-events-none absolute top-1/2 left-3 size-[18px] -translate-y-1/2 text-neutral-500" />
         <input
@@ -181,7 +184,7 @@ async function CustomersContent({ searchParams }: PageProps<"/[lang]/dashboard/c
           type="search"
           name="q"
           defaultValue={q}
-          placeholder="Name, email or phone"
+          placeholder={o("Name, email or phone")}
           maxLength={80}
           className="h-11 w-full rounded-lg border border-line bg-surface pr-3 pl-10 text-[15px] text-ink placeholder:text-neutral-500 focus:border-accent focus:outline-none"
         />
@@ -189,27 +192,27 @@ async function CustomersContent({ searchParams }: PageProps<"/[lang]/dashboard/c
 
       {all.length === 0 ? (
         <Card>
-          <EmptyState icon={UsersThreeIcon} title="No customers yet">
-            Everyone who books, online or added by you, shows up here.
+          <EmptyState icon={UsersThreeIcon} title={o("No customers yet")}>
+            {o("Everyone who books, online or added by you, shows up here.")}
           </EmptyState>
         </Card>
       ) : shown.length === 0 ? (
         <Card>
-          <EmptyState icon={MagnifyingGlassIcon} title="Nobody found">
-            No customer matches “{q}”. Try part of a name, an email or a phone number.
+          <EmptyState icon={MagnifyingGlassIcon} title={o("Nobody found")}>
+            {o("No customer matches “{q}”. Try part of a name, an email or a phone number.", { q })}
           </EmptyState>
         </Card>
       ) : (
         <>
           <p className="mb-2 px-1 text-[13px] text-neutral-400">
-            {q ? `${plural(shown.length, "match", "matches")}` : plural(all.length, "customer")}
+            {q ? o.n(shown.length, "{n} match", "{n} matches") : o.n(all.length, "{n} customer", "{n} customers")}
           </p>
           <Card className="overflow-hidden">
             <ul>
               {shown.slice(0, 300).map((c) => {
                 const bits = [
-                  c.visits ? plural(c.visits, "visit") : "No visits yet",
-                  c.next_visit ? `next ${day.format(new Date(c.next_visit))}` : c.last_visit ? `last ${day.format(new Date(c.last_visit))}` : "",
+                  c.visits ? o.n(c.visits, "{n} visit", "{n} visits") : o("No visits yet"),
+                  c.next_visit ? o("next {day}", { day: day.format(new Date(c.next_visit)) }) : c.last_visit ? o("last {day}", { day: day.format(new Date(c.last_visit)) }) : "",
                 ].filter(Boolean);
                 return (
                   <li key={c.customer_key}>
@@ -221,13 +224,13 @@ async function CustomersContent({ searchParams }: PageProps<"/[lang]/dashboard/c
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-1.5 text-[15px] font-medium wrap-anywhere">
                           {c.name}
-                          {c.note ? <NotePencilIcon aria-label="Has a note" className="size-3.5 shrink-0 text-neutral-500" /> : null}
+                          {c.note ? <NotePencilIcon aria-label={o("Has a note")} className="size-3.5 shrink-0 text-neutral-500" /> : null}
                         </span>
                         <span className="block text-[13px] text-neutral-400">{bits.join(" · ")}</span>
                       </span>
                       {c.no_shows ? (
                         <span className="shrink-0 rounded-md bg-danger-soft px-2 py-0.5 text-[11px] whitespace-nowrap text-danger-ink">
-                          {c.no_shows} missed
+                          {o("{n} missed", { n: c.no_shows })}
                         </span>
                       ) : null}
                       <CaretRightIcon aria-hidden className="size-4 shrink-0 text-neutral-600" />
@@ -237,7 +240,7 @@ async function CustomersContent({ searchParams }: PageProps<"/[lang]/dashboard/c
               })}
             </ul>
           </Card>
-          {shown.length > 300 ? <p className="mt-2 px-1 text-[13px] text-neutral-400">Showing the 300 most recent. Search to find others.</p> : null}
+          {shown.length > 300 ? <p className="mt-2 px-1 text-[13px] text-neutral-400">{o("Showing the 300 most recent. Search to find others.")}</p> : null}
         </>
       )}
 

@@ -5,20 +5,22 @@ import type { ActionState } from "@/lib/action-state";
 import { fields } from "@/lib/form-data";
 import { requireShop } from "@/lib/shop";
 import { firstError, idSchema, staffSchema } from "@/lib/validation";
+import { getActionOwnerT } from "@/lib/i18n/server";
 
 // The team: add, rename, turn on or off, remove.
 // Every action checks who is logged in and which shop they own. The database
 // locks (RLS) check again, so a trick request still can't touch another shop.
 
 export async function addStaff(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const o = await getActionOwnerT();
   const parsed = staffSchema.safeParse(fields(formData));
-  if (!parsed.success) return { error: firstError(parsed.error) };
+  if (!parsed.success) return { error: firstError(parsed.error, o) };
 
   const { supabase, shop } = await requireShop();
   const { error } = await supabase.from("staff").insert({ name: parsed.data.name, shop_id: shop.id });
-  if (error) return { error: "Could not add them. Please try again." };
+  if (error) return { error: o("Could not add them. Please try again.") };
   refresh();
-  return { message: `Added ${parsed.data.name}.` };
+  return { message: o("Added {name}.", { name: parsed.data.name }) };
 }
 
 export async function renameStaff(formData: FormData) {

@@ -8,13 +8,16 @@ import { OwnerHeader } from "../account";
 import { CURRENCY_UNIT, formatDuration, formatPrice } from "@/lib/format";
 import { requireShop } from "@/lib/shop";
 import { addService, deleteService, toggleService } from "../actions/services";
+import { getOwnerT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Services" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getOwnerT())("Services") };
+}
 
 type Service = { id: string; name: string; duration_minutes: number; price_cents: number | null; active: boolean };
 
 async function ServicesContent() {
-  const { supabase, shop } = await requireShop();
+  const [{ supabase, shop }, o] = await Promise.all([requireShop(), getOwnerT()]);
   const { data } = await supabase
     .from("services")
     .select("id, name, duration_minutes, price_cents, active")
@@ -25,13 +28,13 @@ async function ServicesContent() {
 
   return (
     <>
-      <OwnerHeader back title="Services" description="What customers can book, how long each one takes, and what it costs." />
+      <OwnerHeader back title={o("Services")} description={o("What customers can book, how long each one takes, and what it costs.")} />
 
       <div className="space-y-6">
         {services.length === 0 ? (
           <Card>
-            <EmptyState icon={ScissorsIcon} title="No services yet">
-              Add your first one below, for example “Haircut, 30 minutes”. Customers can only book what you list here.
+            <EmptyState icon={ScissorsIcon} title={o("No services yet")}>
+              {o("Add your first one below, for example “Haircut, 30 minutes”. Customers can only book what you list here.")}
             </EmptyState>
           </Card>
         ) : (
@@ -45,14 +48,14 @@ async function ServicesContent() {
                       <span className="tabular">{formatDuration(s.duration_minutes)}</span>
                       {/* On phones the price sits here, so a long name keeps the room it needs. */}
                       {s.price_cents !== null ? (
-                        <span className="tabular whitespace-nowrap sm:hidden">· {formatPrice(s.price_cents, shop.currency)}</span>
+                        <span className="tabular whitespace-nowrap sm:hidden">· {formatPrice(s.price_cents, shop.currency, o.lang)}</span>
                       ) : null}
-                      {s.active ? null : <Badge>Hidden</Badge>}
+                      {s.active ? null : <Badge>{o("Hidden")}</Badge>}
                     </p>
                   </div>
                   {s.price_cents !== null ? (
                     <span className={`hidden font-medium tabular whitespace-nowrap sm:inline ${s.active ? "text-gray-900" : "text-gray-600"}`}>
-                      {formatPrice(s.price_cents, shop.currency)}
+                      {formatPrice(s.price_cents, shop.currency, o.lang)}
                     </span>
                   ) : null}
                   <div className="flex shrink-0 items-center">
@@ -62,14 +65,14 @@ async function ServicesContent() {
                       <SubmitButton
                         variant="ghost"
                         size="sm"
-                        label={s.active ? `Hide ${s.name} from customers` : `Show ${s.name} to customers`}
+                        label={s.active ? o("Hide {name} from customers", { name: s.name }) : o("Show {name} to customers", { name: s.name })}
                       >
-                        {s.active ? "Hide" : "Show"}
+                        {s.active ? o("Hide") : o("Show")}
                       </SubmitButton>
                     </form>
                     <form action={deleteService}>
                       <input type="hidden" name="id" value={s.id} />
-                      <ConfirmDelete label={`Delete ${s.name}`}>
+                      <ConfirmDelete label={o("Delete {name}", { name: s.name })}>
                         <TrashIcon aria-hidden className="size-4.5" />
                       </ConfirmDelete>
                     </form>
@@ -81,16 +84,16 @@ async function ServicesContent() {
         )}
         {services.length > 0 ? (
           <p className="-mt-3 text-sm text-gray-600">
-            A service that already has bookings can’t be deleted. Deleting it hides it instead.
+            {o("A service that already has bookings can’t be deleted. Deleting it hides it instead.")}
           </p>
         ) : null}
 
-        <CardSection title="Add a service" description="Customers see the name, length and price.">
-          <ActionForm action={addService} submitLabel="Add service" pendingText="Adding…">
-            <Field label="Name" name="name" placeholder="Standard appointment" required maxLength={80} />
+        <CardSection title={o("Add a service")} description={o("Customers see the name, length and price.")}>
+          <ActionForm action={addService} submitLabel={o("Add service")} pendingText={o("Adding…")}>
+            <Field label={o("Name")} name="name" placeholder={o("Standard appointment")} required maxLength={80} />
             <div className="grid gap-5 sm:grid-cols-2">
               <Field
-                label="Length"
+                label={o("Length")}
                 name="duration_minutes"
                 type="number"
                 inputMode="numeric"
@@ -102,12 +105,12 @@ async function ServicesContent() {
                 required
               />
               <Field
-                label="Price"
+                label={o("Price")}
                 name="price_cents"
                 inputMode="decimal"
                 placeholder="25"
                 suffix={CURRENCY_UNIT[shop.currency]}
-                hint="Leave empty to hide the price."
+                hint={o("Leave empty to hide the price.")}
               />
             </div>
           </ActionForm>

@@ -5,19 +5,23 @@ import { IconSubmit } from "@/components/form";
 import { EnvelopeSimpleIcon, HourglassIcon, PhoneIcon, XIcon } from "@/components/icons";
 import { Card, EmptyState, PageSkeleton } from "@/components/ui";
 import { shopToday } from "@/lib/booking";
-import { asUtc, longDay } from "@/lib/dates";
+import { asUtc, datesFor } from "@/lib/dates";
 import { requireShop } from "@/lib/shop";
 import { WAIT_COLUMNS, withFreeTimes, type WaitRow } from "@/lib/waitlist";
 import { OwnerHeader } from "../account";
 import { removeFromWaitlist } from "../actions/waitlist";
+import { getOwnerT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Waitlist" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getOwnerT())("Waitlist") };
+}
 
 const contactClass =
   "inline-flex h-9 items-center gap-1.5 rounded-lg border border-line px-3 text-[13px] font-medium transition-colors duration-150 hover:bg-ink/7";
 
 async function WaitlistContent() {
-  const { supabase, shop } = await requireShop();
+  const [{ supabase, shop }, o] = await Promise.all([requireShop(), getOwnerT()]);
+  const { longDay } = datesFor(o.lang);
   const today = shopToday(shop.timezone, new Date());
   const { data } = await supabase
     .from("waitlist")
@@ -35,14 +39,14 @@ async function WaitlistContent() {
     <>
       <OwnerHeader
         back
-        title="Waitlist"
-        description="People waiting for a time on a full day. If someone cancels, they see the free time in their app. You can also call them."
+        title={o("Waitlist")}
+        description={o("People waiting for a time on a full day. If someone cancels, they see the free time in their app. You can also call them.")}
       />
 
       {waits.length === 0 ? (
         <Card>
-          <EmptyState icon={HourglassIcon} title="Nobody is waiting">
-            When a day is fully booked, customers can join its waitlist from your booking page. They show up here.
+          <EmptyState icon={HourglassIcon} title={o("Nobody is waiting")}>
+            {o("When a day is fully booked, customers can join its waitlist from your booking page. They show up here.")}
           </EmptyState>
         </Card>
       ) : (
@@ -53,9 +57,9 @@ async function WaitlistContent() {
               <section key={day} aria-labelledby={`day-${day}`} className="space-y-2">
                 <h2 id={`day-${day}`} className="flex items-baseline justify-between gap-3 px-1 text-[13px] font-medium">
                   <Link href={`/dashboard/calendar?date=${day}`} className="hover:underline">
-                    {day === today ? "Today" : longDay.format(asUtc(day))}
+                    {day === today ? o("Today") : longDay.format(asUtc(day))}
                   </Link>
-                  <span className="font-normal text-neutral-400">{list.length} waiting</span>
+                  <span className="font-normal text-neutral-400">{o("{n} waiting", { n: list.length })}</span>
                 </h2>
                 <Card className="overflow-hidden">
                   <ul>
@@ -63,19 +67,19 @@ async function WaitlistContent() {
                       <li key={w.id} className="rule-top space-y-2.5 py-3 pr-2 pl-4">
                         <div className="flex items-start gap-3">
                           <div className="min-w-0 flex-1 space-y-0.5">
-                            <p className="text-[15px] font-medium wrap-anywhere">{w.name || w.email || "A customer"}</p>
+                            <p className="text-[15px] font-medium wrap-anywhere">{w.name || w.email || o("A customer")}</p>
                             <p className="text-[13px] text-neutral-400 wrap-anywhere">
-                              {w.serviceName || "A service that’s now hidden"} · {w.staffName ?? "anyone"}
+                              {w.serviceName || o("A service that’s now hidden")} · {w.staffName ?? o("anyone")}
                             </p>
                           </div>
                           {w.slots.length ? (
                             <span className="shrink-0 rounded-md bg-success-soft px-2 py-0.5 text-[11px] whitespace-nowrap text-success-ink">
-                              Free now: {w.slots[0].label}
+                              {o("Free now: {time}", { time: w.slots[0].label })}
                             </span>
                           ) : null}
                           <form action={removeFromWaitlist} className="-mt-1 shrink-0">
                             <input type="hidden" name="id" value={w.id} />
-                            <IconSubmit label={`Remove ${w.name || "this person"} from the waitlist`}>
+                            <IconSubmit label={o("Remove {name} from the waitlist", { name: w.name || o("this person") })}>
                               <XIcon aria-hidden className="size-4" />
                             </IconSubmit>
                           </form>

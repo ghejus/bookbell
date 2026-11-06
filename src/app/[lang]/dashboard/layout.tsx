@@ -4,16 +4,18 @@ import { FlashToast } from "@/components/flash-toast";
 import { Logo, PageSkeleton } from "@/components/ui";
 import { SidebarAccount } from "./account";
 import { SidebarNav, TabBar } from "./nav";
+import { getOwnerT } from "@/lib/i18n/server";
 
 // The owner's app: a bottom tab bar on phones, a left sidebar on computers.
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const o = await getOwnerT();
   return (
     <div className="flex min-h-full flex-1">
       <a
         href="#content"
         className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-surface focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg"
       >
-        Skip to content
+        {o("Skip to content")}
       </a>
 
       {/* Computer sidebar */}

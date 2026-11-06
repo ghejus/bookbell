@@ -5,11 +5,11 @@ import { requireShop } from "@/lib/shop";
 import { addDays, isoWeekday } from "@/lib/slots";
 import { zonedToUtc } from "@/lib/time";
 import { NewBookingForm, type NewBookingData } from "./new-booking-form";
+import { datesFor } from "@/lib/dates";
+import { getOwnerT } from "@/lib/i18n/server";
 
 const DAYS = 7;
 const asUtc = (d: string) => new Date(`${d}T12:00:00Z`);
-const weekday = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short" });
-const dayNum = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric" });
 
 /**
  * The "New booking" sheet, for walk-ins and phone calls. Opened by the round
@@ -29,7 +29,8 @@ export async function NewBookingSheet({
   staffId?: string;
   view: string;
 }) {
-  const { supabase, shop } = await requireShop();
+  const [{ supabase, shop }, o] = await Promise.all([requireShop(), getOwnerT()]);
+  const { dayName: weekday, dayNum } = datesFor(o.lang);
   const tz = shop.timezone;
   const now = new Date();
   const today = shopToday(tz, now);
@@ -77,15 +78,15 @@ export async function NewBookingSheet({
   };
 
   return (
-    <Sheet label="New booking" closeHref={closeHref}>
-      <SheetHeader title="New booking" description="For walk-ins and phone calls." closeHref={closeHref} />
+    <Sheet label={o("New booking")} closeHref={closeHref}>
+      <SheetHeader title={o("New booking")} description={o("For walk-ins and phone calls.")} closeHref={closeHref} />
       {list.length === 0 || team.length === 0 ? (
         <p className="text-sm text-neutral-400">
-          {list.length === 0 ? "Add a service first, on the " : "Add a person first, on the "}
+          {list.length === 0 ? o("Add a service first, on the ") : o("Add a person first, on the ")}
           <Link href={list.length === 0 ? "/dashboard/services" : "/dashboard/team"} className="font-medium text-accent-400 hover:underline">
-            {list.length === 0 ? "Services" : "Team"}
-          </Link>{" "}
-          page.
+            {list.length === 0 ? o("Services") : o("Team")}
+          </Link>
+          {o(" page.")}
         </p>
       ) : (
         <NewBookingForm key={`${wanted}-${time}-${staffId}`} data={data} />

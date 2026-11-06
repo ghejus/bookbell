@@ -5,10 +5,14 @@ import type { BookingRules } from "@/lib/booking-rules";
 import { requireShop } from "@/lib/shop";
 import { OwnerHeader } from "../account";
 import { RulesForm } from "./rules-form";
+import { getOwnerT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Booking rules" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getOwnerT())("Booking rules") };
+}
 
 async function RulesContent() {
+  const o = await getOwnerT();
   const { supabase, shop } = await requireShop();
   const { data: rules } = await supabase
     .from("shops")
@@ -18,8 +22,8 @@ async function RulesContent() {
 
   return (
     <>
-      <OwnerHeader back title="Booking rules" description="When customers can book online, and how close to the visit they can still change it." />
-      <Card className="p-5 sm:p-6">{rules ? <RulesForm rules={rules} /> : <p className="text-sm text-neutral-400">Could not load your rules. Please reload the page.</p>}</Card>
+      <OwnerHeader back title={o("Booking rules")} description={o("When customers can book online, and how close to the visit they can still change it.")} />
+      <Card className="p-5 sm:p-6">{rules ? <RulesForm rules={rules} /> : <p className="text-sm text-neutral-400">{o("Could not load your rules. Please reload the page.")}</p>}</Card>
     </>
   );
 }

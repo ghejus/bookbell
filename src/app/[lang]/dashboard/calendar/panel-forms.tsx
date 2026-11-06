@@ -4,6 +4,7 @@ import { Field, FormMessage, Select, SubmitButton } from "@/components/form";
 import { useActionForm } from "@/components/use-action-form";
 import { OWNER_TIMES } from "@/lib/calendar";
 import { ownerMoveBooking } from "../actions/calendar";
+import { useOwnerT } from "@/lib/i18n/client";
 
 type Option = { id: string; name: string };
 
@@ -29,14 +30,15 @@ export function MoveBookingForm({
   view: string;
 }) {
   const { state, pending, formProps } = useActionForm(ownerMoveBooking);
+  const o = useOwnerT();
   return (
     <form {...formProps} className="space-y-4">
       <input type="hidden" name="id" value={bookingId} />
       <input type="hidden" name="view" value={view} />
       {state?.values?.force ? <input type="hidden" name="force" value={state.values.force} /> : null}
       <div className="grid grid-cols-2 gap-3">
-        <Field label="New date" name="date" type="date" defaultValue={date} required />
-        <Select label="New time" name="time" defaultValue={time} required>
+        <Field label={o("New date")} name="date" type="date" defaultValue={date} required />
+        <Select label={o("New time")} name="time" defaultValue={time} required>
           {timeOptions(time).map((t) => (
             <option key={t} value={t}>
               {t}
@@ -45,7 +47,7 @@ export function MoveBookingForm({
         </Select>
       </div>
       {staff.length > 1 ? (
-        <Select label="With" name="staff_id" defaultValue={staffId} required>
+        <Select label={o("With")} name="staff_id" defaultValue={staffId} required>
           {staff.map((w) => (
             <option key={w.id} value={w.id}>
               {w.name}
@@ -57,8 +59,8 @@ export function MoveBookingForm({
       )}
       <FormMessage state={state} />
       <div className="[&>button]:w-full">
-        <SubmitButton variant="secondary" pending={pending} pendingText="Moving…">
-          Move
+        <SubmitButton variant="secondary" pending={pending} pendingText={o("Moving…")}>
+          {o("Move")}
         </SubmitButton>
       </div>
     </form>

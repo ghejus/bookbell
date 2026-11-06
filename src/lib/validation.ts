@@ -1,12 +1,13 @@
 import { z } from "zod";
 import { CURRENCIES } from "./format";
 import { isValidTimeZone, zonedToUtc } from "./time";
+import { mark } from "./i18n/owner";
 
 // Everything people type goes through these checks before it reaches the database.
 
 const text = (max: number, min = 0) => z.string().trim().min(min).max(max);
-const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, "Use a time like 09:30.");
-const localDateTime = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, "Pick a date and time.");
+const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, mark("Use a time like 09:30."));
+const localDateTime = z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, mark("Pick a date and time."));
 
 export const credentialsSchema = z.object({
   email: z.string().trim().toLowerCase().pipe(z.email("Type a valid email address.")),
@@ -17,15 +18,15 @@ export const slugSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .min(3, "Web address needs at least 3 characters.")
+  .min(3, mark("Web address needs at least 3 characters."))
   .max(40)
-  .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, "Use only small letters, numbers and single dashes.");
+  .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, mark("Use only small letters, numbers and single dashes."));
 
 export const shopSchema = z.object({
   name: text(80, 2),
   slug: slugSchema,
-  timezone: z.string().trim().refine(isValidTimeZone, "Unknown time zone."),
-  currency: z.enum(CURRENCIES, "Pick euro or lei."),
+  timezone: z.string().trim().refine(isValidTimeZone, mark("Unknown time zone.")),
+  currency: z.enum(CURRENCIES, mark("Pick euro or lei.")),
   about: text(1000),
   address: text(200),
   phone: text(40),
@@ -38,7 +39,7 @@ const priceToCents = z
   .transform((value, ctx) => {
     if (value === "") return null;
     if (!/^\d{1,6}([.,]\d{1,2})?$/.test(value)) {
-      ctx.addIssue({ code: "custom", message: "Use a price like 25 or 25.50." });
+      ctx.addIssue({ code: "custom", message: mark("Use a price like 25 or 25.50.") });
       return z.NEVER;
     }
     return Math.round(Number(value.replace(",", ".")) * 100);
@@ -46,7 +47,7 @@ const priceToCents = z
 
 export const serviceSchema = z.object({
   name: text(80, 1),
-  duration_minutes: z.coerce.number().int().min(5, "At least 5 minutes.").max(480, "At most 8 hours."),
+  duration_minutes: z.coerce.number().int().min(5, mark("At least 5 minutes.")).max(480, mark("At most 8 hours.")),
   price_cents: priceToCents,
 });
 
@@ -56,7 +57,7 @@ export const openingHoursSchema = z
     opens: hhmm,
     closes: hhmm,
   })
-  .refine((v) => v.closes > v.opens, { message: "Closing time must be after opening time.", path: ["closes"] });
+  .refine((v) => v.closes > v.opens, { message: mark("Closing time must be after opening time."), path: ["closes"] });
 
 /** Builds the time-off check for one shop, because the times are in that shop's time zone. */
 export function timeOffSchema(timezone: string) {
@@ -74,7 +75,7 @@ export function timeOffSchema(timezone: string) {
       reason: v.reason,
       staff_id: v.staff_id || null,
     }))
-    .refine((v) => v.ends_at > v.starts_at, { message: "The end must be after the start.", path: ["ends_at"] });
+    .refine((v) => v.ends_at > v.starts_at, { message: mark("The end must be after the start."), path: ["ends_at"] });
 }
 
 export const shopInfoSchema = z.object({
@@ -83,7 +84,7 @@ export const shopInfoSchema = z.object({
 });
 
 export const staffSchema = z.object({
-  name: z.string().trim().min(1, "Type a name.").max(60, "Use at most 60 characters."),
+  name: z.string().trim().min(1, mark("Type a name.")).max(60, mark("Use at most 60 characters.")),
 });
 
 export const idSchema = z.uuid();
@@ -109,7 +110,8 @@ export function safeNextPath(next: string | null | undefined, fallback = "/dashb
   return next;
 }
 
-/** Turns a zod error into one short sentence for the form. */
-export function firstError(error: z.ZodError): string {
-  return error.issues[0]?.message ?? "Please check the form";
+/** Turns a zod error into one short sentence for the form (in the owner's language when `o` is given). */
+export function firstError(error: z.ZodError, o?: (text: string) => string): string {
+  const message = error.issues[0]?.message ?? mark("Please check the form.");
+  return o ? o(message) : message;
 }

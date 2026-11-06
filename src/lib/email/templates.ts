@@ -1,7 +1,7 @@
 // What each Bookbell email says, as plain text plus simple HTML.
 // No database or server code here, so the wording is easy to test.
 // Customer emails come in the customer's language (English or Romanian);
-// notes to the shop owner are in English for now.
+// notes to the shop owner come in the language the owner uses Bookbell in.
 
 import { whenLabel } from "../assistant/facts";
 import { formatDuration, formatPrice, type Currency } from "../format";
@@ -85,6 +85,18 @@ const WORDS = {
       text: (url: string) => `Book it: ${url}`,
       footer: (shop: string) => `You asked Bookbell to tell you about free times at ${shop}.`,
     },
+    owner: {
+      headline: { new: "New booking", cancelled: "Booking cancelled", moved: "Booking moved" },
+      intro: {
+        new: (name: string) => `${name} booked online.`,
+        cancelled: (name: string) => `${name} cancelled their booking. The time is free again.`,
+        moved: (name: string) => `${name} moved their booking to a new time.`,
+      },
+      customer: "Customer",
+      yourBookings: "Your bookings",
+      button: "Open my bookings",
+      footer: "You get these notes because you own this shop on Bookbell.",
+    },
   },
   ro: {
     with: (name: string) => `cu ${name}`,
@@ -136,6 +148,18 @@ const WORDS = {
       button: "Programează",
       text: (url: string) => `Programează: ${url}`,
       footer: (shop: string) => `Ai cerut Bookbell să te anunțe despre ore libere la ${shop}.`,
+    },
+    owner: {
+      headline: { new: "Programare nouă", cancelled: "Programare anulată", moved: "Programare mutată" },
+      intro: {
+        new: (name: string) => `${name} s-a programat online.`,
+        cancelled: (name: string) => `${name} și-a anulat programarea. Ora e din nou liberă.`,
+        moved: (name: string) => `${name} și-a mutat programarea la o oră nouă.`,
+      },
+      customer: "Client",
+      yourBookings: "Programările tale",
+      button: "Deschide programările",
+      footer: "Primești aceste mesaje pentru că ai acest salon pe Bookbell.",
     },
   },
 };
@@ -267,31 +291,30 @@ export function cancelledEmail(b: BookingInfo, by: "customer" | "shop", bookAgai
   };
 }
 
-/** A note to the shop owner (in English). `what`: a new booking, or a customer cancelled or moved one. */
+/** A note to the shop owner, in their language. `what`: a new booking, or a customer cancelled or moved one. */
 export function ownerNoteEmail(
   booking: BookingInfo,
   what: "new" | "cancelled" | "moved",
   customer: { email: string; phone: string },
   dashboardUrl: string,
+  ownerLang: Lang = "en",
 ): Email {
-  const b = { ...booking, lang: "en" as const };
+  const b = { ...booking, lang: ownerLang };
+  const w = WORDS[ownerLang].owner;
   const d = details(b);
-  const headline = { new: "New booking", cancelled: "Booking cancelled", moved: "Booking moved" }[what];
-  const intro = {
-    new: `${b.customerName} booked online.`,
-    cancelled: `${b.customerName} cancelled their booking. The time is free again.`,
-    moved: `${b.customerName} moved their booking to a new time.`,
-  }[what];
+  const headline = w.headline[what];
+  const intro = w.intro[what](b.customerName);
   const contact = [customer.email, customer.phone].filter(Boolean).join(", ");
   return {
     subject: `${headline}: ${b.customerName}, ${when(b)}`,
-    text: `${intro}\n\n${d.text}\nCustomer: ${contact}\n\nYour bookings: ${dashboardUrl}\n`,
+    text: `${intro}\n\n${d.text}\n${w.customer}: ${contact}\n\n${w.yourBookings}: ${dashboardUrl}\n`,
     html: layout({
       heading: headline,
       intro,
-      body: d.html + `<p style="margin:0;color:#4b5563">Customer: ${esc(contact)}</p>`,
-      button: { label: "Open my bookings", url: dashboardUrl },
-      footer: "You get these notes because you own this shop on Bookbell.",
+      body: d.html + `<p style="margin:0;color:#4b5563">${w.customer}: ${esc(contact)}</p>`,
+      button: { label: w.button, url: dashboardUrl },
+      footer: w.footer,
+      lang: ownerLang,
     }),
   };
 }

@@ -7,6 +7,7 @@ import { buttonClass } from "@/components/ui";
 import { LOGO_SIZE, MAX_PHOTOS, MAX_UPLOAD_BYTES, MEDIA_BUCKET, PHOTO_WIDTH } from "@/lib/media";
 import { createClient } from "@/lib/supabase/client";
 import { addPhoto, removeLogo, removePhoto, setLogo } from "../actions/media";
+import { useOwnerT } from "@/lib/i18n/client";
 
 type Photo = { id: string; url: string };
 type Props = { shopId: string; logoUrl: string | null; photos: Photo[] };
@@ -41,6 +42,7 @@ async function shrink(file: File, kind: "logo" | "photo"): Promise<{ blob: Blob;
 }
 
 export function MediaForm({ shopId, logoUrl, photos }: Props) {
+  const o = useOwnerT();
   const [busy, setBusy] = useState<"logo" | "photo" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -51,7 +53,7 @@ export function MediaForm({ shopId, logoUrl, photos }: Props) {
     if (!file) return;
     setError(null);
     if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
-      setError("Please pick a JPEG, PNG or WebP picture.");
+      setError(o("Please pick a JPEG, PNG or WebP picture."));
       return;
     }
     setBusy(kind);
@@ -63,7 +65,7 @@ export function MediaForm({ shopId, logoUrl, photos }: Props) {
       const result = kind === "logo" ? await setLogo(path) : await addPhoto(path);
       if (result.error) setError(result.error);
     } catch {
-      setError("Could not upload that picture. Please try another one.");
+      setError(o("Could not upload that picture. Please try another one."));
     } finally {
       setBusy(null);
       if (logoInput.current) logoInput.current.value = "";
@@ -85,7 +87,7 @@ export function MediaForm({ shopId, logoUrl, photos }: Props) {
       <div className="flex items-center gap-4">
         <div className="relative size-16 shrink-0 overflow-hidden rounded-xl bg-raised shadow-card">
           {logoUrl ? (
-            <Image src={logoUrl} alt="Your logo" fill sizes="64px" unoptimized className="object-cover" />
+            <Image src={logoUrl} alt={o("Your logo")} fill sizes="64px" unoptimized className="object-cover" />
           ) : (
             <ImageSquareIcon aria-hidden className="absolute inset-0 m-auto size-6 text-neutral-500" />
           )}
@@ -101,11 +103,11 @@ export function MediaForm({ shopId, logoUrl, photos }: Props) {
           />
           <label htmlFor="logo-file" className={`${buttonClass("secondary", { size: "sm" })} cursor-pointer`} aria-disabled={busy !== null}>
             {busy === "logo" ? spinner : null}
-            {logoUrl ? "Change logo" : "Add logo"}
+            {logoUrl ? o("Change logo") : o("Add logo")}
           </label>
           {logoUrl ? (
             <button type="button" onClick={() => run(removeLogo)} className={buttonClass("ghost", { size: "sm" })}>
-              Remove
+              {o("Remove")}
             </button>
           ) : null}
         </div>
@@ -113,7 +115,7 @@ export function MediaForm({ shopId, logoUrl, photos }: Props) {
 
       <div>
         <p className="mb-2 text-sm font-medium">
-          Photos <span className="font-normal text-neutral-400">({photos.length} of {MAX_PHOTOS})</span>
+          {o("Photos")} <span className="font-normal text-neutral-400">({o("{count} of {max}", { count: photos.length, max: MAX_PHOTOS })})</span>
         </p>
         <ul className="grid grid-cols-3 gap-2">
           {photos.map((p, i) => (
@@ -122,7 +124,7 @@ export function MediaForm({ shopId, logoUrl, photos }: Props) {
               <button
                 type="button"
                 onClick={() => run(() => removePhoto(p.id))}
-                aria-label={`Remove photo ${i + 1}`}
+                aria-label={o("Remove photo {n}", { n: i + 1 })}
                 className="absolute top-1 right-1 flex size-8 items-center justify-center rounded-md bg-ground/80 text-neutral-200 backdrop-blur transition-colors duration-150 hover:bg-danger-soft hover:text-danger-ink"
               >
                 <TrashIcon aria-hidden className="size-4" />
@@ -144,7 +146,7 @@ export function MediaForm({ shopId, logoUrl, photos }: Props) {
                 className="flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-line text-[13px] text-neutral-400 transition-colors duration-150 hover:border-accent hover:text-ink"
               >
                 {busy === "photo" ? spinner : <PlusIcon aria-hidden className="size-5" />}
-                {busy === "photo" ? "Uploading…" : "Add photo"}
+                {busy === "photo" ? o("Uploading…") : o("Add photo")}
               </label>
             </li>
           ) : null}
@@ -156,7 +158,7 @@ export function MediaForm({ shopId, logoUrl, photos }: Props) {
           {error}
         </p>
       ) : (
-        <p className="text-[13px] text-neutral-400">Pictures are made smaller before they upload, so phone photos are fine.</p>
+        <p className="text-[13px] text-neutral-400">{o("Pictures are made smaller before they upload, so phone photos are fine.")}</p>
       )}
     </div>
   );

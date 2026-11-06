@@ -1,11 +1,12 @@
 // Small display helpers shared by server and browser code.
 
 import type { Lang } from "./i18n/config";
+import { mark } from "./i18n/owner";
 
 export const CURRENCIES = ["EUR", "RON"] as const;
 export type Currency = (typeof CURRENCIES)[number];
 
-export const CURRENCY_LABELS: Record<Currency, string> = { EUR: "Euro (€)", RON: "Romanian lei (lei)" };
+export const CURRENCY_LABELS: Record<Currency, string> = { EUR: mark("Euro (€)"), RON: mark("Romanian lei (lei)") };
 
 /** Short unit shown beside price inputs. */
 export const CURRENCY_UNIT: Record<Currency, string> = { EUR: "€", RON: "lei" };

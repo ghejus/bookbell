@@ -3,9 +3,11 @@
 import { CheckIcon, CopyIcon } from "@/components/icons";
 import { useState } from "react";
 import { buttonClass } from "@/components/ui";
+import { useOwnerT } from "@/lib/i18n/client";
 
 /** Shows a full web address with a button that copies it. Says "Copied." for a moment. */
 export function CopyLink({ url }: { url: string }) {
+  const o = useOwnerT();
   const [copied, setCopied] = useState(false);
 
   async function copy() {
@@ -24,7 +26,7 @@ export function CopyLink({ url }: { url: string }) {
   return (
     <div className="flex gap-2">
       <label htmlFor="booking-link" className="sr-only">
-        Your booking link
+        {o("Your booking link")}
       </label>
       <input
         id="booking-link"
@@ -35,10 +37,10 @@ export function CopyLink({ url }: { url: string }) {
       />
       <button type="button" onClick={copy} className={`${buttonClass("secondary")} shrink-0 whitespace-nowrap ${copied ? "text-success-ink" : ""}`}>
         {copied ? <CheckIcon aria-hidden className="size-4" /> : <CopyIcon aria-hidden className="size-4" />}
-        {copied ? "Copied." : "Copy link"}
+        {copied ? o("Copied.") : o("Copy link")}
       </button>
       <span role="status" className="sr-only">
-        {copied ? "Link copied." : ""}
+        {copied ? o("Link copied.") : ""}
       </span>
     </div>
   );

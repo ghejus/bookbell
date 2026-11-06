@@ -12,8 +12,12 @@ import { DemoNotice, OwnerHeader } from "./account";
 import { BookingSheet, isBookingId } from "./booking-sheet";
 import { SetupChecklist, setupSteps } from "./setup-checklist";
 import { ShopForm } from "./shop-form";
+import { datesFor } from "@/lib/dates";
+import { getOwnerT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Today" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getOwnerT())("Today") };
+}
 
 type Booking = {
   id: string;
@@ -28,22 +32,22 @@ type Booking = {
   staff: { name: string } | null;
 };
 
-const longDay = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
 
 /** The owner's home screen: who is next, and the whole day at a glance. */
 async function TodayContent({ searchParams }: PageProps<"/[lang]/dashboard">) {
   const query = await searchParams;
-  const { supabase, shop, email } = await getMyShop();
+  const [{ supabase, shop, email }, o] = await Promise.all([getMyShop(), getOwnerT()]);
+  const { longDay } = datesFor(o.lang);
 
   // A new owner makes their shop first.
   if (!shop) {
     return (
       <>
         <OwnerHeader
-          title="Set up your shop"
-          description={`Signed in as ${email}. This takes about two minutes, and you can change everything later.`}
+          title={o("Set up your shop")}
+          description={o("Signed in as {email}. This takes about two minutes, and you can change everything later.", { email })}
         />
-        <CardSection title="Shop details" description="Customers see these on your booking page.">
+        <CardSection title={o("Shop details")} description={o("Customers see these on your booking page.")}>
           <ShopForm shop={null} timezones={Intl.supportedValuesOf("timeZone")} />
         </CardSection>
       </>
@@ -87,19 +91,19 @@ async function TodayContent({ searchParams }: PageProps<"/[lang]/dashboard">) {
     const contact = "flex h-10 flex-1 items-center justify-center gap-1.5 rounded-lg border border-line text-sm font-medium transition-colors duration-150 hover:bg-ink/7";
     nextCard = (
       <section
-        aria-label="Next booking"
+        aria-label={o("Next booking")}
         className="flex flex-col gap-3.5 rounded-lg bg-surface p-[18px] shadow-[0_0_0_1px_var(--color-accent-800),0_0_40px_rgb(145_132_217/0.08)]"
       >
         <p className="flex items-center gap-2 text-[13px] text-accent-300">
           <span aria-hidden className="size-1.5 rounded-full bg-accent shadow-[0_0_8px_var(--color-accent)]" />
-          Next up, {minutes < 60 ? `in ${minutes} min` : `at ${time(next.starts_at)}`}
+          {minutes < 60 ? o("Next up, in {minutes} min", { minutes }) : o("Next up, at {time}", { time: time(next.starts_at) })}
         </p>
         <div>
           <p className="text-[22px] leading-tight font-medium tracking-tight wrap-anywhere">{next.customer_name}</p>
           <p className="mt-0.5 text-sm text-neutral-400">
-            {next.services?.name ?? "Booking"}
+            {next.services?.name ?? o("Booking")}
             {next.services ? `, ${formatDuration(next.services.duration_minutes)}` : ""}
-            {showWho && next.staff ? ` · with ${next.staff.name}` : ""}
+            {showWho && next.staff ? ` · ${o("with {name}", { name: next.staff.name })}` : ""}
           </p>
           <p className="mt-1 text-base font-medium tabular">
             {time(next.starts_at)}–{time(next.ends_at)}
@@ -107,24 +111,27 @@ async function TodayContent({ searchParams }: PageProps<"/[lang]/dashboard">) {
         </div>
         {alsoThen.length ? (
           <p className="text-[13px] text-neutral-400">
-            Also at {time(next.starts_at)}: {alsoThen.map((o) => (showWho && o.staff ? `${o.customer_name} with ${o.staff.name}` : o.customer_name)).join(", ")}.
+            {o("Also at {time}: {names}.", {
+              time: time(next.starts_at),
+              names: alsoThen.map((x) => (showWho && x.staff ? `${x.customer_name} ${o("with {name}", { name: x.staff.name })}` : x.customer_name)).join(", "),
+            })}
           </p>
         ) : null}
         <div className="flex gap-2">
           {next.customer_phone ? (
             <a href={`tel:${next.customer_phone.replace(/[^\d+]/g, "")}`} className={contact}>
               <PhoneIcon aria-hidden className="size-[17px]" />
-              Call
+              {o("Call")}
             </a>
           ) : null}
           {next.customer_email ? (
             <a href={`mailto:${next.customer_email}`} className={contact}>
               <EnvelopeSimpleIcon aria-hidden className="size-[17px]" />
-              Email
+              {o("Email")}
             </a>
           ) : null}
           <Link href={href(next.id)} scroll={false} className={`${buttonClass("primary")} h-10 flex-1 shadow-none`}>
-            Details
+            {o("Details")}
           </Link>
         </div>
       </section>
@@ -133,14 +140,14 @@ async function TodayContent({ searchParams }: PageProps<"/[lang]/dashboard">) {
 
   const nowLine = (
     <li aria-hidden key="now" className="flex items-center gap-3 px-4 py-1">
-      <span className="min-w-12 text-xs font-medium whitespace-nowrap text-accent-400 tabular">Now {utcToZoned(now, tz).time}</span>
+      <span className="min-w-12 text-xs font-medium whitespace-nowrap text-accent-400 tabular">{o("Now {time}", { time: utcToZoned(now, tz).time })}</span>
       <span className="h-px flex-1 bg-linear-to-r from-accent to-transparent shadow-[0_0_6px_rgb(145_132_217/0.6)]" />
     </li>
   );
 
   return (
     <>
-      <OwnerHeader title="Today" eyebrow={longDay.format(new Date(`${today}T12:00:00Z`))} />
+      <OwnerHeader title={o("Today")} eyebrow={longDay.format(new Date(`${today}T12:00:00Z`))} />
       <div className="space-y-6">
         <SetupChecklist steps={steps} />
         {nextCard}
@@ -148,11 +155,11 @@ async function TodayContent({ searchParams }: PageProps<"/[lang]/dashboard">) {
         <section aria-labelledby="all-today" className="space-y-2.5">
           <div className="flex items-baseline justify-between px-1">
             <h2 id="all-today" className="text-[15px] font-medium">
-              All of today
+              {o("All of today")}
             </h2>
             {bookings.length ? (
               <span className="text-[13px] text-neutral-400 tabular">
-                {bookings.length} {bookings.length === 1 ? "booking" : "bookings"} · {left} to go
+                {o.n(bookings.length, "{n} booking", "{n} bookings")} · {o("{left} to go", { left })}
               </span>
             ) : null}
           </div>
@@ -163,15 +170,15 @@ async function TodayContent({ searchParams }: PageProps<"/[lang]/dashboard">) {
             >
               <HourglassIcon aria-hidden className="size-[18px] shrink-0 text-accent-400" />
               <span className="flex-1">
-                {waiting} {waiting === 1 ? "person is" : "people are"} waiting for a time today
+                {o.n(waiting, "{n} person is waiting for a time today", "{n} people are waiting for a time today")}
               </span>
               <CaretRightIcon aria-hidden className="size-4 text-neutral-600" />
             </Link>
           ) : null}
           {bookings.length === 0 ? (
             <Card>
-              <EmptyState icon={CalendarBlankIcon} title="Nothing booked today">
-                New bookings show up here right away. Add a walk-in with the + button.
+              <EmptyState icon={CalendarBlankIcon} title={o("Nothing booked today")}>
+                {o("New bookings show up here right away. Add a walk-in with the + button.")}
               </EmptyState>
             </Card>
           ) : (
@@ -192,14 +199,14 @@ async function TodayContent({ searchParams }: PageProps<"/[lang]/dashboard">) {
                         <span className="flex min-w-0 flex-col gap-0.5">
                           <span className="text-[15px] font-medium wrap-anywhere">{b.customer_name}</span>
                           <span className="text-[13px] text-neutral-400">
-                            {b.services?.name ?? "Booking"} · until&nbsp;{time(b.ends_at)}
+                            {b.services?.name ?? o("Booking")} · {o("until {time}", { time: time(b.ends_at) })}
                             {showWho && b.staff ? ` · ${b.staff.name}` : ""}
                           </span>
                         </span>
                         {b.status === "no_show" ? (
-                          <span className="rounded-md bg-danger-soft px-2 py-0.5 text-[11px] whitespace-nowrap text-danger-ink">Didn’t come</span>
+                          <span className="rounded-md bg-danger-soft px-2 py-0.5 text-[11px] whitespace-nowrap text-danger-ink">{o("Didn’t come")}</span>
                         ) : done ? (
-                          <span className="rounded-md bg-neutral-800 px-2 py-0.5 text-[11px] text-neutral-200">Done</span>
+                          <span className="rounded-md bg-neutral-800 px-2 py-0.5 text-[11px] text-neutral-200">{o("Done")}</span>
                         ) : (
                           <CaretRightIcon aria-hidden className="mt-[3px] size-4 text-neutral-600" />
                         )}

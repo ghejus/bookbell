@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { lang } from "next/root-params";
 import { DEFAULT_LANG, isLang, LANG_HEADER, type Lang } from "./config";
 import { dictFor } from "./dict";
+import { ownerT } from "./owner";
 
 // The visitor's language on the server.
 
@@ -26,4 +27,14 @@ export async function actionLang(): Promise<Lang> {
 /** Words for server actions and route handlers. */
 export async function getActionT() {
   return dictFor(await actionLang());
+}
+
+/** Owner-screen words for pages: o("Saved.") (see owner.ts). */
+export async function getOwnerT() {
+  return ownerT(await pageLang());
+}
+
+/** Owner-screen words for server actions. */
+export async function getActionOwnerT() {
+  return ownerT(await actionLang());
 }

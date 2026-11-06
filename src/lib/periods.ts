@@ -1,4 +1,7 @@
 import { addDays, isoWeekday } from "./slots";
+import { capital, dateLocale } from "./dates";
+import type { Lang } from "./i18n/config";
+import { mark } from "./i18n/owner";
 
 // The time ranges on the Stats page: a week (Monday to Sunday) or a calendar
 // month, counted back from the one we're in. Dates are "YYYY-MM-DD" in the
@@ -7,8 +10,8 @@ import { addDays, isoWeekday } from "./slots";
 export type PeriodKind = "week" | "month";
 export type Period = { from: string; to: string; label: string };
 
-const monthName = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", month: "long", year: "numeric" });
-const dayMonth = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "short" });
+const monthName = (lang: Lang) => new Intl.DateTimeFormat(dateLocale(lang), { timeZone: "UTC", month: "long", year: "numeric" });
+const dayMonth = (lang: Lang) => new Intl.DateTimeFormat(dateLocale(lang), { timeZone: "UTC", day: "numeric", month: "short" });
 const asUtc = (d: string) => new Date(`${d}T12:00:00Z`);
 
 function addMonths(date: string, months: number): string {
@@ -17,22 +20,22 @@ function addMonths(date: string, months: number): string {
 }
 
 /** The week or month `offset` steps back from the one containing `today` (0 = this one). */
-export function periodFor(kind: PeriodKind, today: string, offset = 0): Period {
+export function periodFor(kind: PeriodKind, today: string, offset = 0, lang: Lang = "en"): Period {
   if (kind === "week") {
     const from = addDays(today, 1 - isoWeekday(today) - 7 * offset);
     const to = addDays(from, 7);
-    const label = offset === 0 ? "This week" : offset === 1 ? "Last week" : dayMonth.formatRange(asUtc(from), asUtc(addDays(to, -1)));
+    const label = offset === 0 ? mark("This week") : offset === 1 ? mark("Last week") : dayMonth(lang).formatRange(asUtc(from), asUtc(addDays(to, -1)));
     return { from, to, label };
   }
   const from = addMonths(today, -offset);
   const to = addMonths(from, 1);
-  const label = offset === 0 ? "This month" : offset === 1 ? "Last month" : monthName.format(asUtc(from));
+  const label = offset === 0 ? mark("This month") : offset === 1 ? mark("Last month") : capital(monthName(lang).format(asUtc(from)));
   return { from, to, label };
 }
 
 /** The dates a period covers, in plain words: "3 – 9 Nov" or "November 2026". */
-export function periodRange(kind: PeriodKind, p: Period): string {
-  return kind === "week" ? dayMonth.formatRange(asUtc(p.from), asUtc(addDays(p.to, -1))) : monthName.format(asUtc(p.from));
+export function periodRange(kind: PeriodKind, p: Period, lang: Lang = "en"): string {
+  return kind === "week" ? dayMonth(lang).formatRange(asUtc(p.from), asUtc(addDays(p.to, -1))) : capital(monthName(lang).format(asUtc(p.from)));
 }
 
 /**

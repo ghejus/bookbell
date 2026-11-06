@@ -1,14 +1,17 @@
 // Small charts for the Stats page, in plain HTML (no chart library).
+import { getOwnerT } from "@/lib/i18n/server";
 // One colour (the accent), thin columns with a rounded top on one baseline,
 // only the biggest value labelled; every value shows on hover or keyboard
 // focus, and "See the numbers" opens the same data as a table.
 
 type Datum = { key: string; label: string; short: string; n: number };
 
-function NumbersTable({ caption, headings, data }: { caption: string; headings: [string, string]; data: { label: string; value: string }[] }) {
+async function NumbersTable({ caption, headings, data }: { caption: string; headings: [string, string]; data: { label: string; value: string }[] }) {
+  const o = await getOwnerT();
+  const showNumbers = o("See the numbers");
   return (
     <details className="mt-3 text-[13px] text-neutral-400">
-      <summary className="cursor-pointer select-none hover:text-ink">See the numbers</summary>
+      <summary className="cursor-pointer select-none hover:text-ink">{showNumbers}</summary>
       <table className="mt-2 w-full">
         <caption className="sr-only">{caption}</caption>
         <thead>
@@ -35,10 +38,23 @@ function NumbersTable({ caption, headings, data }: { caption: string; headings: 
 }
 
 /** Columns along one baseline, e.g. bookings per weekday. */
-export function ColumnChart({ data, caption, unit, heading }: { data: Datum[]; caption: string; unit: [string, string]; heading: string }) {
+export function ColumnChart({
+  data,
+  caption,
+  count,
+  heading,
+  valueHeading,
+}: {
+  data: Datum[];
+  caption: string;
+  /** 3 -> "3 bookings", in the owner's language. */
+  count: (n: number) => string;
+  heading: string;
+  valueHeading: string;
+}) {
   const max = Math.max(1, ...data.map((d) => d.n));
   const top = data.reduce((best, d) => (d.n > best.n ? d : best), data[0]);
-  const word = (n: number) => `${n} ${n === 1 ? unit[0] : unit[1]}`;
+  const word = count;
   return (
     <div>
       <div role="list" aria-label={caption} className="flex h-36 items-end gap-0.5 border-b border-hairline pt-5">
@@ -79,13 +95,22 @@ export function ColumnChart({ data, caption, unit, heading }: { data: Datum[]; c
           </span>
         ))}
       </div>
-      <NumbersTable caption={caption} headings={[heading, unit[1][0].toUpperCase() + unit[1].slice(1)]} data={data.map((d) => ({ label: d.label, value: String(d.n) }))} />
+      <NumbersTable caption={caption} headings={[heading, valueHeading]} data={data.map((d) => ({ label: d.label, value: String(d.n) }))} />
     </div>
   );
 }
 
 /** A ranked list with a thin bar each, e.g. the top services. */
-export function RankedBars({ rows, caption }: { rows: { name: string; n: number; money: string }[]; caption: string }) {
+export function RankedBars({
+  rows,
+  caption,
+  headings,
+}: {
+  rows: { name: string; n: number; money: string }[];
+  caption: string;
+  /** The hidden table's column titles, like ["Service", "Bookings · takings"]. */
+  headings: [string, string];
+}) {
   const max = Math.max(1, ...rows.map((r) => r.n));
   return (
     <div>
@@ -103,7 +128,7 @@ export function RankedBars({ rows, caption }: { rows: { name: string; n: number;
           </li>
         ))}
       </ol>
-      <NumbersTable caption={caption} headings={["Service", "Bookings · takings"]} data={rows.map((r) => ({ label: r.name, value: `${r.n} · ${r.money}` }))} />
+      <NumbersTable caption={caption} headings={headings} data={rows.map((r) => ({ label: r.name, value: `${r.n} · ${r.money}` }))} />
     </div>
   );
 }

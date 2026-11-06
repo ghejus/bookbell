@@ -6,19 +6,21 @@ import { bookingRulesSchema } from "@/lib/booking-rules";
 import { fields } from "@/lib/form-data";
 import { requireShop } from "@/lib/shop";
 import { firstError } from "@/lib/validation";
+import { getActionOwnerT } from "@/lib/i18n/server";
 
 // Saving the shop's booking rules.
 // Every action checks who is logged in and which shop they own. The database
 // locks (RLS) check again, so a trick request still can't touch another shop.
 
 export async function saveBookingRules(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const o = await getActionOwnerT();
   const values = fields(formData);
   const parsed = bookingRulesSchema.safeParse(values);
-  if (!parsed.success) return { error: firstError(parsed.error), values };
+  if (!parsed.success) return { error: firstError(parsed.error, o), values };
 
   const { supabase, shop } = await requireShop();
   const { error } = await supabase.from("shops").update(parsed.data).eq("id", shop.id);
-  if (error) return { error: "Could not save. Please try again.", values };
+  if (error) return { error: o("Could not save. Please try again."), values };
   refresh();
-  return { message: "Saved. New bookings follow these rules now." };
+  return { message: o("Saved. New bookings follow these rules now.") };
 }

@@ -11,8 +11,12 @@ import { utcToZoned, zonedToUtc } from "@/lib/time";
 import { OwnerHeader } from "../account";
 import { BookingSheet, isBookingId } from "../booking-sheet";
 import { NewBookingSheet } from "../new-booking";
+import { capital, dateLocale } from "@/lib/dates";
+import { getOwnerT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Calendar" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getOwnerT())("Calendar") };
+}
 
 /** Pixels per minute: one hour is 66px tall, like the design. */
 const PX = 1.1;
@@ -87,11 +91,12 @@ async function CalendarContent({ searchParams }: PageProps<"/[lang]/dashboard/ca
   };
   const closeHref = link({});
 
-  const dayTitle = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
-  const month = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", month: "long", year: "numeric" });
-  const shortDay = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short" });
-  const dayNum = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric" });
-  const dayMonth = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric", month: "short" });
+  const o = await getOwnerT();
+  const dayTitle = new Intl.DateTimeFormat(dateLocale(o.lang), { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
+  const month = new Intl.DateTimeFormat(dateLocale(o.lang), { timeZone: "UTC", month: "long", year: "numeric" });
+  const shortDay = new Intl.DateTimeFormat(dateLocale(o.lang), { timeZone: "UTC", weekday: "short" });
+  const dayNum = new Intl.DateTimeFormat(dateLocale(o.lang), { timeZone: "UTC", day: "numeric" });
+  const dayMonth = new Intl.DateTimeFormat(dateLocale(o.lang), { timeZone: "UTC", day: "numeric", month: "short" });
   const nowMinute = minuteOfDay(now.toISOString(), tz, today);
   const week = Array.from({ length: 7 }, (_, i) => addDays(monday, i));
 
@@ -109,7 +114,7 @@ async function CalendarContent({ searchParams }: PageProps<"/[lang]/dashboard/ca
       cursor = Math.max(cursor, o.e);
     }
     if (cursor < window.end) closed.push({ s: cursor, e: window.end });
-    const laneOffs = offs.filter((o) => o.staff_id === null || o.staff_id === worker.id);
+    const laneOffs = offs.filter((off) => off.staff_id === null || off.staff_id === worker.id);
     const laneBookings = bookings.filter((b) => b.staff_id === worker.id);
     const marks: number[] = [];
     for (let m = window.start; m < window.end; m += 30) marks.push(m);
@@ -131,25 +136,25 @@ async function CalendarContent({ searchParams }: PageProps<"/[lang]/dashboard/ca
             style={{ top: top(m), height: 30 * PX }}
           >
             <span className="sr-only">
-              Add a booking on {dayTitle.format(asUtc(day))} at {hhmm(m)}
-              {staff.length > 1 ? ` with ${worker.name}` : ""}
+              {o("Add a booking on {day} at {time}", { day: dayTitle.format(asUtc(day)), time: hhmm(m) })}
+              {staff.length > 1 ? ` ${o("with {name}", { name: worker.name })}` : ""}
             </span>
             <span aria-hidden className="hidden px-2 pt-0.5 text-[11px] font-medium text-accent-400 group-hover:block">
               + {hhmm(m)}
             </span>
           </Link>
         ))}
-        {laneOffs.map((o) => {
-          const s = minuteOfDay(o.starts_at, tz, day);
-          const e = minuteOfDay(o.ends_at, tz, day);
+        {laneOffs.map((off) => {
+          const s = minuteOfDay(off.starts_at, tz, day);
+          const e = minuteOfDay(off.ends_at, tz, day);
           if (e <= window.start || s >= window.end || e <= s) return null;
           return (
             <div
-              key={o.id}
+              key={off.id}
               className={`pointer-events-none absolute inset-x-0 rounded-md bg-ink/4 ${hatch} px-2 pt-1 text-[11px] font-medium text-neutral-400`}
               style={{ top: top(s), height: top(e) - top(s) }}
             >
-              {o.staff_id ? "Off" : "Closed"}
+              {off.staff_id ? o("Off") : o("Closed")}
             </div>
           );
         })}
@@ -168,7 +173,7 @@ async function CalendarContent({ searchParams }: PageProps<"/[lang]/dashboard/ca
               href={link({ b: b.id })}
               scroll={false}
               aria-current={active ? "true" : undefined}
-              title={`${start}–${end} ${b.customer_name}${staff.length > 1 ? `, with ${worker.name}` : ""}${b.status === "no_show" ? " (didn’t come)" : ""}`}
+              title={`${start}–${end} ${b.customer_name}${staff.length > 1 ? `, ${o("with {name}", { name: worker.name })}` : ""}${b.status === "no_show" ? ` (${o("didn’t come")})` : ""}`}
               className={`absolute inset-x-[3px] z-20 flex content-start items-center gap-x-1.5 overflow-hidden rounded-md text-xs leading-[14px] transition-colors duration-150 ${
                 h < 30 ? "flex-nowrap px-[7px] py-px" : "flex-wrap px-[7px] py-[3px]"
               } ${
@@ -208,7 +213,7 @@ async function CalendarContent({ searchParams }: PageProps<"/[lang]/dashboard/ca
 
   return (
     <div data-wide>
-      <OwnerHeader title="Calendar" eyebrow={month.format(asUtc(date))} />
+      <OwnerHeader title={o("Calendar")} eyebrow={capital(month.format(asUtc(date)))} />
 
       <div className="flex items-center justify-between gap-2 pb-2 pl-1">
         <div className="flex items-center gap-2">
@@ -217,12 +222,12 @@ async function CalendarContent({ searchParams }: PageProps<"/[lang]/dashboard/ca
           </span>
           {!thisWeek || date !== today ? (
             <Link href={link({ date: undefined })} scroll={false} className="rounded-md px-1.5 py-0.5 text-[13px] font-medium text-accent-400 hover:bg-accent/10">
-              Today
+              {o("Today")}
             </Link>
           ) : null}
         </div>
         <div className="flex items-center gap-1">
-          <div role="group" aria-label="View" className="mr-1 hidden rounded-lg border border-line p-0.5 sm:flex">
+          <div role="group" aria-label={o("View")} className="mr-1 hidden rounded-lg border border-line p-0.5 sm:flex">
             {(["day", "week"] as const).map((v) => (
               <Link
                 key={v}
@@ -233,14 +238,14 @@ async function CalendarContent({ searchParams }: PageProps<"/[lang]/dashboard/ca
                   view === v ? "bg-accent-900 text-accent-300 shadow-[inset_0_0_0_1px_var(--color-accent)]" : "text-neutral-300 hover:bg-ink/7"
                 }`}
               >
-                {v === "day" ? "Day" : "Week"}
+                {v === "day" ? o("Day") : o("Week")}
               </Link>
             ))}
           </div>
-          <Link href={link({ date: addDays(date, -7) })} scroll={false} aria-label="Earlier week" className="flex size-9 items-center justify-center rounded-lg text-neutral-300 hover:bg-ink/7">
+          <Link href={link({ date: addDays(date, -7) })} scroll={false} aria-label={o("Earlier week")} className="flex size-9 items-center justify-center rounded-lg text-neutral-300 hover:bg-ink/7">
             <CaretLeftIcon aria-hidden className="size-[18px]" />
           </Link>
-          <Link href={link({ date: addDays(date, 7) })} scroll={false} aria-label="Later week" className="flex size-9 items-center justify-center rounded-lg text-neutral-300 hover:bg-ink/7">
+          <Link href={link({ date: addDays(date, 7) })} scroll={false} aria-label={o("Later week")} className="flex size-9 items-center justify-center rounded-lg text-neutral-300 hover:bg-ink/7">
             <CaretRightIcon aria-hidden className="size-[18px]" />
           </Link>
         </div>
@@ -256,7 +261,7 @@ async function CalendarContent({ searchParams }: PageProps<"/[lang]/dashboard/ca
               href={`/dashboard/calendar${d === today ? "" : `?date=${d}`}`}
               scroll={false}
               aria-current={on ? "date" : undefined}
-              aria-label={`${dayTitle.format(asUtc(d))}${openOn(d) ? "" : ", closed"}`}
+              aria-label={`${dayTitle.format(asUtc(d))}${openOn(d) ? "" : o(", closed")}`}
               className={`flex h-[60px] flex-col items-center justify-center gap-px rounded-lg border font-medium transition-colors duration-150 ${on ? "chip-on" : openOn(d) ? "chip-off" : "chip-shut"}`}
             >
               <span className="text-[11px]">{shortDay.format(asUtc(d))}</span>
@@ -272,8 +277,8 @@ async function CalendarContent({ searchParams }: PageProps<"/[lang]/dashboard/ca
           <span className="mb-2 flex size-11 items-center justify-center rounded-full bg-neutral-800 text-neutral-300">
             <CalendarXIcon aria-hidden className="size-5" />
           </span>
-          <p className="font-medium">Closed</p>
-          <p className="text-sm text-neutral-400">There are no opening hours on this day. Tap + to add a booking anyway.</p>
+          <p className="font-medium">{o("Closed")}</p>
+          <p className="text-sm text-neutral-400">{o("There are no opening hours on this day. Tap + to add a booking anyway.")}</p>
         </div>
       ) : (
         <>
@@ -315,8 +320,8 @@ async function CalendarContent({ searchParams }: PageProps<"/[lang]/dashboard/ca
             </div>
           </div>
           <p className="mt-3 px-1 text-[13px] text-neutral-400">
-            Tap an empty time to add a booking there.
-            {view === "week" && staff.length > 1 ? ` Each day has one narrow column per person: ${staff.map((w) => w.name).join(", ")}.` : ""}
+            {o("Tap an empty time to add a booking there.")}
+            {view === "week" && staff.length > 1 ? ` ${o("Each day has one narrow column per person: {names}.", { names: staff.map((w) => w.name).join(", ") })}` : ""}
           </p>
         </>
       )}

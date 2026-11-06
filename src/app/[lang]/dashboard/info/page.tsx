@@ -7,12 +7,16 @@ import { Card, CardSection, EmptyState, PageSkeleton } from "@/components/ui";
 import { OwnerHeader } from "../account";
 import { requireShop } from "@/lib/shop";
 import { addShopInfo, deleteShopInfo } from "../actions/info";
+import { getOwnerT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "AI notes" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getOwnerT())("AI notes") };
+}
 
 type Note = { id: string; question: string; answer: string };
 
 async function InfoContent() {
+  const o = await getOwnerT();
   const { supabase, shop } = await requireShop();
   const { data } = await supabase
     .from("shop_info")
@@ -25,15 +29,15 @@ async function InfoContent() {
   return (
     <>
       <OwnerHeader back
-        title="Notes for the AI helper"
-        description="The helper on your booking page answers customers using only these notes and your shop details. If something isn’t here, it says it doesn’t know. Customers can read these, so don’t write anything private."
+        title={o("Notes for the AI helper")}
+        description={o("The helper on your booking page answers customers using only these notes and your shop details. If something isn’t here, it says it doesn’t know. Customers can read these, so don’t write anything private.")}
       />
 
       <div className="space-y-6">
         {notes.length === 0 ? (
           <Card>
-            <EmptyState icon={ChatCircleTextIcon} title="No notes yet">
-              Think of what customers often ask you: parking, how to pay, kids, being late, cancelling.
+            <EmptyState icon={ChatCircleTextIcon} title={o("No notes yet")}>
+              {o("Think of what customers often ask you: parking, how to pay, kids, being late, cancelling.")}
             </EmptyState>
           </Card>
         ) : (
@@ -47,7 +51,7 @@ async function InfoContent() {
                   </div>
                   <form action={deleteShopInfo}>
                     <input type="hidden" name="id" value={n.id} />
-                    <ConfirmDelete label={`Delete note: ${n.question}`}>
+                    <ConfirmDelete label={o("Delete note: {question}", { question: n.question })}>
                       <TrashIcon aria-hidden className="size-4.5" />
                     </ConfirmDelete>
                   </form>
@@ -57,13 +61,13 @@ async function InfoContent() {
           </ul>
         )}
 
-        <CardSection title="Add a note">
-          <ActionForm action={addShopInfo} submitLabel="Save note" pendingText="Saving…">
-            <Field label="Question" name="question" placeholder="Is there parking?" required maxLength={200} />
+        <CardSection title={o("Add a note")}>
+          <ActionForm action={addShopInfo} submitLabel={o("Save note")} pendingText={o("Saving…")}>
+            <Field label={o("Question")} name="question" placeholder={o("Is there parking?")} required maxLength={200} />
             <TextArea
-              label="Answer"
+              label={o("Answer")}
               name="answer"
-              placeholder="Yes, free parking behind the shop for 30 minutes."
+              placeholder={o("Yes, free parking behind the shop for 30 minutes.")}
               required
               maxLength={1000}
             />

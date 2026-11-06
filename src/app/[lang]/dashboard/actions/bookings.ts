@@ -4,12 +4,14 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { sendShopChangeEmail, type OwnerBookingRow } from "@/lib/booking-emails";
+import { dateLocale } from "@/lib/dates";
 import { emailMode } from "@/lib/email/send";
 import { flash } from "@/lib/flash";
 import { siteUrl } from "@/lib/site";
 import { requireShop } from "@/lib/shop";
 import { idSchema } from "@/lib/validation";
 import { notifyWaitlist } from "@/lib/waitlist";
+import { getActionOwnerT } from "@/lib/i18n/server";
 
 // Cancelling a booking, and marking a visit as "didn't come".
 // Every action checks who is logged in and which shop they own. The database
@@ -20,6 +22,7 @@ const backTo = (v: FormDataEntryValue | null) =>
   typeof v === "string" && /^\/dashboard(\/[a-z]+)?(\?[\w=&%.-]*)?$/.test(v) ? v : null;
 
 export async function cancelBooking(formData: FormData) {
+  const o = await getActionOwnerT();
   const id = idSchema.parse(formData.get("id"));
   const back = backTo(formData.get("back"));
   const { supabase, shop } = await requireShop();
@@ -33,8 +36,8 @@ export async function cancelBooking(formData: FormData) {
     .select("id, starts_at, ends_at, customer_name, customer_email, services(name, price_cents), staff(name)")
     .maybeSingle<OwnerBookingRow>();
   if (booking) {
-    const when = new Intl.DateTimeFormat("en-GB", { timeZone: shop.timezone, weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-    await flash("cancelled", "Booking cancelled", `${booking.customer_name}, ${when.format(new Date(booking.starts_at))}.${booking.customer_email && emailMode() === "gmail" ? " We emailed them." : " Please let them know."}`);
+    const when = new Intl.DateTimeFormat(dateLocale(o.lang), { timeZone: shop.timezone, weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+    await flash("cancelled", o("Booking cancelled"), `${booking.customer_name}, ${when.format(new Date(booking.starts_at))}. ${booking.customer_email && emailMode() === "gmail" ? o("We emailed them.") : o("Please let them know.")}`);
   }
   if (booking && Date.parse(booking.starts_at) >= Date.now()) {
     const [{ count: teamSize }, site] = await Promise.all([
@@ -50,6 +53,7 @@ export async function cancelBooking(formData: FormData) {
 
 /** "Didn't come": only for a live booking that has already started. */
 export async function markNoShow(formData: FormData) {
+  const o = await getActionOwnerT();
   const id = idSchema.parse(formData.get("id"));
   const back = backTo(formData.get("back"));
   const { supabase, shop } = await requireShop();
@@ -62,13 +66,14 @@ export async function markNoShow(formData: FormData) {
     .lte("starts_at", new Date().toISOString())
     .select("customer_name")
     .maybeSingle<{ customer_name: string }>();
-  if (booking) await flash("saved", "Marked as didn’t come", `${booking.customer_name}. You’ll see it in their visits.`);
+  if (booking) await flash("saved", o("Marked as didn’t come"), o("{name}. You’ll see it in their visits.", { name: booking.customer_name }));
   if (back) redirect(back);
   refresh();
 }
 
 /** Undo "didn't come": the booking counts as a visit again. */
 export async function undoNoShow(formData: FormData) {
+  const o = await getActionOwnerT();
   const id = idSchema.parse(formData.get("id"));
   const back = backTo(formData.get("back"));
   const { supabase, shop } = await requireShop();
@@ -82,9 +87,9 @@ export async function undoNoShow(formData: FormData) {
     .maybeSingle<{ customer_name: string }>();
   if (error?.code === "23P01") {
     // Someone else was put in that time since.
-    await flash("cancelled", "Couldn’t undo", "Another booking now sits at that time with the same person.");
+    await flash("cancelled", o("Couldn’t undo"), o("Another booking now sits at that time with the same person."));
   } else if (booking) {
-    await flash("saved", "Counted as a visit again", booking.customer_name);
+    await flash("saved", o("Counted as a visit again"), booking.customer_name);
   }
   if (back) redirect(back);
   refresh();

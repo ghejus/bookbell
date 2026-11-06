@@ -25,21 +25,27 @@ import { type BookingRules, rulesSummary } from "@/lib/booking-rules";
 import { shopToday } from "@/lib/booking";
 import { mediaUrl } from "@/lib/media";
 import { qrSvg } from "@/lib/qr";
-import { averageText, getShopRating, reviewCount } from "@/lib/reviews";
+import { averageText, getShopRating } from "@/lib/reviews";
 import { requireShop } from "@/lib/shop";
 import { siteUrl } from "@/lib/site";
 import { OwnerHeader } from "../account";
 import { ShopForm } from "../shop-form";
 import { MediaForm } from "./media-form";
+import { datesFor } from "@/lib/dates";
+import type { OwnerT } from "@/lib/i18n/owner";
+import { getOwnerT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Your shop" };
-
-const DAY = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getOwnerT())("Your shop") };
+}
 
 /** Opening days in a few letters: "Mon–Sat", "Mon, Wed, Fri", or "Not set". */
-function daysSummary(weekdays: number[]) {
+function daysSummary(weekdays: number[], o: OwnerT) {
+  // 2026-11-02 was a Monday: day n of the week is that date plus n - 1.
+  const name = (n: number) => datesFor(o.lang).dayName.format(new Date(Date.UTC(2026, 10, 1 + n, 12)));
+  const DAY = ["", 1, 2, 3, 4, 5, 6, 7].map((n) => (n ? name(n as number) : ""));
   const days = [...new Set(weekdays)].sort((a, b) => a - b);
-  if (days.length === 0) return "Not set";
+  if (days.length === 0) return o("Not set");
   if (days.length === 1) return DAY[days[0]];
   const inARow = days.every((d, i) => i === 0 || d === days[i - 1] + 1);
   return inARow ? `${DAY[days[0]]}–${DAY[days[days.length - 1]]}` : days.map((d) => DAY[d]).join(", ");
@@ -73,7 +79,7 @@ function RowList({ id, title, rows }: { id: string; title: string; rows: Row[] }
 }
 
 async function ShopContent() {
-  const { supabase, shop } = await requireShop();
+  const [{ supabase, shop }, o] = await Promise.all([requireShop(), getOwnerT()]);
   const [bookingUrl, { data: services }, { data: hours }, { count: notes }, { data: staff }, { data: rules }, { data: media }, { data: photos }, rating, { count: waiting }] = await Promise.all([
     siteUrl().then((site) => `${site}/s/${shop.slug}`),
     supabase.from("services").select("id").eq("shop_id", shop.id).eq("active", true),
@@ -93,27 +99,27 @@ async function ShopContent() {
 
   const team = (staff ?? []).map((w) => w.name);
   const businessRows: Row[] = [
-    { href: "/dashboard/customers", icon: UsersThreeIcon, label: "Customers", value: "Visits and notes" },
-    { href: "/dashboard/stats", icon: ChartBarIcon, label: "Stats", value: "Takings and busy times" },
-    { href: "/dashboard/reviews", icon: StarIcon, label: "Reviews", value: rating.total ? `${averageText(rating.average)} from ${reviewCount(rating.total)}` : "No reviews yet" },
-    { href: "/dashboard/waitlist", icon: HourglassIcon, label: "Waitlist", value: waiting ? `${waiting} waiting` : "Nobody waiting" },
+    { href: "/dashboard/customers", icon: UsersThreeIcon, label: o("Customers"), value: o("Visits and notes") },
+    { href: "/dashboard/stats", icon: ChartBarIcon, label: o("Stats"), value: o("Takings and busy times") },
+    { href: "/dashboard/reviews", icon: StarIcon, label: o("Reviews"), value: rating.total ? o.n(rating.total, "{avg} from {n} review", "{avg} from {n} reviews", { avg: averageText(rating.average) }) : o("No reviews yet") },
+    { href: "/dashboard/waitlist", icon: HourglassIcon, label: o("Waitlist"), value: waiting ? o("{n} waiting", { n: waiting }) : o("Nobody waiting") },
   ];
   const rows: Row[] = [
-    { href: "/dashboard/services", icon: ScissorsIcon, label: "Services", value: `${services?.length ?? 0} shown` },
-    { href: "/dashboard/hours", icon: ClockIcon, label: "Hours and days off", value: daysSummary((hours ?? []).map((h) => h.weekday)) },
-    { href: "/dashboard/rules", icon: SlidersHorizontalIcon, label: "Booking rules", value: rules ? rulesSummary(rules) : "" },
-    { href: "/dashboard/info", icon: ChatCircleTextIcon, label: "AI notes", value: `${notes ?? 0} ${notes === 1 ? "answer" : "answers"}` },
-    { href: "/dashboard/team", icon: UsersIcon, label: "Team", value: team.length > 2 ? `${team.length} people` : team.join(", ") || "Nobody yet" },
+    { href: "/dashboard/services", icon: ScissorsIcon, label: o("Services"), value: o("{n} shown", { n: services?.length ?? 0 }) },
+    { href: "/dashboard/hours", icon: ClockIcon, label: o("Hours and days off"), value: daysSummary((hours ?? []).map((h) => h.weekday), o) },
+    { href: "/dashboard/rules", icon: SlidersHorizontalIcon, label: o("Booking rules"), value: rules ? rulesSummary(rules, o) : "" },
+    { href: "/dashboard/info", icon: ChatCircleTextIcon, label: o("AI notes"), value: o.n(notes ?? 0, "{n} answer", "{n} answers") },
+    { href: "/dashboard/team", icon: UsersIcon, label: o("Team"), value: team.length > 2 ? o.n(team.length, "{n} person", "{n} people") : team.join(", ") || o("Nobody yet") },
   ];
 
   return (
     <>
-      <OwnerHeader title={shop.name} eyebrow="Your shop" />
+      <OwnerHeader title={shop.name} eyebrow={o("Your shop")} />
       <div className="space-y-[22px]">
         <Card className="space-y-3.5 p-[18px]">
           <div>
-            <h2 className="text-base font-medium">Your booking page</h2>
-            <p className="mt-0.5 text-sm text-neutral-400">Share this link with customers. New bookings show up right away.</p>
+            <h2 className="text-base font-medium">{o("Your booking page")}</h2>
+            <p className="mt-0.5 text-sm text-neutral-400">{o("Share this link with customers. New bookings show up right away.")}</p>
           </div>
           <CopyLink url={bookingUrl} />
           <Link
@@ -121,12 +127,12 @@ async function ShopContent() {
             className="inline-flex items-center gap-1.5 py-1 text-sm font-medium text-accent-400 transition-colors duration-150 hover:text-accent-300"
           >
             <ArrowSquareOutIcon aria-hidden className="size-4" />
-            Open it as a customer
+            {o("Open it as a customer")}
           </Link>
         </Card>
 
-        <RowList id="business" title="Your business" rows={businessRows} />
-        <RowList id="setup" title="Set up" rows={rows} />
+        <RowList id="business" title={o("Your business")} rows={businessRows} />
+        <RowList id="setup" title={o("Set up")} rows={rows} />
 
         {shop.address || shop.phone ? (
           <div className="space-y-1 px-1 text-[13px] text-neutral-400">
@@ -145,7 +151,7 @@ async function ShopContent() {
           </div>
         ) : null}
 
-        <CardSection title="Pictures" description="Your logo and up to 6 photos, shown at the top of your booking page.">
+        <CardSection title={o("Pictures")} description={o("Your logo and up to 6 photos, shown at the top of your booking page.")}>
           <MediaForm
             shopId={shop.id}
             logoUrl={media?.logo_path ? mediaUrl(media.logo_path) : null}
@@ -153,28 +159,28 @@ async function ShopContent() {
           />
         </CardSection>
 
-        <CardSection title="QR code" description="Print it for your door or counter. Customers point their phone camera at it to book.">
+        <CardSection title={o("QR code")} description={o("Print it for your door or counter. Customers point their phone camera at it to book.")}>
           <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
             <div
               role="img"
-              aria-label="QR code for your booking page"
+              aria-label={o("QR code for your booking page")}
               className="w-36 shrink-0 overflow-hidden rounded-lg [&>svg]:block [&>svg]:h-auto [&>svg]:w-full"
               dangerouslySetInnerHTML={{ __html: qrSvg(bookingUrl) }}
             />
             <div className="flex flex-wrap gap-2">
               <Link href="/dashboard/shop/poster" className={buttonClass("secondary", { size: "sm" })}>
                 <PrinterIcon aria-hidden className="size-4" />
-                Print a poster
+                {o("Print a poster")}
               </Link>
               <a href="/dashboard/shop/qr" download className={buttonClass("secondary", { size: "sm" })}>
                 <DownloadSimpleIcon aria-hidden className="size-4" />
-                Download
+                {o("Download")}
               </a>
             </div>
           </div>
         </CardSection>
 
-        <CardSection title="Shop details" description="Customers see these on your booking page.">
+        <CardSection title={o("Shop details")} description={o("Customers see these on your booking page.")}>
           <ShopForm shop={shop} timezones={Intl.supportedValuesOf("timeZone")} />
         </CardSection>
       </div>

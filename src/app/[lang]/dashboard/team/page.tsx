@@ -7,12 +7,16 @@ import { Badge, Card, CardSection, EmptyState, PageSkeleton } from "@/components
 import { OwnerHeader } from "../account";
 import { requireShop } from "@/lib/shop";
 import { addStaff, deleteStaff, renameStaff, toggleStaff } from "../actions/team";
+import { getOwnerT } from "@/lib/i18n/server";
 
-export const metadata: Metadata = { title: "Team" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getOwnerT())("Team") };
+}
 
 type Worker = { id: string; name: string; active: boolean };
 
 async function TeamContent() {
+  const o = await getOwnerT();
   const { supabase, shop } = await requireShop();
   const { data } = await supabase
     .from("staff")
@@ -26,15 +30,15 @@ async function TeamContent() {
   return (
     <>
       <OwnerHeader back
-        title="Team"
-        description="Everyone who takes bookings. Each person has their own calendar, so two people can be booked at the same time."
+        title={o("Team")}
+        description={o("Everyone who takes bookings. Each person has their own calendar, so two people can be booked at the same time.")}
       />
 
       <div className="space-y-6">
         {team.length === 0 ? (
           <Card>
-            <EmptyState icon={UsersIcon} title="Nobody here yet">
-              Add yourself below. Customers can only book when at least one person is taking bookings.
+            <EmptyState icon={UsersIcon} title={o("Nobody here yet")}>
+              {o("Add yourself below. Customers can only book when at least one person is taking bookings.")}
             </EmptyState>
           </Card>
         ) : (
@@ -49,7 +53,7 @@ async function TeamContent() {
                     <form action={renameStaff} className="flex min-w-0 flex-1 basis-full items-center gap-2 sm:basis-auto">
                       <input type="hidden" name="id" value={w.id} />
                       <label className="sr-only" htmlFor={`name-${w.id}`}>
-                        Name
+                        {o("Name")}
                       </label>
                       <input
                         id={`name-${w.id}`}
@@ -62,12 +66,12 @@ async function TeamContent() {
                           w.active ? "text-gray-900" : "text-gray-600"
                         }`}
                       />
-                      <SubmitButton variant="ghost" size="sm" label={`Save the new name for ${w.name}`}>
-                        Save
+                      <SubmitButton variant="ghost" size="sm" label={o("Save the new name for {name}", { name: w.name })}>
+                        {o("Save")}
                       </SubmitButton>
                     </form>
                     <div className="ml-auto flex shrink-0 items-center gap-1">
-                      {w.active ? null : <Badge>Off</Badge>}
+                      {w.active ? null : <Badge>{o("Turned off")}</Badge>}
                       {isLast ? null : (
                         <form action={toggleStaff}>
                           <input type="hidden" name="id" value={w.id} />
@@ -75,16 +79,16 @@ async function TeamContent() {
                           <SubmitButton
                             variant="ghost"
                             size="sm"
-                            label={w.active ? `Stop bookings for ${w.name}` : `Start bookings for ${w.name}`}
+                            label={w.active ? o("Stop bookings for {name}", { name: w.name }) : o("Start bookings for {name}", { name: w.name })}
                           >
-                            {w.active ? "Turn off" : "Turn on"}
+                            {w.active ? o("Turn off") : o("Turn on")}
                           </SubmitButton>
                         </form>
                       )}
                       {isLast ? null : (
                         <form action={deleteStaff}>
                           <input type="hidden" name="id" value={w.id} />
-                          <ConfirmDelete label={`Remove ${w.name}`}>
+                          <ConfirmDelete label={o("Remove {name}", { name: w.name })}>
                             <TrashIcon aria-hidden className="size-4.5" />
                           </ConfirmDelete>
                         </form>
@@ -98,17 +102,16 @@ async function TeamContent() {
         )}
         {team.length > 0 ? (
           <p className="-mt-3 text-sm text-gray-600">
-            Turned-off people get no new bookings; the ones they have stay. Someone with bookings can’t be removed, so
-            removing them turns them off instead. The last person taking bookings always stays on.
+            {o("Turned-off people get no new bookings; the ones they have stay. Someone with bookings can’t be removed, so removing them turns them off instead. The last person taking bookings always stays on.")}
           </p>
         ) : null}
 
         <CardSection
-          title="Add a person"
-          description="With two or more people, customers can pick who they want, or take whoever is free."
+          title={o("Add a person")}
+          description={o("With two or more people, customers can pick who they want, or take whoever is free.")}
         >
-          <ActionForm action={addStaff} submitLabel="Add person" pendingText="Adding…">
-            <Field label="Name" name="name" placeholder="Alex" required maxLength={60} hint="Customers see this name." />
+          <ActionForm action={addStaff} submitLabel={o("Add person")} pendingText={o("Adding…")}>
+            <Field label={o("Name")} name="name" placeholder="Alex" required maxLength={60} hint={o("Customers see this name.")} />
           </ActionForm>
         </CardSection>
       </div>

@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowRightIcon, CheckIcon } from "@/components/icons";
 import { buttonClass, Card } from "@/components/ui";
 import type { requireShop } from "@/lib/shop";
+import { mark } from "@/lib/i18n/owner";
+import { getOwnerT } from "@/lib/i18n/server";
 
 type Ctx = Awaited<ReturnType<typeof requireShop>>;
 
@@ -14,30 +16,31 @@ export async function setupSteps({ supabase, shop }: Pick<Ctx, "supabase" | "sho
   );
   const [services, hours, notes] = counts.map((r) => r.count ?? 0);
   return [
-    { done: true, label: "Create your shop", detail: "Name, web address and prices.", href: "/dashboard/shop" },
-    { done: services > 0, label: "Add your services", detail: "What customers can book and how long it takes.", href: "/dashboard/services" },
-    { done: hours > 0, label: "Set your opening hours", detail: "Customers can only book inside these.", href: "/dashboard/hours" },
-    { done: notes > 0, label: "Write notes for the AI helper", detail: "Parking, payment, kids: what people often ask.", href: "/dashboard/info" },
+    { done: true, label: mark("Create your shop"), detail: mark("Name, web address and prices."), href: "/dashboard/shop" },
+    { done: services > 0, label: mark("Add your services"), detail: mark("What customers can book and how long it takes."), href: "/dashboard/services" },
+    { done: hours > 0, label: mark("Set your opening hours"), detail: mark("Customers can only book inside these."), href: "/dashboard/hours" },
+    { done: notes > 0, label: mark("Write notes for the AI helper"), detail: mark("Parking, payment, kids: what people often ask."), href: "/dashboard/info" },
   ];
 }
 
 /** "Finish setting up": the steps left, with a Start button on the next one. Nothing once all are done. */
-export function SetupChecklist({ steps }: { steps: Awaited<ReturnType<typeof setupSteps>> }) {
+export async function SetupChecklist({ steps }: { steps: Awaited<ReturnType<typeof setupSteps>> }) {
+  const o = await getOwnerT();
   const doneCount = steps.filter((s) => s.done).length;
   const next = steps.find((s) => !s.done);
   if (!next) return null;
   return (
     <Card className="overflow-hidden">
       <div className="flex items-center justify-between gap-4 px-[18px] pt-[18px]">
-        <h2 className="text-base font-medium">Finish setting up</h2>
+        <h2 className="text-base font-medium">{o("Finish setting up")}</h2>
         <span className="text-sm text-neutral-400 tabular">
-          {doneCount} of {steps.length} done
+          {o("{done} of {all} done", { done: doneCount, all: steps.length })}
         </span>
       </div>
       <div
         className="mx-[18px] mt-3 h-1 overflow-hidden rounded-full bg-neutral-800"
         role="progressbar"
-        aria-label="Setup progress"
+        aria-label={o("Setup progress")}
         aria-valuemin={0}
         aria-valuemax={steps.length}
         aria-valuenow={doneCount}
@@ -56,14 +59,14 @@ export function SetupChecklist({ steps }: { steps: Awaited<ReturnType<typeof set
             </span>
             <div className="min-w-0 flex-1">
               <p className={`text-sm font-medium ${step.done ? "text-neutral-500 line-through decoration-neutral-700" : ""}`}>
-                <span className="sr-only">{step.done ? "Done: " : "To do: "}</span>
-                {step.label}
+                <span className="sr-only">{step.done ? o("Done: ") : o("To do: ")}</span>
+                {o(step.label)}
               </p>
-              {!step.done ? <p className="text-[13px] text-neutral-400">{step.detail}</p> : null}
+              {!step.done ? <p className="text-[13px] text-neutral-400">{o(step.detail)}</p> : null}
             </div>
             {step === next ? (
               <Link href={step.href} className={buttonClass("primary", { size: "sm" })}>
-                Start
+                {o("Start")}
                 <ArrowRightIcon aria-hidden className="size-4" />
               </Link>
             ) : null}

@@ -5,6 +5,7 @@ import type { ActionState } from "@/lib/action-state";
 import { fields } from "@/lib/form-data";
 import { requireShop } from "@/lib/shop";
 import { firstError, idSchema, openingHoursSchema, timeOffSchema } from "@/lib/validation";
+import { getActionOwnerT } from "@/lib/i18n/server";
 
 // Opening hours and days off.
 // Every action checks who is logged in and which shop they own. The database
@@ -13,8 +14,9 @@ import { firstError, idSchema, openingHoursSchema, timeOffSchema } from "@/lib/v
 const toMinutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 5));
 
 export async function addOpeningHours(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const o = await getActionOwnerT();
   const parsed = openingHoursSchema.safeParse(fields(formData));
-  if (!parsed.success) return { error: firstError(parsed.error) };
+  if (!parsed.success) return { error: firstError(parsed.error, o) };
   const { weekday, opens, closes } = parsed.data;
 
   const { supabase, shop } = await requireShop();
@@ -27,12 +29,12 @@ export async function addOpeningHours(_prev: ActionState, formData: FormData): P
   const overlaps = (sameDay ?? []).some(
     (r) => toMinutes(opens) < toMinutes(r.closes) && toMinutes(r.opens) < toMinutes(closes),
   );
-  if (overlaps) return { error: "Those hours overlap hours you already set for that day." };
+  if (overlaps) return { error: o("Those hours overlap hours you already set for that day.") };
 
   const { error } = await supabase.from("opening_hours").insert({ shop_id: shop.id, weekday, opens, closes });
-  if (error) return { error: "Could not save those hours. Please try again." };
+  if (error) return { error: o("Could not save those hours. Please try again.") };
   refresh();
-  return { message: "Hours added." };
+  return { message: o("Hours added.") };
 }
 
 /** Quick start: Monday to Friday, 09:00 to 17:00, for days that have no hours yet. */
@@ -57,9 +59,10 @@ export async function deleteOpeningHours(formData: FormData) {
 // Days off
 
 export async function addTimeOff(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const o = await getActionOwnerT();
   const { supabase, shop } = await requireShop();
   const parsed = timeOffSchema(shop.timezone).safeParse(fields(formData));
-  if (!parsed.success) return { error: firstError(parsed.error) };
+  if (!parsed.success) return { error: firstError(parsed.error, o) };
 
   const { error } = await supabase.from("time_off").insert({
     shop_id: shop.id,
@@ -68,9 +71,9 @@ export async function addTimeOff(_prev: ActionState, formData: FormData): Promis
     reason: parsed.data.reason,
     staff_id: parsed.data.staff_id,
   });
-  if (error) return { error: "Could not save the time off. Please try again." };
+  if (error) return { error: o("Could not save the time off. Please try again.") };
   refresh();
-  return { message: "Time off added." };
+  return { message: o("Time off added.") };
 }
 
 export async function deleteTimeOff(formData: FormData) {
