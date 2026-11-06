@@ -21,6 +21,12 @@ export const bookingErrors: Record<string, string> = {
   visitor_limit: "You’ve tried to book a lot of times. Please wait a while, or call the shop.",
   shop_limit: "Lots of people are booking here right now. Please try again in a few minutes.",
   other_account: "This booking is already saved to another account.",
+  // Reviews
+  not_yet: "You can leave a review once your visit is over.",
+  cant_review: "This visit can’t be reviewed. Only visits booked online that went ahead, in the last 60 days, can.",
+  locked: "Reviews can only be changed in the first 14 days.",
+  own_shop: "You can’t review your own shop.",
+  bad_review: "Please tap a star and keep the words under 1000 characters.",
 };
 
 export function bookingError(code: string | undefined, fallback = "Something went wrong. Please try again."): string {

@@ -14,6 +14,7 @@ import {
   PhoneIcon,
   ScissorsIcon,
   SlidersHorizontalIcon,
+  StarIcon,
   UsersIcon,
   UsersThreeIcon,
   type Icon,
@@ -22,6 +23,7 @@ import { buttonClass, Card, CardSection, PageSkeleton } from "@/components/ui";
 import { type BookingRules, rulesSummary } from "@/lib/booking-rules";
 import { mediaUrl } from "@/lib/media";
 import { qrSvg } from "@/lib/qr";
+import { averageText, getShopRating, reviewCount } from "@/lib/reviews";
 import { requireShop } from "@/lib/shop";
 import { siteUrl } from "@/lib/site";
 import { OwnerHeader } from "../account";
@@ -70,7 +72,7 @@ function RowList({ id, title, rows }: { id: string; title: string; rows: Row[] }
 
 async function ShopContent() {
   const { supabase, shop } = await requireShop();
-  const [bookingUrl, { data: services }, { data: hours }, { count: notes }, { data: staff }, { data: rules }, { data: media }, { data: photos }] = await Promise.all([
+  const [bookingUrl, { data: services }, { data: hours }, { count: notes }, { data: staff }, { data: rules }, { data: media }, { data: photos }, rating] = await Promise.all([
     siteUrl().then((site) => `${site}/s/${shop.slug}`),
     supabase.from("services").select("id").eq("shop_id", shop.id).eq("active", true),
     supabase.from("opening_hours").select("weekday").eq("shop_id", shop.id).returns<{ weekday: number }[]>(),
@@ -83,12 +85,14 @@ async function ShopContent() {
       .single<BookingRules>(),
     supabase.from("shops").select("logo_path").eq("id", shop.id).single<{ logo_path: string | null }>(),
     supabase.from("shop_photos").select("id, path").eq("shop_id", shop.id).order("position").order("created_at").returns<{ id: string; path: string }[]>(),
+    getShopRating(supabase, shop.id),
   ]);
 
   const team = (staff ?? []).map((w) => w.name);
   const businessRows: Row[] = [
     { href: "/dashboard/customers", icon: UsersThreeIcon, label: "Customers", value: "Visits and notes" },
     { href: "/dashboard/stats", icon: ChartBarIcon, label: "Stats", value: "Takings and busy times" },
+    { href: "/dashboard/reviews", icon: StarIcon, label: "Reviews", value: rating.total ? `${averageText(rating.average)} from ${reviewCount(rating.total)}` : "No reviews yet" },
   ];
   const rows: Row[] = [
     { href: "/dashboard/services", icon: ScissorsIcon, label: "Services", value: `${services?.length ?? 0} shown` },

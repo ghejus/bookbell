@@ -13,7 +13,10 @@ import { getCurrentUser } from "@/lib/shop";
 import { asUtc, DAYS_SHOWN, dayWindow, isDate, longDay, shownMonths } from "@/lib/dates";
 import { addDays } from "@/lib/slots";
 import { createClient } from "@/lib/supabase/server";
-import { saveToMyBookings } from "./actions";
+import { ReviewForm } from "@/components/review-form";
+import { Stars } from "@/components/stars";
+import type { OwnReview } from "@/lib/reviews";
+import { leaveReviewByToken, saveToMyBookings } from "./actions";
 import { CancelForm, MoveForm } from "./manage-forms";
 
 // The customer's private booking page, reached from the link in their emails
@@ -25,6 +28,52 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+
+const shortDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "long" });
+
+/** After the visit: "How was it?", or the review they wrote (and the shop's reply). */
+function ReviewSection({ token, review, editing, base }: { token: string; review: OwnReview; editing: boolean; base: string }) {
+  const written = review.state === "done" || review.state === "locked";
+  const form = review.state === "open" || (review.state === "done" && editing);
+  return (
+    <section id="review" aria-labelledby="review-title" className="scroll-mt-6">
+      <Card className="space-y-4 p-5 sm:p-6">
+        <h2 id="review-title" className="text-lg font-medium">
+          {written && !form ? "Your review" : "How was it?"}
+        </h2>
+        {form ? (
+          <ReviewForm
+            action={leaveReviewByToken}
+            hidden={{ token }}
+            initial={{ stars: review.stars, body: review.body }}
+            submitLabel={written ? "Save changes" : "Post review"}
+          />
+        ) : (
+          <>
+            <div className="space-y-2">
+              <Stars stars={review.stars ?? 0} size="size-5" />
+              {review.body ? <p className="text-[15px] whitespace-pre-line wrap-anywhere">{review.body}</p> : null}
+            </div>
+            {review.state === "done" && review.editable_until ? (
+              <p className="text-sm text-neutral-400">
+                You can change it until {shortDate.format(new Date(review.editable_until))}.{" "}
+                <Link href={`${base}?review=edit#review`} className="font-medium text-accent-400 hover:text-accent-300 hover:underline">
+                  Change it
+                </Link>
+              </p>
+            ) : null}
+          </>
+        )}
+        {review.reply ? (
+          <div className="rounded-lg bg-raised px-4 py-3 text-sm">
+            <p className="mb-1 font-medium">Reply from the shop</p>
+            <p className="whitespace-pre-line text-neutral-300 wrap-anywhere">{review.reply}</p>
+          </div>
+        ) : null}
+      </Card>
+    </section>
+  );
+}
 
 function BrokenLink() {
   return (
@@ -46,12 +95,15 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
 
   // Is it in the signed-in person's My bookings already?
   const [user, supabase] = await Promise.all([getCurrentUser(), createClient()]);
-  const { data: saved } = await supabase.rpc("booking_saved_by_token", { p_token: token });
+  const [{ data: saved }, { data: review }] = await Promise.all([
+    supabase.rpc("booking_saved_by_token", { p_token: token }),
+    supabase.rpc("review_by_token", { p_token: token }).maybeSingle<OwnReview>(),
+  ]);
 
   const info = toBookingInfo(row);
   const now = new Date();
   const live = row.status === "booked" && Date.parse(row.starts_at) > now.getTime();
-  const done = ["moved", "cancelled", "saved", "not-saved"].includes(String(query.done)) ? String(query.done) : null;
+  const done = ["moved", "cancelled", "saved", "not-saved", "reviewed"].includes(String(query.done)) ? String(query.done) : null;
   // The shop may close online changes some hours before the visit.
   const changeable = live && Date.parse(row.change_until) > now.getTime();
   const moving = changeable && query.move === "1";
@@ -134,7 +186,9 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
             ? "Done: your booking has its new time."
             : done === "saved"
               ? "Saved to My bookings."
-              : "Done: your booking is cancelled."}
+              : done === "reviewed"
+                ? "Thank you! Your review is on the shop’s page now."
+                : "Done: your booking is cancelled."}
         </p>
       ) : null}
 
@@ -218,6 +272,10 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
           </div>
         ) : null}
       </Card>
+
+      {review && review.state !== "none" ? (
+        <ReviewSection token={token} review={review} editing={query.review === "edit"} base={base} />
+      ) : null}
 
       {saved === "none" && live ? (
         user ? (

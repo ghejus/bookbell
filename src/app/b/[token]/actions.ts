@@ -7,6 +7,7 @@ import type { ActionState } from "@/lib/action-state";
 import { sendCustomerChangeEmails } from "@/lib/booking-emails";
 import { bookingError } from "@/lib/booking-errors";
 import { fields } from "@/lib/form-data";
+import { reviewSchema } from "@/lib/reviews";
 import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
@@ -51,4 +52,22 @@ export async function saveToMyBookings(formData: FormData) {
   const supabase = await createClient();
   const { error } = await supabase.rpc("claim_booking_by_token", { p_token: parsed.data.token });
   redirect(`/b/${parsed.data.token}?done=${error ? "not-saved" : "saved"}`);
+}
+
+/** "How was it?": writes or changes the review. The secret link is the proof. */
+export async function leaveReviewByToken(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const data = fields(formData);
+  const parsed = reviewSchema.safeParse(data);
+  const link = token.safeParse(data.token);
+  if (!link.success) return { error: bookingError("not_found") };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message, values: { body: String(data.body ?? "") } };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("leave_review", {
+    p_token: link.data,
+    p_booking_id: null,
+    p_stars: parsed.data.stars,
+    p_body: parsed.data.body,
+  });
+  if (error) return { error: bookingError(error.message), values: { body: parsed.data.body } };
+  redirect(`/b/${link.data}?done=reviewed`);
 }

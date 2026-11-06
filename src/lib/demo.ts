@@ -2,6 +2,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addDays, isoWeekday } from "@/lib/slots";
+import { reviewAuthor } from "@/lib/reviews";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { utcToZoned, zonedToUtc } from "@/lib/time";
 
@@ -63,6 +64,19 @@ const DEMO_PHOTOS = ["demo/storefront.webp", "demo/interior.webp", "demo/haircut
 const CUSTOMER_NOTES = [
   { email: "ioana.stan@example.com", note: "Likes it short on the sides, longer on top." },
   { email: "george.v@example.com", note: "Prefers Andrei. Pays by card." },
+];
+
+// Reviews of past visits (newest visit first), so the shop page, the Reviews
+// page and the Shop screen have something to show. One gets a reply.
+const DEMO_REVIEWS = [
+  { stars: 5, body: "Quick, friendly and exactly what I asked for. Booking took ten seconds." },
+  { stars: 5, body: "Really know what they’re doing. Will be back.", reply: "Thank you, see you next time!" },
+  { stars: 4, body: "Good work. I waited about five minutes, but the coffee helped." },
+  { stars: 5, body: "" },
+  { stars: 3, body: "The cut was fine, but it felt a bit rushed at the end.", reply: "Sorry about that. Next time tell us and we’ll take our time." },
+  { stars: 5, body: "Best barber in the area. Easy to book a time online." },
+  { stars: 4, body: "Nice place, good music, fair price." },
+  { stars: 5, body: "Always on time. Love that I can move my booking myself." },
 ];
 
 // Today's visits, so the Today screen has a "Next up" and a full day to show.
@@ -198,15 +212,51 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
           p_customer_phone: v.who.phone,
         })
         .single<{ booking_id: string }>();
-      return v.missed ? (data?.booking_id ?? null) : null;
+      return data?.booking_id ? { id: data.booking_id, v } : null;
     }),
   );
-  const missed = made.filter((id): id is string => Boolean(id));
+  const missed = made.flatMap((m) => (m?.v.missed ? [m.id] : []));
+  // The newest kept visits by regulars get the sample reviews, the day after.
+  const reviewed = made
+    .filter((m): m is NonNullable<typeof m> => Boolean(m && !m.v.missed && m.v.who.email))
+    .sort((x, y) => (x.v.day === y.v.day ? x.v.time.localeCompare(y.v.time) : y.v.day.localeCompare(x.v.day)))
+    .slice(0, DEMO_REVIEWS.length);
   await Promise.all([
     missed.length ? supabase.from("bookings").update({ status: "no_show" }).in("id", missed) : null,
     supabase.from("customer_notes").insert(CUSTOMER_NOTES.map((n) => ({ shop_id: shopId, customer_key: `e:${n.email}`, note: n.note }))),
     // Pictures shared by every demo shop (uploaded once by scripts/upload-demo-media.mjs).
     supabase.from("shops").update({ logo_path: DEMO_LOGO }).eq("id", shopId),
     supabase.from("shop_photos").insert(DEMO_PHOTOS.map((path, position) => ({ shop_id: shopId, path, position }))),
+    admin ? addDemoReviews(admin, shopId, reviewed) : null,
   ]);
+}
+
+/**
+ * Only the server may write reviews directly (customers go through
+ * leave_review). The reviewed visits count as booked online, like real ones.
+ */
+async function addDemoReviews(
+  admin: SupabaseClient,
+  shopId: string,
+  visits: { id: string; v: { who: { name: string }; day: string; time: string } }[],
+) {
+  if (!visits.length) return;
+  await admin.from("bookings").update({ source: "online" }).in("id", visits.map((m) => m.id));
+  await admin.from("reviews").insert(
+    visits.map((m, i) => {
+      const r = DEMO_REVIEWS[i];
+      const at = zonedToUtc(addDays(m.v.day, 1), "10:00", TZ).toISOString();
+      return {
+        booking_id: m.id,
+        shop_id: shopId,
+        stars: r.stars,
+        body: r.body,
+        author: reviewAuthor(m.v.who.name),
+        created_at: at,
+        updated_at: at,
+        reply: r.reply ?? null,
+        replied_at: r.reply ? at : null,
+      };
+    }),
+  );
 }

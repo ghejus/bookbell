@@ -155,3 +155,21 @@ export function ownerNoteEmail(
     }),
   };
 }
+
+/** The day after a visit: "How was it?", with a link to leave a review. */
+export function reviewAskEmail(b: BookingInfo): Email {
+  const intro = `Hi ${b.customerName}, thanks for visiting ${b.shopName}. How was your ${b.serviceName}?`;
+  const ask = "It takes ten seconds: tap a star, add a few words if you like. It helps the shop and other customers.";
+  const url = b.manageUrl ?? "";
+  return {
+    subject: `How was your visit to ${b.shopName}?`,
+    text: `${intro}\n\n${ask}\n\nLeave a review: ${url}\n`,
+    html: layout({
+      heading: "How was it?",
+      intro,
+      body: `<p style="margin:16px 0 0;color:#4b5563">${esc(ask)}</p>`,
+      button: url ? { label: "Leave a review", url } : undefined,
+      footer: sentFor(b),
+    }),
+  };
+}

@@ -4,8 +4,11 @@ import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { sendCustomerChangeEmails } from "@/lib/booking-emails";
+import type { ActionState } from "@/lib/action-state";
 import { bookingError } from "@/lib/booking-errors";
 import { flash } from "@/lib/flash";
+import { fields } from "@/lib/form-data";
+import { reviewSchema } from "@/lib/reviews";
 import { requireUser } from "@/lib/shop";
 import { siteUrl } from "@/lib/site";
 import { idSchema } from "@/lib/validation";
@@ -40,4 +43,23 @@ export async function cancelFromMyBookings(formData: FormData) {
   after(() => sendCustomerChangeEmails(token, "cancelled", site));
   await flash("cancelled", "Booking cancelled", "The time is free for others now.");
   refresh();
+}
+
+/** "How was it?" from the Past list: writes or changes the review of one of your own visits. */
+export async function leaveMyReview(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const data = fields(formData);
+  const id = idSchema.safeParse(data.id);
+  const parsed = reviewSchema.safeParse(data);
+  if (!id.success) return { error: bookingError("not_found") };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message, values: { body: data.body ?? "" } };
+  const { supabase } = await requireUser();
+  const { error } = await supabase.rpc("leave_review", {
+    p_token: null,
+    p_booking_id: id.data,
+    p_stars: parsed.data.stars,
+    p_body: parsed.data.body,
+  });
+  if (error) return { error: bookingError(error.message), values: { body: parsed.data.body } };
+  await flash("saved", "Thank you!", "Your review is on the shop’s page now.");
+  redirect("/my");
 }

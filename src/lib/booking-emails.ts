@@ -10,6 +10,7 @@ import {
   movedEmail,
   ownerNoteEmail,
   reminderEmail,
+  reviewAskEmail,
   type BookingInfo,
 } from "./email/templates";
 
@@ -201,4 +202,13 @@ export async function sendReminderEmail(token: string, site: string) {
   const info = toBookingInfo(row, `${site}/b/${token}`);
   const owner = await ownerEmail(row.shop_id);
   return sendEmail({ to: row.customer_email, ...reminderEmail(info), replyTo: owner ?? undefined });
+}
+
+/** The day after a kept visit: "How was it?", with the link where they can leave a review. */
+export async function sendReviewAskEmail(token: string, site: string) {
+  const row = await bookingByToken(token);
+  if (!row || row.status !== "booked") return "skipped" as const;
+  const info = toBookingInfo(row, `${site}/b/${token}#review`);
+  const owner = await ownerEmail(row.shop_id);
+  return sendEmail({ to: row.customer_email, ...reviewAskEmail(info), replyTo: owner ?? undefined });
 }

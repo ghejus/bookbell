@@ -34,6 +34,7 @@ The AI helper only knows what the owner wrote (shop details, services, hours, an
 - Planned: confirmation and reminder emails and staff calendars (later). Until emails exist, owners tell customers themselves about cancellations.
 - Free to use. No payments for now.
 - Interface language: English.
+- Reviews: only people who booked online and came (not cancelled, not "didn't come") can leave stars and a few words, up to 60 days after the visit, and change them for 14 days. Owners can reply once (and edit it) but can't delete or hide a review; marking a visit "didn't come" hides its review. Owner-added walk-ins can't be reviewed, so owners can't review their own shop.
 - Prices: each shop chooses euro (EUR) or Romanian lei (RON).
 - Stack: Next.js 16 (App Router, Cache Components), Supabase (Postgres, Auth, row level security), Tailwind 4, hosting planned on Vercel.
 

@@ -1,4 +1,4 @@
-import { CalendarXIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
+import { CalendarXIcon, CaretRightIcon, MapPinIcon, PhoneIcon, StarIcon } from "@/components/icons";
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -15,6 +15,9 @@ import { getAvailability, getPublicShop, getShopMeta, shopToday } from "@/lib/bo
 import { emailMode } from "@/lib/email/send";
 import { formatDuration, formatPrice } from "@/lib/format";
 import { mediaUrl } from "@/lib/media";
+import { averageText, getShopRating, getShopReviews, reviewCount, REVIEWS_ON_SHOP_PAGE } from "@/lib/reviews";
+import { ReviewList } from "@/components/review-list";
+import { Stars } from "@/components/stars";
 import { getCurrentUser } from "@/lib/shop";
 import { asUtc, DAYS_SHOWN, dayWindow, isDate, longDay, shownMonths } from "@/lib/dates";
 import { addDays } from "@/lib/slots";
@@ -41,6 +44,10 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
   if (!data) notFound();
   const { shop, services, hours, staff, photos } = data;
   const ticket = bookingTicket(shop.id);
+  const [rating, reviews] = await Promise.all([
+    getShopRating(data.supabase, shop.id),
+    getShopReviews(data.supabase, shop.id, REVIEWS_ON_SHOP_PAGE),
+  ]);
 
   const now = new Date();
   const today = shopToday(shop.timezone, now);
@@ -91,6 +98,13 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
               </Link>
             )}
           </div>
+          {rating.total > 0 ? (
+            <a href="#reviews" className="mt-2 inline-flex items-center gap-1.5 rounded-lg text-sm hover:underline">
+              <StarIcon aria-hidden weight="fill" className="size-4 text-accent-400" />
+              <span className="font-medium tabular">{averageText(rating.average)}</span>
+              <span className="text-neutral-400">· {reviewCount(rating.total)}</span>
+            </a>
+          ) : null}
           {shop.about ? <AboutText text={shop.about} /> : null}
           {shop.address || shop.phone ? (
             <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-sm text-gray-600">
@@ -272,6 +286,31 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
             ) : null}
           </BookingFlow>
         )}
+
+        {rating.total > 0 ? (
+          <section id="reviews" aria-labelledby="reviews-title" className="scroll-mt-6 space-y-3">
+            <div className="flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+              <h2 id="reviews-title" className="text-base font-medium">
+                Reviews
+              </h2>
+              <p className="flex items-center gap-2 text-sm">
+                <Stars stars={rating.average} size="size-3.5" />
+                <span className="font-medium tabular">{averageText(rating.average)}</span>
+                <span className="text-neutral-400">· {reviewCount(rating.total)}</span>
+              </p>
+            </div>
+            <ReviewList reviews={reviews} shopName={shop.name} />
+            {rating.total > reviews.length ? (
+              <Link
+                href={`/s/${shop.slug}/reviews`}
+                className="-ml-2 inline-flex h-10 items-center gap-1 rounded-lg px-2 text-sm font-medium text-accent-400 transition-colors duration-150 hover:bg-accent/10"
+              >
+                See all {rating.total} reviews
+                <CaretRightIcon aria-hidden className="size-4" />
+              </Link>
+            ) : null}
+          </section>
+        ) : null}
       </div>
       {/* Outside the stack above, so its spacing never touches the chat window. */}
       <ShopChat

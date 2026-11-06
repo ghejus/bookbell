@@ -3,12 +3,16 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { AccountButton } from "@/components/account-sheet";
 import { ConfirmDelete, SubmitButton } from "@/components/form";
-import { CalendarBlankIcon, CalendarPlusIcon, ClockClockwiseIcon } from "@/components/icons";
+import { CalendarBlankIcon, CalendarPlusIcon, ClockClockwiseIcon, StarIcon } from "@/components/icons";
 import { buttonClass, Card, EmptyState, PageHeader, PageSkeleton } from "@/components/ui";
 import { accountInfo } from "@/lib/account";
 import { formatDuration, formatPrice } from "@/lib/format";
 import { calendarHref } from "@/lib/ics";
-import { cancelFromMyBookings, changeMyBooking } from "./actions";
+import { ReviewForm } from "@/components/review-form";
+import { Sheet, SheetHeader } from "@/components/sheet";
+import { Stars } from "@/components/stars";
+import type { OwnReview } from "@/lib/reviews";
+import { cancelFromMyBookings, changeMyBooking, leaveMyReview } from "./actions";
 import { myBookings, type MyBooking } from "./data";
 
 export const metadata: Metadata = { title: "My bookings" };
@@ -16,8 +20,13 @@ export const metadata: Metadata = { title: "My bookings" };
 const minutesOf = (b: MyBooking) => Math.round((Date.parse(b.ends_at) - Date.parse(b.starts_at)) / 60_000);
 const fmt = (tz: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat("en-GB", { timeZone: tz, ...o });
 
-async function MyBookingsContent() {
-  const [{ bookings }, account] = await Promise.all([myBookings(), accountInfo()]);
+async function MyBookingsContent({ searchParams }: { searchParams: PageProps<"/my">["searchParams"] }) {
+  const [{ bookings, supabase }, account, query] = await Promise.all([myBookings(), accountInfo(), searchParams]);
+  // Which past visits can get (or already have) a review.
+  const { data: reviewRows } = await supabase.rpc("my_reviews");
+  const reviews = new Map(((reviewRows ?? []) as (OwnReview & { booking_id: string })[]).map((r) => [r.booking_id, r]));
+  const reviewing = typeof query.review === "string" ? bookings.find((b) => b.booking_id === query.review) : undefined;
+  const reviewingState = reviewing ? reviews.get(reviewing.booking_id) : undefined;
   const now = new Date().getTime();
   const upcoming = bookings.filter((b) => b.status === "booked" && Date.parse(b.ends_at) > now);
   const past = bookings.filter((b) => !upcoming.includes(b)).reverse();
@@ -123,32 +132,73 @@ async function MyBookingsContent() {
             </h2>
             <Card className="overflow-hidden">
               <ul>
-                {past.slice(0, 30).map((b) => (
-                  <li key={b.booking_id} className="rule-top flex justify-between gap-3 px-4 py-[13px] text-sm">
-                    <span className="min-w-0 wrap-anywhere">
-                      {b.service_name}
-                      <span className="text-neutral-400"> · {b.shop_name}</span>
-                      {b.status === "cancelled" ? <span className="text-neutral-500"> · Cancelled</span> : null}
-                      {b.status === "no_show" ? <span className="text-neutral-500"> · Missed</span> : null}
-                    </span>
-                    <span className="shrink-0 text-neutral-400 tabular">
-                      {fmt(b.shop_timezone, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(b.starts_at))}
-                    </span>
-                  </li>
-                ))}
+                {past.slice(0, 30).map((b) => {
+                  const review = reviews.get(b.booking_id);
+                  return (
+                    <li key={b.booking_id} className="rule-top px-4 py-[13px] text-sm">
+                      <div className="flex justify-between gap-3">
+                        <span className="min-w-0 wrap-anywhere">
+                          {b.service_name}
+                          <span className="text-neutral-400"> · {b.shop_name}</span>
+                          {b.status === "cancelled" ? <span className="text-neutral-500"> · Cancelled</span> : null}
+                          {b.status === "no_show" ? <span className="text-neutral-500"> · Missed</span> : null}
+                        </span>
+                        <span className="shrink-0 text-neutral-400 tabular">
+                          {fmt(b.shop_timezone, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(b.starts_at))}
+                        </span>
+                      </div>
+                      {review?.state === "open" ? (
+                        <Link
+                          href={`/my?review=${b.booking_id}`}
+                          scroll={false}
+                          className="-ml-2 mt-1 inline-flex h-9 items-center gap-1.5 rounded-lg px-2 font-medium text-accent-400 transition-colors duration-150 hover:bg-accent/10"
+                        >
+                          <StarIcon aria-hidden weight="fill" className="size-4" />
+                          Leave a review
+                        </Link>
+                      ) : review?.stars ? (
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <Stars stars={review.stars} size="size-3.5" />
+                          {review.state === "done" ? (
+                            <Link href={`/my?review=${b.booking_id}`} scroll={false} className="text-[13px] font-medium text-accent-400 hover:underline">
+                              Edit
+                            </Link>
+                          ) : null}
+                        </div>
+                      ) : null}
+                    </li>
+                  );
+                })}
               </ul>
             </Card>
           </section>
         ) : null}
       </div>
+
+      {reviewing && reviewingState && (reviewingState.state === "open" || reviewingState.state === "done") ? (
+        <Sheet label="Review your visit" closeHref="/my">
+          <SheetHeader
+            title="How was it?"
+            description={`${reviewing.service_name} · ${reviewing.shop_name}`}
+            closeHref="/my"
+          />
+          <ReviewForm
+            key={reviewing.booking_id}
+            action={leaveMyReview}
+            hidden={{ id: reviewing.booking_id }}
+            initial={{ stars: reviewingState.stars, body: reviewingState.body }}
+            submitLabel={reviewingState.state === "done" ? "Save changes" : "Post review"}
+          />
+        </Sheet>
+      ) : null}
     </>
   );
 }
 
-export default function MyBookingsPage() {
+export default function MyBookingsPage({ searchParams }: PageProps<"/my">) {
   return (
     <Suspense fallback={<PageSkeleton />}>
-      <MyBookingsContent />
+      <MyBookingsContent searchParams={searchParams} />
     </Suspense>
   );
 }
