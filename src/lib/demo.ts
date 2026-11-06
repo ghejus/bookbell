@@ -290,6 +290,73 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string, l
 }
 
 /**
+ * The EN · RO switch for a demo shop that already exists: the sample words it
+ * was made with (name, services, prices, notes, reviews, "Walk-in") swap to the
+ * other language. Like a sticker sheet: only the original stickers get swapped,
+ * anything the visitor typed themselves stays exactly as they wrote it.
+ *
+ * Uses the server's key, because owners may not rewrite bookings or reviews.
+ * Every change is pinned to this visitor's own shop (found by their user id).
+ */
+export async function translateDemoShop(userId: string, to: Lang) {
+  const admin = createAdminClient();
+  if (!admin) return;
+  const { data: shop } = await admin
+    .from("shops")
+    .select("id, name, about, currency")
+    .eq("owner_id", userId)
+    .like("slug", "demo-%")
+    .maybeSingle();
+  if (!shop) return;
+
+  const from: Lang = to === "ro" ? "en" : "ro";
+  const a = WORDS[from];
+  const b = WORDS[to];
+  const shopId = shop.id as string;
+  // Prices only change along with the money: 25 € becomes 60 lei, not 25 lei.
+  const newMoney = shop.currency === a.currency && a.currency !== b.currency;
+
+  // One small change: set `column` to `value` where it still says `old`.
+  const swap = (table: string, column: string, old: string, value: string) =>
+    old && old !== value ? admin.from(table).update({ [column]: value }).eq("shop_id", shopId).eq(column, old) : null;
+
+  const { data: services } = await admin.from("services").select("id, name, price_cents").eq("shop_id", shopId);
+  const priceChanges = newMoney
+    ? a.services.flatMap((s, i) => {
+        // Matched by the original name in either language (the swap below may run first).
+        const row = services?.find((r) => r.name === s.name || r.name === b.services[i].name);
+        if (!row || row.price_cents !== s.price_cents) return [];
+        const price = b.services[i].price_cents;
+        return [
+          admin.from("services").update({ price_cents: price }).eq("id", row.id).eq("shop_id", shopId),
+          // The price each visit was booked at, so Stats and Customers match.
+          admin.from("bookings").update({ price_cents: price }).eq("shop_id", shopId).eq("service_id", row.id).eq("price_cents", s.price_cents),
+        ];
+      })
+    : [];
+
+  await Promise.all([
+    shop.name === a.name || shop.about === a.about || newMoney
+      ? admin
+          .from("shops")
+          .update({
+            ...(shop.name === a.name ? { name: b.name } : {}),
+            ...(shop.about === a.about ? { about: b.about } : {}),
+            ...(newMoney ? { currency: b.currency } : {}),
+          })
+          .eq("id", shopId)
+      : null,
+    ...priceChanges,
+    ...a.services.map((s, i) => swap("services", "name", s.name, b.services[i].name)),
+    ...a.notes.flatMap((n, i) => [swap("shop_info", "question", n.question, b.notes[i].question), swap("shop_info", "answer", n.answer, b.notes[i].answer)]),
+    ...a.customerNotes.map((note, i) => swap("customer_notes", "note", note, b.customerNotes[i])),
+    ...a.reviews.flatMap((r, i) => [swap("reviews", "body", r.body, b.reviews[i].body), swap("reviews", "reply", r.reply ?? "", b.reviews[i].reply ?? "")]),
+    swap("bookings", "customer_name", a.walkIn, b.walkIn),
+    swap("bookings", "customer_name", a.you, b.you),
+  ]);
+}
+
+/**
  * Only the server may write reviews directly (customers go through
  * leave_review). The reviewed visits count as booked online, like real ones.
  */

@@ -12,6 +12,9 @@ export const LANG_HEADER = "x-bookbell-lang";
 
 export const LANG_NAMES: Record<Lang, string> = { en: "English", ro: "Română" };
 
+/** The name a new shop's first worker gets (the database names it "Me"). */
+export const FIRST_WORKER: Record<Lang, string> = { en: "Me", ro: "Eu" };
+
 export const isLang = (v: unknown): v is Lang => typeof v === "string" && (LANGS as readonly string[]).includes(v);
 
 /**
