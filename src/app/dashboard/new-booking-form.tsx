@@ -6,7 +6,7 @@ import { useActionForm } from "@/components/use-action-form";
 import { OWNER_TIMES } from "@/lib/calendar";
 import { formatDuration } from "@/lib/format";
 import { getTeamFreeSlots, type OpeningBlock, type StaffBusy } from "@/lib/slots";
-import { ownerAddBooking } from "./actions";
+import { ownerAddBooking } from "./actions/calendar";
 
 export type NewBookingData = {
   services: { id: string; name: string; duration: number }[];

@@ -3,7 +3,7 @@
 import { Field, FormMessage, Select, SubmitButton } from "@/components/form";
 import { useActionForm } from "@/components/use-action-form";
 import { OWNER_TIMES } from "@/lib/calendar";
-import { ownerMoveBooking } from "../actions";
+import { ownerMoveBooking } from "../actions/calendar";
 
 type Option = { id: string; name: string };
 

@@ -1,4 +1,4 @@
-import { CalendarXIcon, CaretLeftIcon, CaretRightIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
+import { CalendarXIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -6,6 +6,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { AccountButton } from "@/components/account-sheet";
 import { CustomerTabs } from "@/components/customer-tabs";
+import { DayStrip } from "@/components/day-strip";
 import { Card, EmptyState, Logo, PageSkeleton } from "@/components/ui";
 import { accountFor } from "@/lib/account";
 import { aiProvider } from "@/lib/assistant/provider";
@@ -13,16 +14,16 @@ import { getAvailability, getPublicShop, getShopMeta, shopToday } from "@/lib/bo
 import { emailMode } from "@/lib/email/send";
 import { formatDuration, formatPrice } from "@/lib/format";
 import { getCurrentUser } from "@/lib/shop";
+import { asUtc, DAYS_SHOWN, dayWindow, isDate, longDay, shownMonths } from "@/lib/dates";
 import { addDays } from "@/lib/slots";
+import { bookingTicket } from "@/lib/visitor";
 import { AboutText } from "./about-text";
 import { BookingFlow, HideWhenBooked, LinkPending, PendingSwap } from "./booking-flow";
 import { BookingForm } from "./booking-form";
 import { ShopChat } from "./chat";
 
-const DAYS_SHOWN = 14;
 /** "Europe/Bucharest" -> "Bucharest", for customers. */
 const cityOf = (tz: string) => (tz.split("/").pop() ?? tz).replaceAll("_", " ");
-const isDate = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
 
 export async function generateMetadata({ params }: PageProps<"/s/[slug]">): Promise<Metadata> {
   const { slug } = await params;
@@ -37,6 +38,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
   const [data, user] = await Promise.all([getPublicShop(slug), getCurrentUser()]);
   if (!data) notFound();
   const { shop, services, hours, staff } = data;
+  const ticket = bookingTicket(shop.id);
 
   const now = new Date();
   const today = shopToday(shop.timezone, now);
@@ -54,9 +56,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
   const step = (n: number) => (pickWorker || n < 2 ? n : n - 1);
 
   // The two weeks shown, kept inside today … last bookable day.
-  const from = isDate(query.from) && query.from > today && query.from <= lastDay ? query.from : today;
-  const prevFrom = from > today ? (addDays(from, -DAYS_SHOWN) < today ? today : addDays(from, -DAYS_SHOWN)) : null;
-  const nextFrom = addDays(from, DAYS_SHOWN) <= lastDay ? addDays(from, DAYS_SHOWN) : null;
+  const { from, prevFrom, nextFrom } = dayWindow(today, lastDay, query.from);
 
   const days = service ? await getAvailability(data, service, from, DAYS_SHOWN, now, worker?.id) : [];
   const chosenDate =
@@ -64,20 +64,6 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
       ? query.date
       : days.find((d) => d.slots.length > 0)?.date;
   const chosenDay = days.find((d) => d.date === chosenDate);
-
-  // Calendar dates as noon UTC, so formatting them never slips to the day before.
-  const asUtc = (d: string) => new Date(`${d}T12:00:00Z`);
-  const dayName = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short" });
-  const dayNum = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric" });
-  const longDay = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
-  // Short months ("Oct – Nov 2026") so the range fits beside the heading on small phones.
-  const monthRange = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", month: "short", year: "numeric" });
-  const shownMonths = (() => {
-    // "October 2026", or "October – November 2026" when the two weeks cross a month.
-    const first = asUtc(from);
-    const last = asUtc(addDays(from, DAYS_SHOWN - 1));
-    return monthRange.formatRange(first, last);
-  })();
 
   const takingBookings = services.length > 0 && hours.length > 0;
 
@@ -197,63 +183,18 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
             {/* Step 3 (or 2): day */}
             {service ? (
               <section aria-labelledby="step-day">
-                <div className="mb-3 flex items-center justify-between gap-3">
-                  <h2 id="step-day" className="text-base font-medium whitespace-nowrap text-gray-900">
-                    {step(3)}. Choose a day
-                  </h2>
-                  <div className="flex items-center gap-1">
-                    <span className="mr-1 text-sm whitespace-nowrap text-gray-600 tabular">{shownMonths}</span>
-                    {prevFrom ? (
-                      <Link href={href({ service: service.id, from: prevFrom })} scroll={false} aria-label="Earlier days" className="relative flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
-                        <CaretLeftIcon aria-hidden className="size-4.5" />
-                        <LinkPending className="absolute text-gray-500" />
-                      </Link>
-                    ) : null}
-                    {nextFrom ? (
-                      <Link href={href({ service: service.id, from: nextFrom })} scroll={false} aria-label="Later days" className="relative flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
-                        <CaretRightIcon aria-hidden className="size-4.5" />
-                        <LinkPending className="absolute text-gray-500" />
-                      </Link>
-                    ) : null}
-                  </div>
-                </div>
-                <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-7 sm:overflow-visible sm:px-0">
-                  {days.map((d) => {
-                    const open = d.slots.length > 0;
-                    const active = d.date === chosenDate;
-                    const weekday = dayName.format(asUtc(d.date));
-                    const number = <span className="text-lg font-medium tabular">{dayNum.format(asUtc(d.date))}</span>;
-                    return (
-                      <li key={d.date} className="shrink-0">
-                        {open ? (
-                          <Link
-                            href={href({ service: service.id, from: from === today ? undefined : from, date: d.date })}
-                            scroll={false}
-                            aria-current={active ? "date" : undefined}
-                            aria-label={`${longDay.format(asUtc(d.date))}, ${d.slots.length} free times`}
-                            className={`relative flex h-16 w-14 flex-col items-center justify-center rounded-lg border transition-colors duration-150 sm:w-full ${
-                              active ? "chip-on" : "chip-off"
-                            }`}
-                          >
-                            {/* While the day loads, the spinner takes the weekday's place. */}
-                            <span className="flex h-4 items-center text-xs font-medium">
-                              <PendingSwap>{weekday}</PendingSwap>
-                            </span>
-                            {number}
-                          </Link>
-                        ) : (
-                          <span
-                            aria-label={`${longDay.format(asUtc(d.date))}, no free times`}
-                            className="flex h-16 w-14 flex-col items-center justify-center rounded-lg border chip-shut sm:w-full"
-                          >
-                            <span className="flex h-4 items-center text-xs font-medium">{weekday}</span>
-                            {number}
-                          </span>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
+                <DayStrip
+                  title={<>{step(3)}. Choose a day</>}
+                  titleId="step-day"
+                  months={shownMonths(from)}
+                  prevHref={prevFrom ? href({ service: service.id, from: prevFrom }) : null}
+                  nextHref={nextFrom ? href({ service: service.id, from: nextFrom }) : null}
+                  arrowPending={<LinkPending className="absolute text-neutral-500" />}
+                  days={days.map((d) => ({ date: d.date, free: d.slots.length }))}
+                  chosen={chosenDate}
+                  hrefFor={(date) => href({ service: service.id, from: from === today ? undefined : from, date })}
+                  weekday={(name) => <PendingSwap>{name}</PendingSwap>}
+                />
                 <p className="mt-2 text-sm text-gray-600">Times are {cityOf(shop.timezone)} time.</p>
               </section>
             ) : null}
@@ -288,6 +229,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
                       emailsOn={emailMode() === "gmail"}
                       account={user ? { name: user.name, email: user.email } : null}
                       pagePath={`/s/${shop.slug}`}
+                      ticket={ticket}
                     />
                   </Card>
                 ) : (
@@ -312,6 +254,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/s/[slug]">) {
         timezone={shop.timezone}
         practice={aiProvider() === "practice"}
         raised={Boolean(user)}
+        ticket={ticket}
       />
       {user ? <CustomerTabs /> : null}
     </>

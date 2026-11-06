@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { z } from "zod";
 import { AssistantError, claudeReply } from "@/lib/assistant/claude";
 import { practiceReply } from "@/lib/assistant/practice";
@@ -8,6 +7,7 @@ import { CHAT_LIMITS, type ChatReply, type ShopFacts } from "@/lib/assistant/typ
 import { getPublicShop, shopToday } from "@/lib/booking";
 import { addDays } from "@/lib/slots";
 import { slugSchema } from "@/lib/validation";
+import { clientIp, visitorKey } from "@/lib/visitor";
 
 // The chat helper on a shop's public page. The browser sends the whole
 // conversation each time (short, text only); nothing is stored except a
@@ -29,12 +29,6 @@ const chatRequest = z.object({
 
 const fail = (status: number, error: string) => Response.json({ error }, { status });
 
-/** A one-way code for "this visitor at this shop", so no network address is stored. */
-function visitorKey(request: Request, shopId: string) {
-  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown";
-  return createHash("sha256").update(`bookbell-chat:${shopId}:${ip}`).digest("hex").slice(0, 32);
-}
-
 export async function POST(request: Request) {
   if (Number(request.headers.get("content-length") ?? 0) > 64_000) return fail(413, "That message is too long.");
   const parsed = chatRequest.safeParse(await request.json().catch(() => null));
@@ -50,7 +44,8 @@ export async function POST(request: Request) {
 
   const { data: verdict, error: limitError } = await supabase.rpc("take_chat_turn", {
     p_shop_id: shop.id,
-    p_visitor: visitorKey(request, shop.id),
+    // A one-way code for "this visitor at this shop", so no network address is stored.
+    p_visitor: visitorKey(clientIp(request.headers), `chat:${shop.id}`),
   });
   if (limitError) {
     console.error("take_chat_turn failed:", limitError.message);

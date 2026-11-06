@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { ActionState } from "@/lib/action-state";
 import { sendCustomerChangeEmails } from "@/lib/booking-emails";
 import { bookingError } from "@/lib/booking-errors";
+import { fields } from "@/lib/form-data";
 import { siteUrl } from "@/lib/site";
 import { createClient } from "@/lib/supabase/server";
 
@@ -15,9 +16,6 @@ import { createClient } from "@/lib/supabase/server";
 const token = z.string().regex(/^[0-9a-f]{48}$/);
 const cancelSchema = z.object({ token });
 const moveSchema = z.object({ token, starts_at: z.iso.datetime({ offset: true, error: "Pick a new time first." }) });
-
-const fields = (formData: FormData) =>
-  Object.fromEntries([...formData.entries()].filter(([k]) => !k.startsWith("$")).map(([k, v]) => [k, String(v)]));
 
 export async function cancelMyBooking(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const parsed = cancelSchema.safeParse(fields(formData));

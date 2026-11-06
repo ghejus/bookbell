@@ -6,10 +6,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { addDays, isoWeekday } from "../../src/lib/slots";
 import { utcToZoned, zonedToUtc } from "../../src/lib/time";
-import { client, owner, testOwners, type TestOwner } from "./helpers";
+import { client, owner, server, testOwners, type TestOwner } from "./helpers";
 
 const TZ = "Europe/Bucharest";
 const anon = client();
+const site = server();
 let a: TestOwner;
 let b: TestOwner;
 let customer: Awaited<ReturnType<typeof owner>>;
@@ -19,14 +20,16 @@ const at = (time: string) => zonedToUtc(monday, time, TZ).toISOString();
 
 type Made = { booking_id: string; manage_token: string };
 
-async function book(db: ReturnType<typeof client>, time: string, email: string): Promise<Made> {
-  const res = await db
+/** Books the way the website does: the server passes who is signed in (or nobody). */
+async function book(customerId: string | null, time: string, email: string): Promise<Made> {
+  const res = await site
     .rpc("book_appointment", {
       p_shop_id: a.shopId,
       p_service_id: serviceId,
       p_starts_at: at(time),
       p_customer_name: "Customer Test",
       p_customer_email: email,
+      p_customer_id: customerId,
     })
     .single<Made>();
   if (res.error) throw res.error;
@@ -69,7 +72,7 @@ afterAll(cleanUp);
 describe("booking while signed in", () => {
   let made: Made;
   beforeAll(async () => {
-    made = await book(customer.db, "09:00", "customer-c@randul-test.dev");
+    made = await book(customer.userId, "09:00", "customer-c@randul-test.dev");
   });
 
   it("puts the booking in the customer's My bookings", async () => {
@@ -100,7 +103,7 @@ describe("booking while signed in", () => {
 describe("booking as a guest", () => {
   let made: Made;
   beforeAll(async () => {
-    made = await book(anon, "10:00", "guest-c@randul-test.dev");
+    made = await book(null, "10:00", "guest-c@randul-test.dev");
   });
 
   it("links the booking to nobody", async () => {

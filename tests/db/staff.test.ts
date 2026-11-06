@@ -8,10 +8,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { addDays, isoWeekday } from "../../src/lib/slots";
 import { utcToZoned, zonedToUtc } from "../../src/lib/time";
-import { client, testOwners, type TestOwner } from "./helpers";
+import { client, server, testOwners, type TestOwner } from "./helpers";
 
 const TZ = "Europe/Bucharest";
 const anon = client();
+const site = server();
 let a: TestOwner;
 let b: TestOwner;
 let serviceId: string;
@@ -25,7 +26,7 @@ let n = 0;
 /** A stranger books in shop B. Every call uses a new email, so the 3-per-email rule never interferes. */
 function book(startsAt: string, staffId: string | null = null) {
   n += 1;
-  return anon.rpc("book_appointment", {
+  return site.rpc("book_appointment", {
     p_shop_id: b.shopId,
     p_service_id: serviceId,
     p_starts_at: startsAt,

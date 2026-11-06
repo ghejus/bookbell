@@ -26,6 +26,8 @@ type Props = {
   practice: boolean;
   /** Lift the button above a bottom tab bar. */
   raised?: boolean;
+  /** When the page was made, signed by the server (stops robots). */
+  ticket: string;
 };
 
 type Message = ChatTurn & {
@@ -329,6 +331,8 @@ function TimeChoices(props: Props & { times: ChatTimes; onBooked: BookedFn }) {
 function ChatBookingForm(props: Props & { booking: ChatBooking; onBooked: BookedFn }) {
   const { booking, shopId } = props;
   const { state, pending, formProps } = useActionForm(bookAppointment);
+  // Keep the first ticket, like the page's form does.
+  const [ticket] = useState(props.ticket);
   const booked = state?.message === "booked" && state.values ? state.values : null;
   const time = booking.whenLabel.split(", ").pop();
   const { onBooked } = props;
@@ -404,6 +408,7 @@ function ChatBookingForm(props: Props & { booking: ChatBooking; onBooked: Booked
           <input type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
         </label>
       </div>
+      <input type="hidden" name="ticket" value={ticket} />
       <FormMessage state={state} />
       <div className="[&>button]:w-full">
         <SubmitButton pending={pending} pendingText="Booking…">

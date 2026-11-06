@@ -9,7 +9,7 @@ Online booking for small shops (barbers, salons, dentists, any appointment busin
 **Launch film (20 seconds):** the preview above is silent. [Watch it with sound](https://bookbell.vercel.app/bookbell-launch.mp4) or [download it](https://github.com/ghejus/bookbell/releases/tag/launch-film). Made with [Hyperframes](https://hyperframes.heygen.com).
 
 **Built:** shop owner accounts and a one-click demo shop; a dark phone app that opens from the home screen; a Today screen and a day/week calendar where owners add walk-ins and move bookings; a team page, so each worker has their own bookings (customers pick a worker or "anyone"); a dashboard to set up the shop, its services, opening hours, days off and notes for the AI helper; a public booking page for each shop at `/s/<shop-address>`; customer accounts with My bookings, plus a private link to change or cancel each booking; and a chat helper on every shop page that answers questions and finds free times.
-**Later ideas:** switch on the confirmation and reminder emails (the code is ready; it only needs a mail account), a cleanup job for old demo accounts, the real AI helper (a Claude key), payments.
+**Later ideas:** switch on the confirmation and reminder emails (the code is ready; it only needs a mail account), the real AI helper (a Claude key), payments.
 
 ## The big pieces
 
@@ -63,7 +63,7 @@ npm run lint     # code style
 npm run build    # full production build
 ```
 
-`npm run test:db` signs in as two test owners (`lock-test-a@` and `lock-test-b@randul-test.dev`). Their password is not in the code: add `TEST_OWNER_PASSWORD=...` to `.env.local` first (any strong password; the tests sign the owners up the first time).
+`npm run test:db` signs in as two test owners (`lock-test-a@` and `lock-test-b@randul-test.dev`). Their password is not in the code: add `TEST_OWNER_PASSWORD=...` to `.env.local` first (any strong password; the tests sign the owners up the first time). They also need `SUPABASE_SECRET_KEY`, because online bookings can only be made by the server.
 
 **Worst-case test shop:** `node scripts/seed-worst-case.mjs` fills a test shop with the longest names and texts the database accepts, names in many scripts, emoji, a dozen services and a full day of bookings. Compare `/s/frizeria-stefan-fiii` (normal) with `/s/atelier-infrumusetare-wisniewska-kowalcz` (worst case) at a 320px-wide window after any layout change.
 
@@ -71,6 +71,6 @@ npm run build    # full production build
 
 ## Known limits
 
-- **Fake bookings:** booking needs no account, so a determined bot could fill a calendar with made-up bookings (a hidden form field stops simple bots, and one email can hold at most 3 upcoming bookings). The planned fix is "confirm your booking by email".
+- **Fake bookings:** booking needs no account. Only the website's server may book (the database refuses everyone else), and it stops forms filled in too fast, forms with the hidden trap field filled in, and more than 6 tries per hour from one network address (20 a day). One email can hold at most 3 upcoming bookings. A determined bot with many addresses could still get some made-up bookings through; the next step would be "confirm your booking by email".
 - **Chat limits can be used up on purpose:** someone could spend a shop's 300 daily chat messages by sending requests directly. That switches off the helper for that shop until the next day; it can't touch bookings or cost more than the cap.
 - **Emails:** customers aren't emailed yet. Owners contact customers themselves when they cancel.

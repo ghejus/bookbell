@@ -6,7 +6,7 @@ import { ConfirmDelete, Field, TextArea } from "@/components/form";
 import { Card, CardSection, EmptyState, PageSkeleton } from "@/components/ui";
 import { OwnerHeader } from "../account";
 import { requireShop } from "@/lib/shop";
-import { addShopInfo, deleteShopInfo } from "../actions";
+import { addShopInfo, deleteShopInfo } from "../actions/info";
 
 export const metadata: Metadata = { title: "AI notes" };
 

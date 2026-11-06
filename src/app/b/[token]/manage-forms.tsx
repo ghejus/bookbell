@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { FormMessage, SubmitButton } from "@/components/form";
+import { TimeGrid, type Slot } from "@/components/time-grid";
 import { useActionForm } from "@/components/use-action-form";
 import { buttonClass } from "@/components/ui";
 import { cancelMyBooking, moveMyBooking } from "./actions";
@@ -39,8 +40,6 @@ export function CancelForm({ token }: { token: string }) {
   );
 }
 
-type Slot = { iso: string; label: string };
-
 /** The free times on one day; pick one and move the booking there. */
 export function MoveForm({ token, slots, dayLabel }: { token: string; slots: Slot[]; dayLabel: string }) {
   const { state, pending, formProps } = useActionForm(moveMyBooking);
@@ -50,26 +49,7 @@ export function MoveForm({ token, slots, dayLabel }: { token: string; slots: Slo
   return (
     <form {...formProps} className="space-y-5">
       <input type="hidden" name="token" value={token} />
-      <fieldset>
-        <legend className="mb-3 text-sm font-medium text-gray-900">Free times on {dayLabel}</legend>
-        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-          {slots.map((s) => (
-            <label key={s.iso} className="relative">
-              <input
-                type="radio"
-                name="starts_at"
-                value={s.iso}
-                checked={picked === s.iso}
-                onChange={() => setPicked(s.iso)}
-                className="peer sr-only"
-              />
-              <span className="flex h-11 cursor-pointer items-center justify-center rounded-lg border chip-off text-sm font-medium tabular transition-colors duration-150 peer-checked:chip-on peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
-                {s.label}
-              </span>
-            </label>
-          ))}
-        </div>
-      </fieldset>
+      <TimeGrid slots={slots} dayLabel={dayLabel} picked={picked} onPick={setPicked} />
       <FormMessage state={state} />
       <div className="[&>button]:w-full">
         <SubmitButton pending={pending} pendingText="Moving…">

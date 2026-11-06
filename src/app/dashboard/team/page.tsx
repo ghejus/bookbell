@@ -6,7 +6,7 @@ import { ConfirmDelete, Field, SubmitButton } from "@/components/form";
 import { Badge, Card, CardSection, EmptyState, PageSkeleton } from "@/components/ui";
 import { OwnerHeader } from "../account";
 import { requireShop } from "@/lib/shop";
-import { addStaff, deleteStaff, renameStaff, toggleStaff } from "../actions";
+import { addStaff, deleteStaff, renameStaff, toggleStaff } from "../actions/team";
 
 export const metadata: Metadata = { title: "Team" };
 

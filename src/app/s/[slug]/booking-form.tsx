@@ -4,6 +4,7 @@ import { CalendarCheckIcon, CalendarDotsIcon, CalendarPlusIcon, MapPinIcon, Phon
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Field, FormMessage, SubmitButton } from "@/components/form";
+import { TimeGrid } from "@/components/time-grid";
 import { useActionForm } from "@/components/use-action-form";
 import { buttonClass } from "@/components/ui";
 import { calendarHref } from "@/lib/ics";
@@ -33,20 +34,12 @@ type Props = {
   account?: { name: string; email: string } | null;
   /** This page's address, to come back here after logging in. */
   pagePath: string;
+  /** When the page was made, signed by the server (stops robots). */
+  ticket: string;
 };
 
 const whenFormat = (timezone: string) =>
   new Intl.DateTimeFormat("en-GB", { timeZone: timezone, weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
-
-/** Morning, afternoon and evening, like a paper appointment book. */
-function groupSlots(slots: Props["slots"]) {
-  const groups = [
-    { name: "Morning", slots: slots.filter((s) => s.label < "12:00") },
-    { name: "Afternoon", slots: slots.filter((s) => s.label >= "12:00" && s.label < "17:00") },
-    { name: "Evening", slots: slots.filter((s) => s.label >= "17:00") },
-  ];
-  return groups.filter((g) => g.slots.length > 0);
-}
 
 /** Step 3: pick a time, then name and email. Shows the receipt after booking. */
 export function BookingForm(props: Props) {
@@ -55,6 +48,9 @@ export function BookingForm(props: Props) {
   const { setBooked } = useBookingFlow();
   const [picked, setPicked] = useState<string | null>(null);
   const [needTime, setNeedTime] = useState(false);
+  // Keep the first ticket: after a failed try the page refreshes with a new
+  // one, and a quick second try must not look "too fast".
+  const [ticket] = useState(props.ticket);
   const grid = useRef<HTMLFieldSetElement>(null);
   const pickedLabel = slots.find((s) => s.iso === picked)?.label;
   const booked = state?.message === "booked" && state.values ? state.values : null;
@@ -178,36 +174,16 @@ export function BookingForm(props: Props) {
       <input type="hidden" name="service_id" value={serviceId} />
       {props.staffId ? <input type="hidden" name="staff_id" value={props.staffId} /> : null}
 
-      <fieldset ref={grid} className="scroll-mt-4">
-        <legend className="mb-3 text-sm font-medium text-gray-900">Free times on {dayLabel}</legend>
-        <div className="space-y-4">
-          {groupSlots(slots).map((group) => (
-            <div key={group.name}>
-              <p className="mb-2 text-xs font-medium text-gray-600">{group.name}</p>
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
-                {group.slots.map((s) => (
-                  <label key={s.iso} className="relative">
-                    <input
-                      type="radio"
-                      name="starts_at"
-                      value={s.iso}
-                      checked={picked === s.iso}
-                      onChange={() => {
-                        setPicked(s.iso);
-                        setNeedTime(false);
-                      }}
-                      className="peer sr-only"
-                    />
-                    <span className="flex h-11 cursor-pointer items-center justify-center rounded-lg border chip-off text-sm font-medium tabular transition-colors duration-150 peer-checked:chip-on peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
-                      {s.label}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </fieldset>
+      <TimeGrid
+        ref={grid}
+        slots={slots}
+        dayLabel={dayLabel}
+        picked={picked}
+        onPick={(iso) => {
+          setPicked(iso);
+          setNeedTime(false);
+        }}
+      />
 
       <div className="rule-top space-y-5 pt-6">
         <Field label="Your name" name="customer_name" autoComplete="name" required maxLength={80} defaultValue={props.account?.name || undefined} />
@@ -231,6 +207,7 @@ export function BookingForm(props: Props) {
             <input type="text" name="website" tabIndex={-1} autoComplete="off" defaultValue="" />
           </label>
         </div>
+        <input type="hidden" name="ticket" value={ticket} />
       </div>
 
       <FormMessage state={needTime ? { error: "Please choose a time." } : state} />

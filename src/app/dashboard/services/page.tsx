@@ -7,7 +7,7 @@ import { Badge, Card, CardSection, EmptyState, PageSkeleton } from "@/components
 import { OwnerHeader } from "../account";
 import { CURRENCY_UNIT, formatDuration, formatPrice } from "@/lib/format";
 import { requireShop } from "@/lib/shop";
-import { addService, deleteService, toggleService } from "../actions";
+import { addService, deleteService, toggleService } from "../actions/services";
 
 export const metadata: Metadata = { title: "Services" };
 

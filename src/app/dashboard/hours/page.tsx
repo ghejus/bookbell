@@ -8,7 +8,7 @@ import { OwnerHeader } from "../account";
 import { WEEKDAYS } from "@/lib/format";
 import { requireShop } from "@/lib/shop";
 import { DateTimeField } from "./date-time-field";
-import { addOpeningHours, addStandardWeek, addTimeOff, deleteOpeningHours, deleteTimeOff } from "../actions";
+import { addOpeningHours, addStandardWeek, addTimeOff, deleteOpeningHours, deleteTimeOff } from "../actions/hours";
 
 export const metadata: Metadata = { title: "Opening hours" };
 

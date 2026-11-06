@@ -15,6 +15,16 @@ export function client() {
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 
+/**
+ * The website's own server key. Online bookings go through it, because only
+ * the server may call book_appointment (after its form and visitor checks).
+ */
+export function server() {
+  const secret = process.env.SUPABASE_SECRET_KEY;
+  if (!secret) throw new Error("Add SUPABASE_SECRET_KEY to .env.local to run the database tests (see README).");
+  return createClient(url, secret, { auth: { persistSession: false, autoRefreshToken: false } });
+}
+
 /** Signs in a test owner, signing them up first if needed. */
 export async function owner(email: string) {
   const db = client();

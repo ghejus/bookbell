@@ -6,7 +6,7 @@ import { useActionForm } from "@/components/use-action-form";
 import { CURRENCIES, CURRENCY_LABELS } from "@/lib/format";
 import type { Shop } from "@/lib/shop";
 import { slugify } from "@/lib/validation";
-import { saveShop } from "./actions";
+import { saveShop } from "./actions/shop";
 
 type Props = { shop: Shop | null; timezones: string[] };
 

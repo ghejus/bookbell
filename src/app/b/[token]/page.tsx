@@ -1,4 +1,5 @@
-import { CalendarCheckIcon, CalendarXIcon, CaretLeftIcon, CaretRightIcon, CheckCircleIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
+import { DayStrip } from "@/components/day-strip";
+import { CalendarCheckIcon, CalendarXIcon, CaretLeftIcon, CheckCircleIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
@@ -9,6 +10,7 @@ import { getAvailability, getPublicShop, shopToday } from "@/lib/booking";
 import { bookingByToken, toBookingInfo } from "@/lib/booking-emails";
 import { serviceLine } from "@/lib/email/templates";
 import { getCurrentUser } from "@/lib/shop";
+import { asUtc, DAYS_SHOWN, dayWindow, isDate, longDay, shownMonths } from "@/lib/dates";
 import { addDays } from "@/lib/slots";
 import { createClient } from "@/lib/supabase/server";
 import { saveToMyBookings } from "./actions";
@@ -23,12 +25,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const DAYS_SHOWN = 14;
-const isDate = (v: unknown): v is string => typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
-const asUtc = (d: string) => new Date(`${d}T12:00:00Z`);
-const dayName = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "short" });
-const dayNum = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", day: "numeric" });
-const longDay = new Intl.DateTimeFormat("en-GB", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" });
 
 function BrokenLink() {
   return (
@@ -66,9 +62,7 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
     if (data) {
       const today = shopToday(row.shop_timezone, now);
       const lastDay = addDays(today, data.shop.booking_window_days);
-      const from = isDate(query.from) && query.from > today && query.from <= lastDay ? query.from : today;
-      const prevFrom = from > today ? (addDays(from, -DAYS_SHOWN) < today ? today : addDays(from, -DAYS_SHOWN)) : null;
-      const nextFrom = addDays(from, DAYS_SHOWN) <= lastDay ? addDays(from, DAYS_SHOWN) : null;
+      const { from, prevFrom, nextFrom } = dayWindow(today, lastDay, query.from);
       const service = { id: row.service_id, name: row.service_name, duration_minutes: row.duration_minutes, price_cents: row.price_cents };
       const days = await getAvailability(data, service, from, DAYS_SHOWN, now, row.staff_id, {
         staffId: row.staff_id,
@@ -85,59 +79,18 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
 
       picker = (
         <section aria-labelledby="move-title" className="space-y-4">
-          <div className="flex items-center justify-between gap-3">
-            <h2 id="move-title" className="text-base font-medium text-gray-900">
-              Pick a new time
-            </h2>
-            <div className="flex items-center gap-1">
-              {prevFrom ? (
-                <Link href={link({ from: prevFrom === today ? null : prevFrom })} scroll={false} aria-label="Earlier days" className="flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
-                  <CaretLeftIcon aria-hidden className="size-4.5" />
-                </Link>
-              ) : null}
-              {nextFrom ? (
-                <Link href={link({ from: nextFrom })} scroll={false} aria-label="Later days" className="flex size-9 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100">
-                  <CaretRightIcon aria-hidden className="size-4.5" />
-                </Link>
-              ) : null}
-            </div>
+          <div>
+            <DayStrip
+              title="Pick a new time"
+              titleId="move-title"
+              months={shownMonths(from)}
+              prevHref={prevFrom ? link({ from: prevFrom === today ? null : prevFrom }) : null}
+              nextHref={nextFrom ? link({ from: nextFrom }) : null}
+              days={days.map((d) => ({ date: d.date, free: d.slots.length }))}
+              chosen={chosen?.date}
+              hrefFor={(date) => link({ from: from === today ? null : from, date })}
+            />
           </div>
-          <ul className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:grid sm:grid-cols-7 sm:overflow-visible sm:px-0">
-            {days.map((d) => {
-              const open = d.slots.length > 0;
-              const active = d.date === chosen?.date;
-              const inner = (
-                <>
-                  <span className="text-xs font-medium">{dayName.format(asUtc(d.date))}</span>
-                  <span className="text-lg font-medium tabular">{dayNum.format(asUtc(d.date))}</span>
-                </>
-              );
-              return (
-                <li key={d.date} className="shrink-0">
-                  {open ? (
-                    <Link
-                      href={link({ from: from === today ? null : from, date: d.date })}
-                      scroll={false}
-                      aria-current={active ? "date" : undefined}
-                      aria-label={`${longDay.format(asUtc(d.date))}, ${d.slots.length} free times`}
-                      className={`flex h-16 w-14 flex-col items-center justify-center rounded-lg border transition-colors duration-150 sm:w-full ${
-                        active ? "chip-on" : "chip-off"
-                      }`}
-                    >
-                      {inner}
-                    </Link>
-                  ) : (
-                    <span
-                      aria-label={`${longDay.format(asUtc(d.date))}, no free times`}
-                      className="flex h-16 w-14 flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 text-gray-600 sm:w-full"
-                    >
-                      {inner}
-                    </span>
-                  )}
-                </li>
-              );
-            })}
-          </ul>
           {chosen ? (
             <Card className="p-5 sm:p-6">
               <MoveForm key={chosen.date} token={token} slots={chosen.slots} dayLabel={longDay.format(asUtc(chosen.date))} />

@@ -23,7 +23,8 @@ const OFFSET = "-03:00";
 
 const options = { auth: { persistSession: false, autoRefreshToken: false } };
 const owner = createClient(url, key, options);
-const stranger = createClient(url, key, options);
+// Online bookings can only be made by the server (book_appointment is server-only).
+const stranger = createClient(url, process.env.SUPABASE_SECRET_KEY, options);
 
 const must = (res, what) => {
   if (res.error) throw new Error(`${what}: ${res.error.message}`);
@@ -131,7 +132,7 @@ must(
   "add time off",
 );
 
-// 7. Bookings, made the way customers make them (as a stranger), on the next weekday 3+ days ahead.
+// 7. Bookings, made the way the website makes them (server key, same checks), on the next weekday 3+ days ahead.
 must(await owner.from("bookings").update({ status: "cancelled" }).eq("shop_id", shopId).eq("status", "booked"), "cancel old bookings");
 let bookDay = 3;
 while ([0, 6].includes(new Date(`${day(bookDay)}T12:00:00Z`).getUTCDay())) bookDay++;

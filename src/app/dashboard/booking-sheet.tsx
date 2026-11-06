@@ -16,7 +16,7 @@ import { emailMode } from "@/lib/email/send";
 import { formatDuration, formatPrice } from "@/lib/format";
 import { requireShop } from "@/lib/shop";
 import { utcToZoned } from "@/lib/time";
-import { cancelBooking } from "./actions";
+import { cancelBooking } from "./actions/bookings";
 import { MoveBookingForm } from "./calendar/panel-forms";
 
 export const isBookingId = (v: unknown): v is string => typeof v === "string" && /^[0-9a-f-]{36}$/.test(v);

@@ -6,10 +6,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { addDays, isoWeekday } from "../../src/lib/slots";
 import { utcToZoned, zonedToUtc } from "../../src/lib/time";
-import { client, testOwners, type TestOwner } from "./helpers";
+import { client, server, testOwners, type TestOwner } from "./helpers";
 
 const TZ = "Europe/Bucharest";
 const anon = client();
+const site = server();
 let a: TestOwner;
 let serviceId: string;
 let monday: string;
@@ -19,7 +20,7 @@ const at = (time: string) => zonedToUtc(monday, time, TZ).toISOString();
 const sameTime = (x: string, y: string) => Date.parse(x) === Date.parse(y);
 
 async function book(time: string, email: string) {
-  const res = await anon
+  const res = await site
     .rpc("book_appointment", {
       p_shop_id: a.shopId,
       p_service_id: serviceId,

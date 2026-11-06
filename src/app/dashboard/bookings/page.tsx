@@ -8,7 +8,7 @@ import { emailMode } from "@/lib/email/send";
 import { formatDuration } from "@/lib/format";
 import { requireShop } from "@/lib/shop";
 import { OwnerHeader } from "../account";
-import { cancelBooking } from "../actions";
+import { cancelBooking } from "../actions/bookings";
 import { BookingSheet, isBookingId } from "../booking-sheet";
 
 export const metadata: Metadata = { title: "Bookings" };

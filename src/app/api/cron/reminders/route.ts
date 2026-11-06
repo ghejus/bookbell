@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { sendReminderEmail } from "@/lib/booking-emails";
+import { isCronRequest } from "@/lib/cron";
 import { isTestAddress } from "@/lib/email/addresses";
 import { siteUrl } from "@/lib/site";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -14,10 +15,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 const HOUR = 3_600_000;
 
 export async function GET(request: NextRequest) {
-  const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
-    return NextResponse.json({ error: "Not allowed." }, { status: 401 });
-  }
+  if (!isCronRequest(request)) return NextResponse.json({ error: "Not allowed." }, { status: 401 });
   const admin = createAdminClient();
   if (!admin) return NextResponse.json({ error: "SUPABASE_SECRET_KEY is not set." }, { status: 503 });
 

@@ -1,7 +1,7 @@
 /**
  * Booking rules against the real database (part of `npm run test:db`).
- * A stranger (not logged in) calls the two public functions directly, the way
- * a hand-made request would, and every rule must hold without the website's help.
+ * Bookings are made the way the website's server makes them (book_appointment
+ * is server-only), and every rule must hold without the website's help.
  *
  * Test shop A is open Mondays 09:00–17:00 (Bucharest time) with a 30-minute
  * "Visible service" and a hidden one. Every booking made here is cancelled at the end.
@@ -9,10 +9,11 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { addDays, isoWeekday } from "../../src/lib/slots";
 import { utcToZoned, zonedToUtc } from "../../src/lib/time";
-import { client, testOwners, type TestOwner } from "./helpers";
+import { client, server, testOwners, type TestOwner } from "./helpers";
 
 const TZ = "Europe/Bucharest";
 const anon = client();
+const site = server();
 let a: TestOwner;
 let b: TestOwner;
 let visibleId: string;
@@ -21,7 +22,7 @@ let monday: string; // a Monday at least 3 days ahead
 const at = (time: string, date = monday) => zonedToUtc(date, time, TZ).toISOString();
 
 function book(startsAt: string, email = "customer@randul-test.dev", serviceId = visibleId) {
-  return anon.rpc("book_appointment", {
+  return site.rpc("book_appointment", {
     p_shop_id: a.shopId,
     p_service_id: serviceId,
     p_starts_at: startsAt,

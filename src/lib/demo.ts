@@ -2,11 +2,14 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { addDays, isoWeekday } from "@/lib/slots";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { utcToZoned, zonedToUtc } from "@/lib/time";
 
 // "Try a demo shop": every visitor gets their own sample shop under a
 // no-email (anonymous) Supabase account, so nobody sees anyone else's changes.
 // It is made with the visitor's own login, so the usual database locks apply.
+// Only the online bookings go through the server's key, because only the
+// server may call book_appointment; they still pass all its checks.
 
 const TZ = "Europe/Bucharest";
 
@@ -109,8 +112,10 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
   // A few bookings, made through the same checks as real ones. They are other
   // people's, so they stay out of the demo visitor's own My bookings.
   const ids = (services ?? []).map((s) => s.id as string);
+  const admin = createAdminClient();
   for (const c of CUSTOMERS) {
-    await supabase.rpc("book_appointment", {
+    if (!admin) break;
+    await admin.rpc("book_appointment", {
       p_shop_id: shopId,
       p_service_id: ids[c.service],
       p_starts_at: zonedToUtc(weekdays[c.day], c.time, TZ).toISOString(),
@@ -118,13 +123,12 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
       p_customer_email: c.email,
       p_customer_phone: c.phone,
       p_staff_id: staffIds[c.staff] ?? null,
-      p_save_to_account: false,
     });
   }
 
   // One booking that is the visitor's own, for trying "Customer" mode: it shows
   // in My bookings, where it can be moved or cancelled.
-  await supabase.rpc("book_appointment", {
+  await admin?.rpc("book_appointment", {
     p_shop_id: shopId,
     p_service_id: ids[0],
     p_starts_at: zonedToUtc(weekdays[2], "16:30", TZ).toISOString(),
@@ -132,6 +136,7 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
     p_customer_email: "alex.pop@example.com",
     p_customer_phone: "",
     p_staff_id: staffIds[0] ?? null,
+    p_customer_id: userId,
   });
 
   // Today's visits and past visits, added the way the owner adds walk-ins
