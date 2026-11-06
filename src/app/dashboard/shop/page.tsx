@@ -12,6 +12,7 @@ import {
   ScissorsIcon,
   SlidersHorizontalIcon,
   UsersIcon,
+  UsersThreeIcon,
   type Icon,
 } from "@/components/icons";
 import { Card, CardSection, PageSkeleton } from "@/components/ui";
@@ -34,6 +35,33 @@ function daysSummary(weekdays: number[]) {
   return inARow ? `${DAY[days[0]]}–${DAY[days[days.length - 1]]}` : days.map((d) => DAY[d]).join(", ");
 }
 
+type Row = { href: string; icon: Icon; label: string; value: string };
+
+/** A titled card of links to the shop's sub-pages. */
+function RowList({ id, title, rows }: { id: string; title: string; rows: Row[] }) {
+  return (
+    <section aria-labelledby={id} className="space-y-2">
+      <h2 id={id} className="px-1 text-[13px] font-medium">
+        {title}
+      </h2>
+      <Card className="overflow-hidden">
+        <ul>
+          {rows.map((r) => (
+            <li key={r.href}>
+              <Link href={r.href} className="rule-top flex min-h-14 items-center gap-3 py-2 pr-3.5 pl-4 transition-colors duration-150 hover:bg-ink/4">
+                <r.icon aria-hidden className="size-5 shrink-0 text-neutral-500" />
+                <span className="flex-1 text-[15px] font-medium">{r.label}</span>
+                <span className="min-w-0 truncate text-right text-[13px] text-neutral-400">{r.value}</span>
+                <CaretRightIcon aria-hidden className="size-4 shrink-0 text-neutral-600" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Card>
+    </section>
+  );
+}
+
 async function ShopContent() {
   const { supabase, shop } = await requireShop();
   const [bookingUrl, { data: services }, { data: hours }, { count: notes }, { data: staff }, { data: rules }] = await Promise.all([
@@ -50,7 +78,10 @@ async function ShopContent() {
   ]);
 
   const team = (staff ?? []).map((w) => w.name);
-  const rows: { href: string; icon: Icon; label: string; value: string }[] = [
+  const businessRows: Row[] = [
+    { href: "/dashboard/customers", icon: UsersThreeIcon, label: "Customers", value: "Visits and notes" },
+  ];
+  const rows: Row[] = [
     { href: "/dashboard/services", icon: ScissorsIcon, label: "Services", value: `${services?.length ?? 0} shown` },
     { href: "/dashboard/hours", icon: ClockIcon, label: "Hours and days off", value: daysSummary((hours ?? []).map((h) => h.weekday)) },
     { href: "/dashboard/rules", icon: SlidersHorizontalIcon, label: "Booking rules", value: rules ? rulesSummary(rules) : "" },
@@ -77,28 +108,8 @@ async function ShopContent() {
           </Link>
         </Card>
 
-        <section aria-labelledby="setup" className="space-y-2">
-          <h2 id="setup" className="px-1 text-[13px] font-medium">
-            Set up
-          </h2>
-          <Card className="overflow-hidden">
-            <ul>
-              {rows.map((r) => (
-                <li key={r.href}>
-                  <Link
-                    href={r.href}
-                    className="rule-top flex min-h-14 items-center gap-3 py-2 pr-3.5 pl-4 transition-colors duration-150 hover:bg-ink/4"
-                  >
-                    <r.icon aria-hidden className="size-5 shrink-0 text-neutral-500" />
-                    <span className="flex-1 text-[15px] font-medium">{r.label}</span>
-                    <span className="min-w-0 truncate text-right text-[13px] text-neutral-400">{r.value}</span>
-                    <CaretRightIcon aria-hidden className="size-4 shrink-0 text-neutral-600" />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </Card>
-        </section>
+        <RowList id="business" title="Your business" rows={businessRows} />
+        <RowList id="setup" title="Set up" rows={rows} />
 
         {shop.address || shop.phone ? (
           <div className="space-y-1 px-1 text-[13px] text-neutral-400">

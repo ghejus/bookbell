@@ -144,7 +144,15 @@ async function ManageBooking({ params, searchParams }: PageProps<"/b/[token]">) 
             <p className="text-sm text-gray-600">Your booking at</p>
             <h1 className="text-[22px] leading-tight font-medium tracking-tight wrap-anywhere">{row.shop_name}</h1>
           </div>
-          {row.status === "cancelled" ? <Badge tone="warning">Cancelled</Badge> : live ? <Badge tone="success">Booked</Badge> : <Badge>Past</Badge>}
+          {row.status === "cancelled" ? (
+            <Badge tone="warning">Cancelled</Badge>
+          ) : row.status === "no_show" ? (
+            <Badge tone="warning">Missed</Badge>
+          ) : live ? (
+            <Badge tone="success">Booked</Badge>
+          ) : (
+            <Badge>Past</Badge>
+          )}
         </div>
 
         <dl className="mt-5 space-y-3 text-sm">

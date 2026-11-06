@@ -129,6 +129,7 @@ async function MyBookingsContent() {
                       {b.service_name}
                       <span className="text-neutral-400"> · {b.shop_name}</span>
                       {b.status === "cancelled" ? <span className="text-neutral-500"> · Cancelled</span> : null}
+                      {b.status === "no_show" ? <span className="text-neutral-500"> · Missed</span> : null}
                     </span>
                     <span className="shrink-0 text-neutral-400 tabular">
                       {fmt(b.shop_timezone, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(b.starts_at))}

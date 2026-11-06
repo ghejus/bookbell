@@ -39,13 +39,26 @@ const CUSTOMERS = [
   { name: "Elena Dumitru", email: "elena.d@example.com", phone: "+40 700 333 444", service: 2, time: "11:00", day: 2, staff: 1 },
 ];
 
-// Visits that already happened (`daysAgo` counts weekdays back from yesterday),
-// so the calendar and the "Past" list have something to show. One is a walk-in
-// with no email, the way an owner would type it in.
-const PAST = [
-  { name: "Ioana Stan", email: "ioana.stan@example.com", phone: "", service: 0, time: "09:30", daysAgo: 0, staff: 0 },
-  { name: "Walk-in", email: "", phone: "", service: 3, time: "12:00", daysAgo: 0, staff: 1 },
-  { name: "George Vasile", email: "george.v@example.com", phone: "+40 700 555 666", service: 1, time: "16:00", daysAgo: 1, staff: 0 },
+// Regular customers for the visits that already happened, so the calendar,
+// the "Past" list and the Customers page have a real history to show.
+const REGULARS = [
+  { name: "Ioana Stan", email: "ioana.stan@example.com", phone: "" },
+  { name: "George Vasile", email: "george.v@example.com", phone: "+40 700 555 666" },
+  { name: "Ana Popescu", email: "ana.popescu@example.com", phone: "+40 700 111 222" },
+  { name: "Daria Munteanu", email: "daria.m@example.com", phone: "+40 700 888 999" },
+  { name: "Mihai Ionescu", email: "mihai@example.com", phone: "" },
+  { name: "Victor Enache", email: "victor.enache@example.com", phone: "" },
+  { name: "Bianca Rusu", email: "bianca.rusu@example.com", phone: "+40 700 123 456" },
+];
+const HISTORY_DAYS = 25; // weekdays back from yesterday, about five weeks
+const HISTORY_TIMES = ["09:30", "11:00", "13:30", "15:00", "16:30"];
+// Which visits in the history the customer missed (by day).
+const MISSED_ON_DAY = [4, 13];
+
+// The owner's private notes about two regulars.
+const CUSTOMER_NOTES = [
+  { email: "ioana.stan@example.com", note: "Likes it short on the sides, longer on top." },
+  { email: "george.v@example.com", note: "Prefers Andrei. Pays by card." },
 ];
 
 // Today's visits, so the Today screen has a "Next up" and a full day to show.
@@ -156,19 +169,37 @@ export async function createDemoShop(supabase: SupabaseClient, userId: string) {
   }
 
   const pastDays: string[] = [];
-  for (let day = addDays(utcToZoned(new Date(), TZ).date, -1); pastDays.length < 2; day = addDays(day, -1)) {
+  for (let day = addDays(today, -1); pastDays.length < HISTORY_DAYS; day = addDays(day, -1)) {
     if (isoWeekday(day) <= 5) pastDays.push(day);
   }
-  for (const p of PAST) {
-    const staffId = staffIds[p.staff];
-    if (!staffId) continue;
-    await supabase.rpc("owner_add_booking", {
-      p_service_id: ids[p.service],
-      p_staff_id: staffId,
-      p_starts_at: zonedToUtc(pastDays[p.daysAgo], p.time, TZ).toISOString(),
-      p_customer_name: p.name,
-      p_customer_email: p.email,
-      p_customer_phone: p.phone,
-    });
-  }
+  // One or two visits a day, regulars taking turns. Added in parallel (each
+  // is a different time or barber), so the demo still starts quickly.
+  const history = pastDays.flatMap((day, i) => {
+    const first = { who: REGULARS[(i * 3) % REGULARS.length], day, time: HISTORY_TIMES[i % HISTORY_TIMES.length], staff: i % 2, service: (i * 7) % 4, missed: MISSED_ON_DAY.includes(i) };
+    const second = { who: REGULARS[(i * 5 + 2) % REGULARS.length], day, time: "17:30", staff: (i + 1) % 2, service: (i + 1) % 4, missed: false };
+    return i % 3 === 0 ? [first, second] : [first];
+  });
+  const walkIn = { who: { name: "Walk-in", email: "", phone: "" }, day: pastDays[0], time: "12:00", staff: 1, service: 3, missed: false };
+  const made = await Promise.all(
+    [...history, walkIn].map(async (v) => {
+      const staffId = staffIds[v.staff];
+      if (!staffId) return null;
+      const { data } = await supabase
+        .rpc("owner_add_booking", {
+          p_service_id: ids[v.service],
+          p_staff_id: staffId,
+          p_starts_at: zonedToUtc(v.day, v.time, TZ).toISOString(),
+          p_customer_name: v.who.name,
+          p_customer_email: v.who.email,
+          p_customer_phone: v.who.phone,
+        })
+        .single<{ booking_id: string }>();
+      return v.missed ? (data?.booking_id ?? null) : null;
+    }),
+  );
+  const missed = made.filter((id): id is string => Boolean(id));
+  await Promise.all([
+    missed.length ? supabase.from("bookings").update({ status: "no_show" }).in("id", missed) : null,
+    supabase.from("customer_notes").insert(CUSTOMER_NOTES.map((n) => ({ shop_id: shopId, customer_key: `e:${n.email}`, note: n.note }))),
+  ]);
 }

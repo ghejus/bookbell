@@ -23,7 +23,7 @@ const toMinutes = (t: string) => Number(t.slice(0, 2)) * 60 + Number(t.slice(3, 
 type Worker = { id: string; name: string; active: boolean };
 type Hours = { weekday: number; opens: string; closes: string };
 type Off = { id: string; starts_at: string; ends_at: string; staff_id: string | null };
-type Booking = { id: string; starts_at: string; ends_at: string; customer_name: string; staff_id: string };
+type Booking = { id: string; status: "booked" | "no_show"; starts_at: string; ends_at: string; customer_name: string; staff_id: string };
 
 const hatch = "bg-[repeating-linear-gradient(135deg,rgb(233_233_237/0.045)_0_6px,transparent_6px_12px)]";
 
@@ -52,9 +52,9 @@ async function CalendarContent({ searchParams }: PageProps<"/dashboard/calendar"
       .returns<Off[]>(),
     supabase
       .from("bookings")
-      .select("id, starts_at, ends_at, customer_name, staff_id")
+      .select("id, status, starts_at, ends_at, customer_name, staff_id")
       .eq("shop_id", shop.id)
-      .eq("status", "booked")
+      .in("status", ["booked", "no_show"])
       .lt("starts_at", to.toISOString())
       .gt("ends_at", from.toISOString())
       .order("starts_at")
@@ -168,7 +168,7 @@ async function CalendarContent({ searchParams }: PageProps<"/dashboard/calendar"
               href={link({ b: b.id })}
               scroll={false}
               aria-current={active ? "true" : undefined}
-              title={`${start}–${end} ${b.customer_name}${staff.length > 1 ? `, with ${worker.name}` : ""}`}
+              title={`${start}–${end} ${b.customer_name}${staff.length > 1 ? `, with ${worker.name}` : ""}${b.status === "no_show" ? " (didn’t come)" : ""}`}
               className={`absolute inset-x-[3px] z-20 flex content-start items-center gap-x-1.5 overflow-hidden rounded-md text-xs leading-[14px] transition-colors duration-150 ${
                 h < 30 ? "flex-nowrap px-[7px] py-px" : "flex-wrap px-[7px] py-[3px]"
               } ${
@@ -180,7 +180,7 @@ async function CalendarContent({ searchParams }: PageProps<"/dashboard/calendar"
               }`}
               style={{ top: top(s) + 1, height: h }}
             >
-              <span className="min-w-0 shrink truncate font-medium">{b.customer_name}</span>
+              <span className={`min-w-0 shrink truncate font-medium ${b.status === "no_show" ? "line-through decoration-danger-text" : ""}`}>{b.customer_name}</span>
               {/* Narrow week columns keep short bookings to the name; the time is in the tooltip. */}
               {showName && h < 30 ? null : <span className="text-[11px] whitespace-nowrap opacity-75 tabular">{h < 30 ? start : `${start}–${end}`}</span>}
               {showName && h > 44 ? <span className="w-full truncate text-[11px] opacity-75">{worker.name}</span> : null}

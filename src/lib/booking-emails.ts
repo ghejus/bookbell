@@ -20,7 +20,7 @@ import {
 /** What get_booking_by_token returns. */
 export type TokenRow = {
   booking_id: string;
-  status: "booked" | "cancelled";
+  status: "booked" | "cancelled" | "no_show";
   starts_at: string;
   ends_at: string;
   customer_name: string;

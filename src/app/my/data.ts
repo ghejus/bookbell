@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/shop";
 
 export type MyBooking = {
   booking_id: string;
-  status: "booked" | "cancelled";
+  status: "booked" | "cancelled" | "no_show";
   starts_at: string;
   ends_at: string;
   service_name: string;

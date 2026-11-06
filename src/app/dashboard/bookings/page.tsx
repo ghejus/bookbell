@@ -1,14 +1,14 @@
-import { CalendarBlankIcon, EnvelopeSimpleIcon, PhoneIcon, XIcon } from "@/components/icons";
+import { CalendarBlankIcon, EnvelopeSimpleIcon, PhoneIcon, UserMinusIcon, XIcon } from "@/components/icons";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ConfirmDelete } from "@/components/form";
+import { ConfirmDelete, IconSubmit } from "@/components/form";
 import { buttonClass, Card, EmptyState, PageSkeleton } from "@/components/ui";
 import { emailMode } from "@/lib/email/send";
 import { formatDuration } from "@/lib/format";
 import { requireShop } from "@/lib/shop";
 import { OwnerHeader } from "../account";
-import { cancelBooking } from "../actions/bookings";
+import { cancelBooking, markNoShow } from "../actions/bookings";
 import { BookingSheet, isBookingId } from "../booking-sheet";
 
 export const metadata: Metadata = { title: "Bookings" };
@@ -25,6 +25,7 @@ function BreakableEmail({ email }: { email: string }) {
 
 type Booking = {
   id: string;
+  status: "booked" | "no_show";
   starts_at: string;
   ends_at: string;
   customer_name: string;
@@ -44,9 +45,10 @@ async function BookingsContent({ searchParams }: PageProps<"/dashboard/bookings"
   const now = new Date().toISOString();
   const list = supabase
     .from("bookings")
-    .select("id, starts_at, ends_at, customer_name, customer_email, customer_phone, services(name, duration_minutes), staff(name)")
+    .select("id, status, starts_at, ends_at, customer_name, customer_email, customer_phone, services(name, duration_minutes), staff(name)")
     .eq("shop_id", shop.id)
-    .eq("status", "booked");
+    // Past visits include the ones marked "didn't come".
+    .in("status", past ? ["booked", "no_show"] : ["booked"]);
   const [{ data }, { count: teamSize }] = await Promise.all([
     past
       ? // Newest first, one page at a time (one extra row tells us if there is an older page).
@@ -130,7 +132,17 @@ async function BookingsContent({ searchParams }: PageProps<"/dashboard/bookings"
                         </Link>
                       </p>
                       {past ? (
-                        <span />
+                        b.status === "no_show" ? (
+                          <span className="mt-1 rounded-md bg-danger-soft px-2 py-0.5 text-[11px] whitespace-nowrap text-danger-ink">Didn’t come</span>
+                        ) : (
+                          <form action={markNoShow} className="flex min-w-9 justify-end">
+                            <input type="hidden" name="id" value={b.id} />
+                            <input type="hidden" name="back" value={here} />
+                            <IconSubmit label={`${b.customer_name} didn’t come`}>
+                              <UserMinusIcon aria-hidden className="size-4.5" />
+                            </IconSubmit>
+                          </form>
+                        )
                       ) : (
                         <form action={cancelBooking} className="row-span-1 flex min-w-9 justify-end">
                           <input type="hidden" name="id" value={b.id} />

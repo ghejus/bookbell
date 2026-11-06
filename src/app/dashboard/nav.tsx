@@ -13,18 +13,23 @@ import {
   StorefrontIcon,
   SunIcon,
   UsersIcon,
+  UsersThreeIcon,
   type Icon,
 } from "@/components/icons";
 
 type Item = { href: string; label: string; icon: Icon; match: (path: string) => boolean };
 
-const shopPages = ["/dashboard/shop", "/dashboard/services", "/dashboard/hours", "/dashboard/rules", "/dashboard/info", "/dashboard/team"];
+const shopPages = ["/dashboard/shop", "/dashboard/services", "/dashboard/hours", "/dashboard/rules", "/dashboard/info", "/dashboard/team", "/dashboard/customers"];
 
 const main: Item[] = [
   { href: "/dashboard", label: "Today", icon: SunIcon, match: (p) => p === "/dashboard" },
   { href: "/dashboard/calendar", label: "Calendar", icon: CalendarBlankIcon, match: (p) => p === "/dashboard/calendar" },
   { href: "/dashboard/bookings", label: "Bookings", icon: ListChecksIcon, match: (p) => p === "/dashboard/bookings" },
   { href: "/dashboard/shop", label: "Shop", icon: StorefrontIcon, match: (p) => shopPages.includes(p) },
+];
+
+const business: Item[] = [
+  { href: "/dashboard/customers", label: "Customers", icon: UsersThreeIcon, match: (p) => p === "/dashboard/customers" },
 ];
 
 const setup: Item[] = [
@@ -113,6 +118,14 @@ export function SidebarNav() {
         {main.map((item) => (
           <SideLink key={item.href} item={item} path={path} />
         ))}
+      </div>
+      <div>
+        <p className="mb-1.5 px-3 text-xs font-medium text-neutral-500">Your business</p>
+        <div className="space-y-0.5">
+          {business.map((item) => (
+            <SideLink key={item.href} item={item} path={path} small />
+          ))}
+        </div>
       </div>
       <div>
         <p className="mb-1.5 px-3 text-xs font-medium text-neutral-500">Set up</p>

@@ -1,11 +1,15 @@
 import { ConfirmDelete } from "@/components/form";
+import Link from "next/link";
 import {
+  ArrowCounterClockwiseIcon,
   CalendarBlankIcon,
+  CaretRightIcon,
   ClockIcon,
   EnvelopeSimpleIcon,
   PhoneIcon,
   ScissorsIcon,
   UserIcon,
+  UserMinusIcon,
   XIcon,
   type Icon,
 } from "@/components/icons";
@@ -16,14 +20,14 @@ import { emailMode } from "@/lib/email/send";
 import { formatDuration, formatPrice } from "@/lib/format";
 import { requireShop } from "@/lib/shop";
 import { utcToZoned } from "@/lib/time";
-import { cancelBooking } from "./actions/bookings";
+import { cancelBooking, markNoShow, undoNoShow } from "./actions/bookings";
 import { MoveBookingForm } from "./calendar/panel-forms";
 
 export const isBookingId = (v: unknown): v is string => typeof v === "string" && /^[0-9a-f-]{36}$/.test(v);
 
 type Row = {
   id: string;
-  status: "booked" | "cancelled";
+  status: "booked" | "cancelled" | "no_show";
   starts_at: string;
   ends_at: string;
   customer_name: string;
@@ -31,6 +35,7 @@ type Row = {
   customer_phone: string;
   staff_id: string;
   source: "online" | "owner";
+  customer_key: string;
   services: { name: string; price_cents: number | null } | null;
 };
 
@@ -46,7 +51,7 @@ export async function BookingSheet({ id, closeHref, view = "day" }: { id: string
   const [{ data: b }, { data: team }] = await Promise.all([
     supabase
       .from("bookings")
-      .select("id, status, starts_at, ends_at, customer_name, customer_email, customer_phone, staff_id, source, services(name, price_cents)")
+      .select("id, status, starts_at, ends_at, customer_name, customer_email, customer_phone, staff_id, source, customer_key, services(name, price_cents)")
       .eq("id", id)
       .eq("shop_id", shop.id)
       .maybeSingle<Row>(),
@@ -61,6 +66,8 @@ export async function BookingSheet({ id, closeHref, view = "day" }: { id: string
   const today = shopToday(tz, new Date());
   const live = b.status === "booked";
   const upcoming = live && Date.parse(b.starts_at) > new Date().getTime();
+  // Once it has started, the owner can say the customer didn't come (or undo that).
+  const started = Date.parse(b.starts_at) <= new Date().getTime();
   const staff = team ?? [];
   const worker = staff.find((w) => w.id === b.staff_id);
   const price = b.services ? formatPrice(b.services.price_cents, shop.currency) : "";
@@ -81,7 +88,8 @@ export async function BookingSheet({ id, closeHref, view = "day" }: { id: string
       <SheetHeader title={b.customer_name} closeHref={closeHref}>
         <span className="flex flex-wrap gap-1.5">
           <Badge tone={b.source === "owner" ? "neutral" : "brand"}>{b.source === "owner" ? "Added by you" : "Booked online"}</Badge>
-          {!live ? <Badge tone="warning">Cancelled</Badge> : null}
+          {b.status === "cancelled" ? <Badge tone="warning">Cancelled</Badge> : null}
+          {b.status === "no_show" ? <Badge tone="warning">Didn’t come</Badge> : null}
         </span>
       </SheetHeader>
       <div className="space-y-4">
@@ -126,6 +134,36 @@ export async function BookingSheet({ id, closeHref, view = "day" }: { id: string
               view={view}
             />
           </div>
+        ) : null}
+
+        <Link
+          href={`/dashboard/customers?c=${encodeURIComponent(b.customer_key)}`}
+          className="flex items-center justify-between gap-2 py-1 text-sm font-medium text-accent-400 transition-colors duration-150 hover:text-accent-300"
+        >
+          All of {b.customer_name.split(" ")[0]}’s visits
+          <CaretRightIcon aria-hidden className="size-4" />
+        </Link>
+
+        {live && started ? (
+          <form action={markNoShow} className="rule-top space-y-2 pt-4">
+            <input type="hidden" name="id" value={b.id} />
+            <input type="hidden" name="back" value={closeHref} />
+            <button type="submit" className="flex h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-line text-sm font-medium transition-colors duration-150 hover:bg-ink/7">
+              <UserMinusIcon aria-hidden className="size-4" />
+              Didn’t come
+            </button>
+            <p className="text-[13px] text-neutral-400">Keeps a count of missed visits on their customer card.</p>
+          </form>
+        ) : null}
+        {b.status === "no_show" ? (
+          <form action={undoNoShow} className="rule-top pt-4">
+            <input type="hidden" name="id" value={b.id} />
+            <input type="hidden" name="back" value={closeHref} />
+            <button type="submit" className="flex h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-line text-sm font-medium transition-colors duration-150 hover:bg-ink/7">
+              <ArrowCounterClockwiseIcon aria-hidden className="size-4" />
+              They came after all
+            </button>
+          </form>
         ) : null}
 
         {upcoming ? (

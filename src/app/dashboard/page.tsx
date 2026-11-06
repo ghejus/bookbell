@@ -17,6 +17,7 @@ export const metadata: Metadata = { title: "Today" };
 
 type Booking = {
   id: string;
+  status: "booked" | "no_show";
   starts_at: string;
   ends_at: string;
   customer_name: string;
@@ -58,9 +59,9 @@ async function TodayContent({ searchParams }: PageProps<"/dashboard">) {
   const [{ data }, { count: teamSize }, steps] = await Promise.all([
     supabase
       .from("bookings")
-      .select("id, starts_at, ends_at, customer_name, customer_email, customer_phone, staff_id, services(name, duration_minutes), staff(name)")
+      .select("id, status, starts_at, ends_at, customer_name, customer_email, customer_phone, staff_id, services(name, duration_minutes), staff(name)")
       .eq("shop_id", shop.id)
-      .eq("status", "booked")
+      .in("status", ["booked", "no_show"])
       .gte("starts_at", from.toISOString())
       .lt("starts_at", to.toISOString())
       .order("starts_at")
@@ -182,7 +183,9 @@ async function TodayContent({ searchParams }: PageProps<"/dashboard">) {
                             {showWho && b.staff ? ` · ${b.staff.name}` : ""}
                           </span>
                         </span>
-                        {done ? (
+                        {b.status === "no_show" ? (
+                          <span className="rounded-md bg-danger-soft px-2 py-0.5 text-[11px] whitespace-nowrap text-danger-ink">Didn’t come</span>
+                        ) : done ? (
                           <span className="rounded-md bg-neutral-800 px-2 py-0.5 text-[11px] text-neutral-200">Done</span>
                         ) : (
                           <CaretRightIcon aria-hidden className="mt-[3px] size-4 text-neutral-600" />

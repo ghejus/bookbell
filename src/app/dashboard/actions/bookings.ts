@@ -10,7 +10,7 @@ import { siteUrl } from "@/lib/site";
 import { requireShop } from "@/lib/shop";
 import { idSchema } from "@/lib/validation";
 
-// Cancelling a booking from the dashboard.
+// Cancelling a booking, and marking a visit as "didn't come".
 // Every action checks who is logged in and which shop they own. The database
 // locks (RLS) check again, so a trick request still can't touch another shop.
 
@@ -41,6 +41,48 @@ export async function cancelBooking(formData: FormData) {
       siteUrl(),
     ]);
     after(() => sendShopChangeEmail("cancelled", booking, shop, teamSize ?? 1, site));
+  }
+  if (back) redirect(back);
+  refresh();
+}
+
+/** "Didn't come": only for a live booking that has already started. */
+export async function markNoShow(formData: FormData) {
+  const id = idSchema.parse(formData.get("id"));
+  const back = backTo(formData.get("back"));
+  const { supabase, shop } = await requireShop();
+  const { data: booking } = await supabase
+    .from("bookings")
+    .update({ status: "no_show" })
+    .eq("id", id)
+    .eq("shop_id", shop.id)
+    .eq("status", "booked")
+    .lte("starts_at", new Date().toISOString())
+    .select("customer_name")
+    .maybeSingle<{ customer_name: string }>();
+  if (booking) await flash("saved", "Marked as didn’t come", `${booking.customer_name}. You’ll see it in their visits.`);
+  if (back) redirect(back);
+  refresh();
+}
+
+/** Undo "didn't come": the booking counts as a visit again. */
+export async function undoNoShow(formData: FormData) {
+  const id = idSchema.parse(formData.get("id"));
+  const back = backTo(formData.get("back"));
+  const { supabase, shop } = await requireShop();
+  const { data: booking, error } = await supabase
+    .from("bookings")
+    .update({ status: "booked" })
+    .eq("id", id)
+    .eq("shop_id", shop.id)
+    .eq("status", "no_show")
+    .select("customer_name")
+    .maybeSingle<{ customer_name: string }>();
+  if (error?.code === "23P01") {
+    // Someone else was put in that time since.
+    await flash("cancelled", "Couldn’t undo", "Another booking now sits at that time with the same person.");
+  } else if (booking) {
+    await flash("saved", "Counted as a visit again", booking.customer_name);
   }
   if (back) redirect(back);
   refresh();
