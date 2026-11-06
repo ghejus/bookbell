@@ -114,7 +114,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/[lang]/s/[slug]
           {rating.total > 0 ? (
             <a href="#reviews" className="mt-2 inline-flex items-center gap-1.5 rounded-lg text-sm hover:underline">
               <StarIcon aria-hidden weight="fill" className="size-4 text-accent-400" />
-              <span className="font-medium tabular">{averageText(rating.average)}</span>
+              <span className="font-medium tabular">{averageText(rating.average, lang)}</span>
               <span className="text-neutral-400">· {t.reviews.count(rating.total)}</span>
             </a>
           ) : null}
@@ -339,7 +339,7 @@ async function BookingPage({ params, searchParams }: PageProps<"/[lang]/s/[slug]
               </h2>
               <p className="flex items-center gap-2 text-sm">
                 <Stars stars={rating.average} size="size-3.5" />
-                <span className="font-medium tabular">{averageText(rating.average)}</span>
+                <span className="font-medium tabular">{averageText(rating.average, lang)}</span>
                 <span className="text-neutral-400">· {t.reviews.count(rating.total)}</span>
               </p>
             </div>

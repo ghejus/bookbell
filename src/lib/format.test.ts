@@ -35,3 +35,13 @@ describe("formatMoney", () => {
     expect(formatMoney(4250, "EUR")).toBe("€42.50");
   });
 });
+
+describe("money in Romanian", () => {
+  it("puts the euro sign after the amount and uses a decimal comma", () => {
+    expect(formatPrice(33100, "EUR", "ro")).toBe(`331${nb}€`);
+    expect(formatPrice(2550, "EUR", "ro")).toBe(`25,50${nb}€`);
+    expect(formatPrice(4050, "RON", "ro")).toBe(`40,50${nb}lei`);
+    expect(formatPrice(0, "EUR", "ro")).toBe("Gratuit");
+    expect(formatMoney(0, "EUR", "ro")).toBe(`0${nb}€`);
+  });
+});

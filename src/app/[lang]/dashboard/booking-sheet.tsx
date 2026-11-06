@@ -73,7 +73,7 @@ export async function BookingSheet({ id, closeHref, view = "day" }: { id: string
   const started = Date.parse(b.starts_at) <= new Date().getTime();
   const staff = team ?? [];
   const worker = staff.find((w) => w.id === b.staff_id);
-  const price = b.services ? formatPrice(b.services.price_cents, shop.currency) : "";
+  const price = b.services ? formatPrice(b.services.price_cents, shop.currency, o.lang) : "";
 
   const rows: { icon: Icon; text: string }[] = [
     { icon: CalendarBlankIcon, text: `${start.date === today ? o("Today, ") : ""}${longDay.format(asUtc(start.date))}` },

@@ -61,7 +61,7 @@ async function ReviewsContent({ searchParams }: PageProps<"/[lang]/dashboard/rev
         <div className="space-y-4">
           <Card className="grid gap-5 p-5 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-8">
             <div className="space-y-1">
-              <p className="text-[40px] leading-none font-medium tracking-tight tabular">{averageText(rating.average)}</p>
+              <p className="text-[40px] leading-none font-medium tracking-tight tabular">{averageText(rating.average, o.lang)}</p>
               <Stars stars={rating.average} />
               <p className="text-sm text-neutral-400">{o.n(rating.total, "{n} review on your page", "{n} reviews on your page")}</p>
             </div>

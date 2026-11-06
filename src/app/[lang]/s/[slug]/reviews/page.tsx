@@ -9,7 +9,7 @@ import { ReviewList, StarSpread } from "@/components/review-list";
 import { Stars } from "@/components/stars";
 import { Card, EmptyState, Logo, PageSkeleton } from "@/components/ui";
 import { getPublicShop, getShopMeta } from "@/lib/booking";
-import { getT } from "@/lib/i18n/server";
+import { getT, pageLang } from "@/lib/i18n/server";
 import { averageText, getShopRating, getShopReviews, REVIEWS_PER_PAGE } from "@/lib/reviews";
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/s/[slug]/reviews">): Promise<Metadata> {
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/s/[slug]/r
 async function ReviewsContent({ params, searchParams }: PageProps<"/[lang]/s/[slug]/reviews">) {
   const [{ slug }, query] = await Promise.all([params, searchParams]);
   await connection();
-  const [data, t] = await Promise.all([getPublicShop(slug), getT()]);
+  const [data, t, lang] = await Promise.all([getPublicShop(slug), getT(), pageLang()]);
   if (!data) notFound();
   const { shop, supabase } = data;
 
@@ -54,7 +54,7 @@ async function ReviewsContent({ params, searchParams }: PageProps<"/[lang]/s/[sl
         <>
           <Card className="grid gap-5 p-5 sm:grid-cols-[auto_1fr] sm:items-center sm:gap-8 sm:p-6">
             <div className="space-y-1">
-              <p className="text-[40px] leading-none font-medium tracking-tight tabular">{averageText(rating.average)}</p>
+              <p className="text-[40px] leading-none font-medium tracking-tight tabular">{averageText(rating.average, lang)}</p>
               <Stars stars={rating.average} />
               <p className="text-sm text-neutral-400">{t.reviews.count(rating.total)}</p>
             </div>

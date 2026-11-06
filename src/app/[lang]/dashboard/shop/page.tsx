@@ -101,7 +101,7 @@ async function ShopContent() {
   const businessRows: Row[] = [
     { href: "/dashboard/customers", icon: UsersThreeIcon, label: o("Customers"), value: o("Visits and notes") },
     { href: "/dashboard/stats", icon: ChartBarIcon, label: o("Stats"), value: o("Takings and busy times") },
-    { href: "/dashboard/reviews", icon: StarIcon, label: o("Reviews"), value: rating.total ? o.n(rating.total, "{avg} from {n} review", "{avg} from {n} reviews", { avg: averageText(rating.average) }) : o("No reviews yet") },
+    { href: "/dashboard/reviews", icon: StarIcon, label: o("Reviews"), value: rating.total ? o.n(rating.total, "{avg} from {n} review", "{avg} from {n} reviews", { avg: averageText(rating.average, o.lang) }) : o("No reviews yet") },
     { href: "/dashboard/waitlist", icon: HourglassIcon, label: o("Waitlist"), value: waiting ? o("{n} waiting", { n: waiting }) : o("Nobody waiting") },
   ];
   const rows: Row[] = [

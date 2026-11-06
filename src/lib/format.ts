@@ -14,23 +14,33 @@ export const CURRENCY_UNIT: Record<Currency, string> = { EUR: "€", RON: "lei" 
 /** No-break space: keeps a number and its unit on one line ("60 lei", "30 min"). */
 const NBSP = String.fromCharCode(160);
 
+/** 2550 -> "25.50" (English) or "25,50" (Romanian). Whole amounts drop the decimals. */
+function amountText(cents: number, lang: Lang): string {
+  return (cents / 100).toLocaleString(lang === "ro" ? "ro-RO" : "en-US", {
+    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+/** The amount with its currency, the way each language writes it: "€25" / "25 €", "60 lei". */
+function withCurrency(amount: string, currency: Currency, lang: Lang): string {
+  if (currency === "RON") return `${amount}${NBSP}lei`;
+  return lang === "ro" ? `${amount}${NBSP}€` : `€${amount}`;
+}
+
 /**
  * 2550 cents -> "€25.50" or "25.50 lei". Whole amounts drop the decimals: "€25", "60 lei".
- * Null (no price set) -> "". Zero -> "Free". In Romanian: "25,50 lei", "Gratuit".
+ * Null (no price set) -> "". Zero -> "Free". In Romanian: "25,50 €", "25,50 lei", "Gratuit".
  */
 export function formatPrice(cents: number | null, currency: Currency, lang: Lang = "en"): string {
   if (cents === null) return "";
   if (cents === 0) return lang === "ro" ? "Gratuit" : "Free";
-  const amount = (cents / 100).toLocaleString(lang === "ro" ? "ro-RO" : "en-US", {
-    minimumFractionDigits: cents % 100 === 0 ? 0 : 2,
-    maximumFractionDigits: 2,
-  });
-  return currency === "EUR" ? `€${amount}` : `${amount}${NBSP}lei`;
+  return withCurrency(amountText(cents, lang), currency, lang);
 }
 
-/** An amount of money (takings, totals): like formatPrice, but zero is "€0", not "Free". */
+/** An amount of money (takings, totals): like formatPrice, but zero is "€0" ("0 €"), not "Free". */
 export function formatMoney(cents: number, currency: Currency, lang: Lang = "en"): string {
-  return cents === 0 ? (currency === "EUR" ? "€0" : `0${NBSP}lei`) : formatPrice(cents, currency, lang);
+  return cents === 0 ? withCurrency("0", currency, lang) : formatPrice(cents, currency, lang);
 }
 
 /** 90 -> "1 h 30 min", 45 -> "45 min", 60 -> "1 h". */

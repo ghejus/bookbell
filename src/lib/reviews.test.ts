@@ -24,6 +24,7 @@ describe("words", () => {
     expect(reviewCount(23)).toBe("23 reviews");
     expect(averageText(4.75)).toBe("4.8");
     expect(averageText(5)).toBe("5.0");
+    expect(averageText(4.44, "ro")).toBe("4,4");
   });
 });
 

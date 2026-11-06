@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { en } from "./i18n/en";
+import type { Lang } from "./i18n/config";
 import type { Dict } from "./i18n/dict";
 
 // Reviews: only people who really came can write one (the database checks).
@@ -53,8 +54,11 @@ export function reviewAuthor(name: string) {
 /** 4 -> "4 out of 5 stars", for screen readers. */
 export const starsLabel = (stars: number) => `${stars} out of 5 stars`;
 
-/** 4.75 -> "4.8", 5 -> "5.0". */
-export const averageText = (average: number) => average.toFixed(1);
+/** 4.75 -> "4.8", 5 -> "5.0". Romanian writes a comma: "4,8", "5,0". */
+export const averageText = (average: number, lang: Lang = "en") => {
+  const text = average.toFixed(1);
+  return lang === "ro" ? text.replace(".", ",") : text;
+};
 
 /** "23 reviews", "1 review". */
 export const reviewCount = (n: number) => `${n} review${n === 1 ? "" : "s"}`;
